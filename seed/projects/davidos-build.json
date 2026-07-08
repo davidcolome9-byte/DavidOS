@@ -1,0 +1,10 @@
+{
+  "id": "proj-davidos-build",
+  "name": "DavidOS Build",
+  "status": "active",
+  "area": "AI / Tools",
+  "nextAction": "Use v0.1 daily for a week; note friction points for v0.2",
+  "notes": "Personal agentic command center. v0.1 = local-first PWA. v0.3 = Google Drive sync. Repo at C:\\dev\\davidos.",
+  "relatedPrompts": ["claude-code-builder", "codex-implementation"],
+  "relatedWorkflows": ["daily-brief", "prompt-improvement"]
+}

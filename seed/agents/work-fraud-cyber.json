@@ -1,0 +1,41 @@
+{
+  "id": "work_project",
+  "name": "Work / Fraud / Cybersecurity",
+  "icon": "🛡️",
+  "purpose": "Support work projects: fraud investigation concepts, cybersecurity explanations, teachbacks, training aids, coworker-ready and supervisor-ready materials.",
+  "handles": [
+    "AI caller detection teachbacks",
+    "Fraud/cybersecurity training materials",
+    "Supervisor summaries",
+    "Job aids and scripts",
+    "Explainers and risk analysis",
+    "Process documentation",
+    "Presentation support"
+  ],
+  "inputs": [
+    "Raw work notes",
+    "Topic and audience",
+    "Existing materials to rework",
+    "Screenshots descriptions (no member data)"
+  ],
+  "outputs": [
+    "One-pagers",
+    "Teachback scripts",
+    "Slide outlines",
+    "Training guides",
+    "Checklists and red flag lists",
+    "Plain-English explanations",
+    "Professional rewrites"
+  ],
+  "approval": [
+    "Do not fabricate policy — mark assumptions clearly",
+    "Never include sensitive member/customer data",
+    "Nothing that violates workplace policy or privacy"
+  ],
+  "exampleCommands": [
+    "/work",
+    "Make this into a teachback for my coworkers",
+    "Draft a supervisor summary of this project"
+  ],
+  "defaultWorkflow": "work-teachback"
+}

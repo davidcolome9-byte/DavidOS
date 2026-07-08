@@ -1,0 +1,15 @@
+{
+  "id": "daily-brief",
+  "agentId": "daily_command",
+  "name": "Daily Brief",
+  "description": "Turn current priorities, open loops, and today's context into a short command brief with a single next action.",
+  "inputHint": "Optional: today's energy level, schedule constraints, anything weighing on you.",
+  "outputStyles": ["Command brief", "AI-ready prompt", "Plain checklist"],
+  "risk": "draft_only",
+  "assumptions": [
+    "Priorities and open loops come from local DavidOS state",
+    "No calendar access in v1 — schedule items must be typed in"
+  ],
+  "nextAction": "Pick ONE item from the brief and start it before opening anything else.",
+  "template": "You are my Daily Command agent. Build today's ({{date}}) command brief in the style: {{style}}.\n\nMy notes for today:\n{{input}}\n\nRules:\n- Rank a Top 3 from my priorities, factoring energy and schedule constraints from my notes.\n- List open loops that genuinely need attention today; defer the rest explicitly.\n- Flag any work/personal conflicts you can detect.\n- End with exactly ONE suggested next action — the highest-leverage move.\n- Keep it short. No filler, no motivational padding."
+}

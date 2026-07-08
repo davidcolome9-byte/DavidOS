@@ -1,0 +1,36 @@
+{
+  "id": "dogs_home_life_admin",
+  "name": "Dogs / Home / Life Admin",
+  "icon": "🐕",
+  "purpose": "Manage home tasks, dogs, chores, errands, and practical life admin.",
+  "handles": [
+    "Dog care reminders",
+    "Home maintenance",
+    "Errands",
+    "Cleaning routines",
+    "Household planning",
+    "Life admin checklists"
+  ],
+  "inputs": [
+    "What needs doing",
+    "Time available",
+    "Dog routines and symptoms (informational only)"
+  ],
+  "outputs": [
+    "Checklist",
+    "Reminder plan",
+    "Simple action plan",
+    "Vet/home note draft",
+    "Practical troubleshooting"
+  ],
+  "approval": [
+    "No veterinary diagnosis — flag urgent symptoms",
+    "Recommend professional help when warranted"
+  ],
+  "exampleCommands": [
+    "/home",
+    "Build a weekend chore checklist",
+    "Draft a note for the next vet visit"
+  ],
+  "defaultWorkflow": "life-admin-checklist"
+}

@@ -1,0 +1,10 @@
+{
+  "id": "proj-weekly-planning",
+  "name": "Weekly Planning System",
+  "status": "active",
+  "area": "Planning",
+  "nextAction": "Run the Weekly Review workflow this Sunday",
+  "notes": "Standing system: weekly review closes/defers open loops and sets top 3. Daily brief each morning. Calendar integration comes in v0.4.",
+  "relatedPrompts": ["weekly-planning"],
+  "relatedWorkflows": ["weekly-review", "daily-brief"]
+}

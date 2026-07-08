@@ -1,0 +1,16 @@
+{
+  "id": "work-teachback",
+  "agentId": "work_project",
+  "name": "Work Teachback",
+  "description": "Turn raw work notes into a coworker-ready teachback, job aid, or supervisor summary.",
+  "inputHint": "Paste your raw notes, the topic, and who the audience is (coworkers, supervisor, trainees).",
+  "outputStyles": ["Teachback script", "One-pager", "Slide outline", "Supervisor summary", "Job aid / checklist"],
+  "risk": "draft_only",
+  "assumptions": [
+    "No sensitive member/customer data in the input — placeholders only",
+    "Policy statements are assumptions unless you provide the actual policy",
+    "Audience is coworkers unless stated otherwise"
+  ],
+  "nextAction": "Review for accuracy against real policy, then format in Word/PowerPoint.",
+  "template": "You are my Work / Fraud / Cybersecurity project agent. Output style: {{style}}. Date: {{date}}.\n\nTurn the provided notes into a clear, coworker-ready deliverable:\n\n{{input}}\n\nRules:\n- Use plain language; define key red flags with concrete examples.\n- Avoid unsupported policy claims — mark every assumption clearly as [ASSUMPTION].\n- Never include or invent member/customer data; use placeholders like [MEMBER].\n- Keep it practical: what to look for, what to do, what to escalate.\n- Structure it so it can be dropped into a Word doc or slide deck."
+}

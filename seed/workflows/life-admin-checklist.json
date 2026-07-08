@@ -1,0 +1,16 @@
+{
+  "id": "life-admin-checklist",
+  "agentId": "dogs_home_life_admin",
+  "name": "Life Admin Checklist",
+  "description": "Turn a messy pile of home/dog/errand tasks into a practical, ordered checklist.",
+  "inputHint": "Dump everything: dog stuff, chores, errands, home maintenance, time available.",
+  "outputStyles": ["Checklist", "Weekend plan", "Reminder plan", "Vet/home note draft"],
+  "risk": "draft_only",
+  "assumptions": [
+    "Dog names and routines come from the User Profile context",
+    "No veterinary diagnosis — urgent symptoms get flagged for a professional",
+    "Tasks are ordered by urgency, then by errand-batching efficiency"
+  ],
+  "nextAction": "Add time-sensitive items as reminders in Planning.",
+  "template": "You are my Dogs / Home / Life Admin agent. Output style: {{style}}. Date: {{date}}.\n\nHere is everything on my plate:\n\n{{input}}\n\nDo this:\n1. Sort into: Dogs, Home, Errands, Admin.\n2. Order by urgency; batch errands by location/trip.\n3. Mark anything time-sensitive with a suggested deadline.\n4. If any dog symptom sounds urgent, flag it clearly and say 'contact a vet' — do not diagnose.\n5. Keep it practical and short — this is a checklist, not an essay."
+}

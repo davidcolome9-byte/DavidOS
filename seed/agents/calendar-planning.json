@@ -1,0 +1,38 @@
+{
+  "id": "calendar_planning",
+  "name": "Calendar / Planning",
+  "icon": "🗓️",
+  "purpose": "Weekly planning, daily schedule review, reminders, open loops, and calendar prep.",
+  "handles": [
+    "Weekly review",
+    "Daily plan",
+    "Reminder planning",
+    "Schedule risk detection",
+    "Time blocking",
+    "Calendar prep"
+  ],
+  "inputs": [
+    "Open loops",
+    "Reminders",
+    "Known events and deadlines",
+    "Energy and work schedule"
+  ],
+  "outputs": [
+    "Daily plan",
+    "Weekly plan",
+    "Reminder list",
+    "Open loop list",
+    "Time-block draft",
+    "Calendar action suggestions"
+  ],
+  "approval": [
+    "Must ask before creating, editing, or deleting calendar events",
+    "v1 does not access Google Calendar — local placeholders only"
+  ],
+  "exampleCommands": [
+    "/weekly",
+    "Help me plan the week and surface open loops",
+    "Draft a time-blocked plan for tomorrow"
+  ],
+  "defaultWorkflow": "weekly-review"
+}

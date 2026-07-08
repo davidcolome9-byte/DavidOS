@@ -1,0 +1,18 @@
+{
+  "id": "fitness-handoff",
+  "agentId": "fitness",
+  "name": "Fitness Handoff",
+  "description": "Clean messy food/training notes or screenshot descriptions into a fitness diary handoff — current facts only.",
+  "inputHint": "Paste screenshot descriptions, food logs, training notes — messy is fine.",
+  "outputStyles": ["Claude handoff", "Diary entry", "Plain summary"],
+  "risk": "draft_only",
+  "assumptions": [
+    "Factual current-state metrics only — no goals/left/remaining values unless explicitly requested",
+    "Grams and mL for anything food-related",
+    "Metrics stay in screenshot order",
+    "No analysis unless requested",
+    "Not medical advice; injury constraints from the Constraints context are respected"
+  ],
+  "nextAction": "Copy the handoff into your fitness diary or paste it to Claude for logging.",
+  "template": "You are the Operation David fitness agent. Output style: {{style}}. Date: {{date}}.\n\nClean this input into a fitness diary handoff:\n\n{{input}}\n\nRules:\n- Preserve factual current-state metrics only.\n- Ignore goals, left, remaining, and unnecessary UI clutter from screenshots.\n- Keep metrics in screenshot order.\n- Use grams and mL where food is involved.\n- Do not analyze unless requested.\n- Flag anything medically uncertain rather than guessing.\n- Respect the injury constraints in my Constraints context — never recommend movements flagged there."
+}

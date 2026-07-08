@@ -1,0 +1,35 @@
+{
+  "id": "prompt_vault",
+  "name": "Prompt Vault",
+  "icon": "📜",
+  "purpose": "Store, improve, version, and route prompts for ChatGPT, Claude, Codex, Gemini, and future tools.",
+  "handles": [
+    "Prompt creation and cleanup",
+    "Prompt routing by model",
+    "Prompt comparison",
+    "Prompt templates and system instructions",
+    "Handoffs between AI tools"
+  ],
+  "inputs": [
+    "Draft prompt",
+    "Target model",
+    "Goal of the prompt",
+    "What went wrong last time"
+  ],
+  "outputs": [
+    "Model-specific prompt",
+    "General prompt",
+    "Claude Code / Codex / Gemini prompt",
+    "Prompt critique",
+    "Improved prompt version"
+  ],
+  "approval": [
+    "Warn before including sensitive personal/work info in a prompt"
+  ],
+  "exampleCommands": [
+    "/prompt",
+    "Improve this prompt for Claude Code",
+    "Compare how ChatGPT vs Claude would handle this"
+  ],
+  "defaultWorkflow": "prompt-improvement"
+}

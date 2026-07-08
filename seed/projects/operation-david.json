@@ -1,0 +1,10 @@
+{
+  "id": "proj-operation-david",
+  "name": "Operation David",
+  "status": "active",
+  "area": "Fitness",
+  "nextAction": "Log today's food and training via the Fitness Handoff workflow",
+  "notes": "Body recomposition: aggressive fat loss with muscle preservation. Clean diary handoffs, grams/mL, current facts only. Injury constraints tracked in Context.",
+  "relatedPrompts": ["fitness-diary-handoff"],
+  "relatedWorkflows": ["fitness-handoff"]
+}

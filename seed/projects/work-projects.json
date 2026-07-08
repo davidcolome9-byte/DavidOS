@@ -1,0 +1,10 @@
+{
+  "id": "proj-work-projects",
+  "name": "Work Training / Project Materials",
+  "status": "active",
+  "area": "Work",
+  "nextAction": "Pick the next teachback topic and run the Work Teachback workflow",
+  "notes": "Teachbacks, job aids, and training materials for fraud/cybersecurity topics. Keep all member/customer data out — placeholders only.",
+  "relatedPrompts": ["work-project-analysis"],
+  "relatedWorkflows": ["work-teachback"]
+}

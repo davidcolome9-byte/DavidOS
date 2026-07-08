@@ -1,0 +1,10 @@
+{
+  "id": "proj-content-assets",
+  "name": "Content / Side-Income Assets",
+  "status": "paused",
+  "area": "Content",
+  "nextAction": "Pick one workflow (e.g., fitness handoff) and outline it as a shareable template",
+  "notes": "Turn proven personal workflows into templates, guides, or prompt packs. Nothing from work. Everything fact-checked before publishing.",
+  "relatedPrompts": ["ai-model-comparison"],
+  "relatedWorkflows": ["content-asset-planner"]
+}

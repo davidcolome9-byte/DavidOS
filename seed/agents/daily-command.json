@@ -1,0 +1,39 @@
+{
+  "id": "daily_command",
+  "name": "Daily Command",
+  "icon": "🎯",
+  "purpose": "See what matters today, reduce noise, and choose the next best move.",
+  "handles": [
+    "Daily brief",
+    "Priority ranking",
+    "Open loop review",
+    "Energy/bandwidth check",
+    "Work/personal conflict detection",
+    "\"What should I do next?\" routing"
+  ],
+  "inputs": [
+    "Current priorities",
+    "Calendar items",
+    "Open loops",
+    "Energy level",
+    "Work schedule",
+    "Urgency and deadlines"
+  ],
+  "outputs": [
+    "Short daily command brief",
+    "Top 3 priorities",
+    "Next action",
+    "Risks",
+    "Deferred items",
+    "Suggested workflow to run"
+  ],
+  "approval": [
+    "No external action without approval"
+  ],
+  "exampleCommands": [
+    "/brief",
+    "What should I focus on today?",
+    "I'm overwhelmed — help me pick the next move"
+  ],
+  "defaultWorkflow": "daily-brief"
+}

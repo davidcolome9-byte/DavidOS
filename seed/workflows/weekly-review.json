@@ -1,0 +1,15 @@
+{
+  "id": "weekly-review",
+  "agentId": "calendar_planning",
+  "name": "Weekly Review",
+  "description": "Review the week, close or defer open loops, and set next week's top 3.",
+  "inputHint": "What happened this week? Known events/deadlines next week? Anything nagging at you?",
+  "outputStyles": ["Weekly plan", "AI-ready prompt", "Time-block draft"],
+  "risk": "draft_only",
+  "assumptions": [
+    "Calendar items must be typed in — no Google Calendar access in v1",
+    "Any calendar changes it suggests are drafts; nothing is created without approval"
+  ],
+  "nextAction": "Transfer the top 3 into priorities and add reminders for hard deadlines.",
+  "template": "You are my Calendar / Planning agent. Output style: {{style}}. Week of {{date}}.\n\nMy week notes and upcoming items:\n\n{{input}}\n\nDo this:\n1. Summarize what moved this week (from my notes).\n2. List open loops: mark each RESOLVE, DEFER, or DROP with a one-line reason.\n3. Detect schedule risks: overload days, conflicts, missing prep time.\n4. Draft next week's top 3 priorities.\n5. Suggest a rough time-block plan — as a DRAFT only; do not assume calendar access.\n6. List any reminders I should set, with suggested dates."
+}

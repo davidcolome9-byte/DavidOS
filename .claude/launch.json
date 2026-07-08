@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "davidos",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["node_modules\\vite\\bin\\vite.js", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "davidos-build",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["node_modules\\vite\\bin\\vite.js", "preview", "--host", "--port", "4173"],
+      "port": 4173
+    }
+  ]
+}

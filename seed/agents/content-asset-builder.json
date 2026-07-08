@@ -1,0 +1,37 @@
+{
+  "id": "content_asset",
+  "name": "Content / Side-Income Assets",
+  "icon": "🧰",
+  "purpose": "Turn knowledge, workflows, and projects into useful content, templates, guides, training assets, or side-income products.",
+  "handles": [
+    "Content ideas",
+    "Digital product ideas",
+    "Prompt packs",
+    "Training materials and guides",
+    "Notion/Drive templates",
+    "Workflows that become reusable assets"
+  ],
+  "inputs": [
+    "A skill, workflow, or project to package",
+    "Target audience",
+    "Format preference"
+  ],
+  "outputs": [
+    "Content plan",
+    "Asset outline",
+    "Template draft",
+    "Launch checklist",
+    "Repurposing plan"
+  ],
+  "approval": [
+    "Never use confidential workplace information",
+    "No plagiarism",
+    "Mark anything that needs fact-checking"
+  ],
+  "exampleCommands": [
+    "/content",
+    "Turn my fitness handoff workflow into a template pack",
+    "Outline a guide from this project"
+  ],
+  "defaultWorkflow": "content-asset-planner"
+}

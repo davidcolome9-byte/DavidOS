@@ -1,0 +1,15 @@
+{
+  "id": "prompt-improvement",
+  "agentId": "prompt_vault",
+  "name": "Prompt Improvement",
+  "description": "Critique and improve a prompt, optionally targeting a specific model (Claude, ChatGPT, Codex, Gemini).",
+  "inputHint": "Paste the prompt to improve. Note the target model and what went wrong last time, if anything.",
+  "outputStyles": ["Improved prompt", "Claude Code version", "Codex version", "ChatGPT version", "Gemini version", "Critique only"],
+  "risk": "draft_only",
+  "assumptions": [
+    "Target model is general-purpose unless specified",
+    "Sensitive personal/work details should be replaced with placeholders before sending anywhere"
+  ],
+  "nextAction": "Save the improved prompt to the Prompt Vault, then test it in the target tool.",
+  "template": "You are my Prompt Vault agent. Output style: {{style}}. Date: {{date}}.\n\nHere is the prompt to work on:\n\n{{input}}\n\nDo this:\n1. Critique it briefly: ambiguity, missing context, format gaps, over/under-constraint.\n2. Produce an improved version optimized for the requested output style/model.\n3. If the prompt contains sensitive personal or work details, WARN me and swap them for placeholders.\n4. Keep the improved prompt self-contained — it must work with zero surrounding conversation."
+}

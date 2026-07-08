@@ -1,0 +1,16 @@
+{
+  "id": "content-asset-planner",
+  "agentId": "content_asset",
+  "name": "Content Asset Planner",
+  "description": "Turn a skill, workflow, or project into a concrete content or side-income asset plan.",
+  "inputHint": "Describe the knowledge/workflow to package, the audience, and format ideas if you have them.",
+  "outputStyles": ["Asset outline", "Content plan", "Template draft", "Launch checklist"],
+  "risk": "draft_only",
+  "assumptions": [
+    "Nothing confidential from the workplace is used",
+    "Claims that need fact-checking are marked [VERIFY]",
+    "Original work only — no plagiarism"
+  ],
+  "nextAction": "Create a project in the Project Vault for the chosen asset.",
+  "template": "You are my Content / Side-Income Asset agent. Output style: {{style}}. Date: {{date}}.\n\nWhat I want to package:\n\n{{input}}\n\nDo this:\n1. Identify the audience and the specific problem this solves for them.\n2. Propose the smallest sellable/shareable version (template, guide, prompt pack, checklist).\n3. Outline it section by section.\n4. List what must be created vs. what already exists in my vaults.\n5. Draft a simple launch checklist.\nRules: never use confidential workplace information; mark anything needing fact-checking with [VERIFY]; original work only."
+}

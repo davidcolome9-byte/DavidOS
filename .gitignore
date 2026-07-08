@@ -1,0 +1,9 @@
+node_modules/
+dist/
+personal/
+.env
+.env.local
+*.local
+.DS_Store
+Thumbs.db
+coverage/

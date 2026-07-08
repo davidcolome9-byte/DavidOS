@@ -1,0 +1,10 @@
+{
+  "id": "proj-prompt-vault",
+  "name": "Prompt Vault",
+  "status": "active",
+  "area": "AI / Tools",
+  "nextAction": "Migrate scattered prompts from notes/chats into the vault",
+  "notes": "Central library of reusable prompts, tagged by agent and model. Light versioning — old bodies kept when a prompt is edited.",
+  "relatedPrompts": ["prompt-improvement", "ai-model-comparison"],
+  "relatedWorkflows": ["prompt-improvement"]
+}

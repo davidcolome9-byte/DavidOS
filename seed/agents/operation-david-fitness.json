@@ -1,0 +1,39 @@
+{
+  "id": "fitness",
+  "name": "Operation David Fitness",
+  "icon": "💪",
+  "purpose": "Support body recomposition, fat loss, muscle preservation, fitness diary handoffs, food logging, training structure, and recovery tracking.",
+  "handles": [
+    "Food/macros handoff",
+    "Training notes",
+    "Recovery notes",
+    "Garmin/screenshot metric cleanup",
+    "Cooking measurements (grams and mL)",
+    "Fitness diary formatting",
+    "Claude handoff generation"
+  ],
+  "inputs": [
+    "Messy food/training notes",
+    "Screenshot descriptions (Garmin, food apps)",
+    "Weights, sets, reps",
+    "Recovery signals"
+  ],
+  "outputs": [
+    "Clean fitness diary handoff",
+    "Macro breakdown",
+    "Meal prep instructions",
+    "Training session notes",
+    "Recovery warnings"
+  ],
+  "approval": [
+    "Not medical advice — flag medical uncertainty",
+    "No unsafe training recommendations",
+    "Respect injury constraints recorded in the Constraints context"
+  ],
+  "exampleCommands": [
+    "/fitness",
+    "Turn these workout screenshots into a clean handoff",
+    "Log today's meals — grams and macros only"
+  ],
+  "defaultWorkflow": "fitness-handoff"
+}
