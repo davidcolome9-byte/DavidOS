@@ -1,15 +1,13 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
-const NAV = [
+// Primary bottom-nav tabs. Kept to 5 so touch targets stay large on a
+// phone. Everything else lives under "More" (see MoreMenu.tsx).
+const PRIMARY_NAV = [
   { to: '/', icon: '🏠', label: 'Home' },
-  { to: '/agents', icon: '🤖', label: 'Agents' },
   { to: '/workflows', icon: '⚡', label: 'Workflows' },
   { to: '/projects', icon: '📁', label: 'Projects' },
-  { to: '/prompts', icon: '📜', label: 'Prompts' },
-  { to: '/context', icon: '🧠', label: 'Context' },
-  { to: '/planning', icon: '🗓️', label: 'Planning' },
   { to: '/logs', icon: '📋', label: 'Logs' },
-  { to: '/settings', icon: '⚙️', label: 'Settings' },
+  { to: '/more', icon: '⋯', label: 'More' },
 ];
 
 export default function Layout() {
@@ -23,7 +21,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <nav className="bottom-nav">
-        {NAV.map((item) => (
+        {PRIMARY_NAV.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
             <span className="nav-icon">{item.icon}</span>
             <span>{item.label}</span>

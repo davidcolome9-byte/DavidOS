@@ -5,6 +5,10 @@ import { requiresApproval, isBlockedInV1 } from '../safety/approvalRules';
 describe('riskClassifier', () => {
   it('classifies email sending as sensitive external write', () => {
     expect(classifyCommand('Send email to my supervisor about the project')).toBe('sensitive_external_write');
+    // Filler words must not defeat the classifier (found in stress testing).
+    expect(classifyCommand('send this email to my supervisor about the fraud case')).toBe('sensitive_external_write');
+    expect(classifyCommand('send an email to the vet')).toBe('sensitive_external_write');
+    expect(classifyCommand('email this to my coworkers')).toBe('sensitive_external_write');
   });
 
   it('classifies calendar edits as external write', () => {

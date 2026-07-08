@@ -238,6 +238,39 @@ pre.output {
   margin: 8px 0;
 }
 .notice.flash { border-color: var(--ok); color: var(--ok); }
+.notice.risk-block { border-color: var(--warn); }
+.notice.risk-block strong { color: var(--warn); }
+
+.checkrow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 10px 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+.checkrow input[type='checkbox'] { width: 18px; height: 18px; margin-top: 1px; }
+
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Collapsible form cards (Health Profile) */
+details.card > summary {
+  cursor: pointer;
+  list-style: none;
+  min-height: 28px;
+}
+details.card > summary::-webkit-details-marker { display: none; }
+details.card > summary::after { content: '▾'; float: right; color: var(--text-dim); }
+details.card[open] > summary::after { content: '▴'; }
+
+.sticky-warn {
+  position: sticky;
+  top: 52px;
+  z-index: 15;
+  border-color: var(--warn);
+}
+
+.card a { color: var(--accent); }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
@@ -264,3 +297,17 @@ details.item summary::-webkit-details-marker { display: none; }
 .audit-entry { font-size: 0.78rem; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .audit-entry:last-child { border-bottom: none; }
 .audit-entry .when { color: var(--text-dim); }
+
+/* ---------- More menu ---------- */
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  text-decoration: none;
+  color: var(--text);
+  min-height: 44px;
+}
+.more-icon { font-size: 1.4rem; line-height: 1; width: 28px; text-align: center; }
+.more-text { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.more-chev { color: var(--text-dim); font-size: 1.3rem; }

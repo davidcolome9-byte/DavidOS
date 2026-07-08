@@ -8,7 +8,10 @@ import RiskBadge from './RiskBadge';
 export default function AuditLog() {
   const { state, update } = useStore();
   const [params] = useSearchParams();
-  const [tab, setTab] = useState<'audit' | 'handoffs'>(params.get('tab') === 'handoffs' ? 'handoffs' : 'audit');
+  const initialTab = params.get('tab');
+  const [tab, setTab] = useState<'audit' | 'handoffs' | 'artifacts'>(
+    initialTab === 'handoffs' ? 'handoffs' : initialTab === 'artifacts' ? 'artifacts' : 'audit',
+  );
   const [flash, setFlash] = useState('');
 
   async function copy(text: string) {
@@ -28,6 +31,9 @@ export default function AuditLog() {
         </button>
         <button className={`chip ${tab === 'handoffs' ? 'selected' : ''}`} onClick={() => setTab('handoffs')}>
           Handoffs ({state.handoffs.length})
+        </button>
+        <button className={`chip ${tab === 'artifacts' ? 'selected' : ''}`} onClick={() => setTab('artifacts')}>
+          Artifacts ({state.artifacts.length})
         </button>
       </div>
 
@@ -79,9 +85,9 @@ export default function AuditLog() {
                 <RiskBadge risk={h.risk} />
               </summary>
               <p className="muted small">Input: {h.inputSummary} · Style: {h.outputStyle}</p>
-              <pre className="output">{h.output}</pre>
+              <pre className="output">{h.content ?? h.output}</pre>
               <div className="btn-row">
-                <button className="primary" onClick={() => copy(h.output)}>Copy</button>
+                <button className="primary" onClick={() => copy(h.content ?? h.output ?? '')}>Copy</button>
                 <button
                   className="danger"
                   onClick={() =>
@@ -96,6 +102,50 @@ export default function AuditLog() {
           ))}
           {state.handoffs.length === 0 && (
             <p className="muted small">No handoffs saved yet — run a workflow and hit “Save handoff”.</p>
+          )}
+        </div>
+      )}
+
+      {tab === 'artifacts' && (
+        <div className="card">
+          <h2>Generated artifacts</h2>
+          <p className="muted small">
+            Full generated prompts you explicitly saved. Separate from handoff history — artifacts are
+            never pulled into future continuity.
+          </p>
+          {state.artifacts.map((a) => (
+            <details className="item" key={a.id}>
+              <summary>
+                <span className="small">
+                  <strong>{a.artifactType.replace(/_/g, ' ')}</strong>
+                  <span className="muted"> · {a.workflowId} · {new Date(a.createdAt).toLocaleDateString()}</span>
+                </span>
+                <span className="badge neutral">{a.shortFingerprint ?? ''}</span>
+              </summary>
+              <p className="muted small">
+                {a.priorHandoffCount ?? 0} prior handoffs · {a.historyStrategy ?? 'default'} history
+                {a.rawFallbackUsed ? ' · raw fallback used' : ''}
+                {a.healthProfilePromptMetadata?.healthProfileIncluded
+                  ? ` · Health Profile included (${a.healthProfilePromptMetadata.promptContextFingerprint ?? ''})`
+                  : ''}
+              </p>
+              <pre className="output">{a.content}</pre>
+              <div className="btn-row">
+                <button className="primary" onClick={() => copy(a.content)}>Copy</button>
+                <button
+                  className="danger"
+                  onClick={() =>
+                    window.confirm('Delete this artifact?') &&
+                    update((s) => ({ ...s, artifacts: s.artifacts.filter((x) => x.id !== a.id) }))
+                  }
+                >
+                  Delete
+                </button>
+              </div>
+            </details>
+          ))}
+          {state.artifacts.length === 0 && (
+            <p className="muted small">No artifacts yet — generate a prompt and hit “Save Generated Artifact”.</p>
           )}
         </div>
       )}

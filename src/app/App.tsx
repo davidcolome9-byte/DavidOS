@@ -9,6 +9,8 @@ import ContextVault from '../components/ContextVault';
 import Planning from '../components/Planning';
 import AuditLog from '../components/AuditLog';
 import Settings from '../components/Settings';
+import MoreMenu from '../components/MoreMenu';
+import HealthProfile from '../components/HealthProfile';
 import { StoreProvider } from '../state/store';
 
 // HashRouter so the PWA works on any static host (and file://) with zero
@@ -27,6 +29,8 @@ export default function App() {
             <Route path="/context" element={<ContextVault />} />
             <Route path="/planning" element={<Planning />} />
             <Route path="/logs" element={<AuditLog />} />
+            <Route path="/more" element={<MoreMenu />} />
+            <Route path="/health" element={<HealthProfile />} />
             <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>

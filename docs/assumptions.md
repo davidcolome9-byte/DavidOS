@@ -48,3 +48,20 @@ Decisions made during the initial build without blocking questions, per the buil
 16. **Deleting projects/prompts/handoffs asks for a browser confirm** — that counts
     as the "clear UI notice" for local writes; no separate gate needed since the
     data never leaves the device and Export/Backup exists.
+
+## v0.2 continuity build (2026-07-08)
+
+- **Health Profile seeding vs. public repo:** the calibration spec asked to seed
+  David's real recomp values into the app. That conflicts with the repo being
+  public, so the shipped seed (`src/data/healthProfileSeed.ts`) is a generic
+  starter with bracket placeholders; real values travel in the gitignored
+  personal backup JSON and are imported per device. Bracket-placeholder values
+  are never inserted into generated prompts.
+- **Unsaved-changes guard:** react-router v6 (non-data router) has no stable
+  navigation blocker, so the Health Profile editor uses a sticky "unsaved
+  changes" banner plus a `beforeunload` guard instead of intercepting in-app
+  navigation.
+- **Slash-command router intentionally bypasses risk gating** (`/brief` etc. are
+  known-safe navigations); free-text commands are always risk-classified.
+- **Handoffs are append-only** in this version; `status`/`correctsHandoffId`
+  exist in the model and retrieval logic but have no edit/correction UI yet.

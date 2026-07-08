@@ -1,6 +1,7 @@
 import type { AppState, ContextItem, Project, Prompt } from '../lib/types';
 import { uid, nowIso } from '../lib/types';
 import { parseFrontmatter } from './seedLoader';
+import { seedHealthProfile } from './healthProfileSeed';
 
 import projDavidos from '../../seed/projects/davidos-build.json';
 import projOperationDavid from '../../seed/projects/operation-david.json';
@@ -152,6 +153,8 @@ export function buildDefaultState(): AppState {
     prompts: seedPrompts(),
     contextItems: seedContextItems(),
     handoffs: [],
+    artifacts: [],
+    healthProfile: seedHealthProfile(),
     auditLog: [],
     settings: { theme: 'dark' },
   };

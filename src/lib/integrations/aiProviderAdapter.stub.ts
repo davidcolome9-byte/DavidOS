@@ -1,6 +1,47 @@
 import type { IntegrationAdapter } from './integrationTypes';
 import { stubResult } from './integrationTypes';
 
+// ---------- Provider contract (Phase 13 — architecture only, no live calls) ----------
+
+export type AiProviderId = 'claude' | 'openai' | 'gemini' | 'local';
+
+export interface ProviderRequest {
+  provider: AiProviderId;
+  model?: string;
+  prompt: string;
+  promptHash?: string;
+  workflowId?: string;
+  maxOutputTokens?: number;
+}
+
+export interface ProviderResponse {
+  provider: AiProviderId;
+  model?: string;
+  status: 'success' | 'error' | 'cancelled';
+  content?: string;
+  errorMessage?: string;
+  tokenCount?: number;
+  estimatedCost?: number;
+  latencyMs?: number;
+}
+
+/** Future settings shape — no key storage is implemented in this pass. */
+export interface ProviderSettings {
+  defaultProvider: AiProviderId;
+  /** Keys are entered at runtime, never bundled. Storage strategy TBD (v0.6). */
+  keyStorage: 'session_only' | 'local_encrypted' | 'proxy';
+}
+
+/**
+ * The single integration point WorkflowRunner will use when live calls land
+ * (Claude first). Always throws in v1 so nothing can pretend to succeed.
+ */
+export async function sendProviderRequest(_req: ProviderRequest): Promise<ProviderResponse> {
+  throw new Error(
+    'AI providers are not wired in this version. Copy the generated prompt into your AI tool instead.',
+  );
+}
+
 /**
  * One adapter covering all AI providers (ChatGPT, Claude, Codex, Gemini).
  * The provider is a parameter, so the same workflow specs route to any model.

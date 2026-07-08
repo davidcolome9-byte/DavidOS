@@ -1,5 +1,8 @@
 import type { AppState } from '../types';
+import { normalizeState } from './localStore';
 
+// Arrays a valid backup must contain. artifacts/healthProfile are intentionally
+// absent — older backups predate them and are backfilled by normalizeState.
 const REQUIRED_ARRAYS: (keyof AppState)[] = [
   'priorities', 'openLoops', 'reminders', 'projects',
   'prompts', 'contextItems', 'handoffs', 'auditLog',
@@ -52,7 +55,7 @@ export function parseImport(json: string): AppState {
   if (!state.settings || typeof state.settings !== 'object') {
     throw new Error('Backup missing settings.');
   }
-  return state;
+  return normalizeState(state);
 }
 
 /** Trigger a browser download of the backup file. */

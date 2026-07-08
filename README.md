@@ -45,17 +45,33 @@ npm run icons      # regenerate PWA icons (already committed)
   reasoning; slash commands (`/brief`, `/fitness`, `/work`, `/weekly`, `/os route`, …)
 - **7 agents** — Daily Command, Operation David Fitness, Work/Fraud/Cyber, Prompt
   Vault, Calendar/Planning, Dogs/Home/Life Admin, Content/Side-Income
-- **Workflow runner** — messy input → output style → AI-ready prompt/handoff,
-  generated locally; copy, save as handoff, or spawn an open loop
+- **Workflow runner (continuity-aware, v0.2)** — messy input → output style →
+  AI-ready prompt built from the current entry **plus prior saved handoffs**
+  (3 for default workflows, 7 for Health & Fitness), with structured metric
+  extraction, date parsing, confidence labeling, raw-excerpt fallbacks, and
+  SHA-256 prompt fingerprints. Preview / Full Prompt views; Copy Full Prompt vs
+  Copy Current Only; canonical handoff history stays clean of generated prompts;
+  full prompts can be saved separately as typed artifacts
+- **Health & Fitness Profile** — global, editable, local-only profile (targets,
+  regimen, restrictions, recovery baselines) automatically inserted into
+  fitness prompts with a per-run toggle. The public seed is a *generic* starter:
+  real personal values live in your gitignored personal backup and are imported
+  per device. Preserved through reset by default; never silently overwritten on
+  import; audit logs record changed field names + fingerprints, never values
 - **Context vault** — layered context (stable / priorities / workflow / session /
   private) with placeholder discipline for sensitive data
 - **Project vault** and **Prompt vault** — CRUD, categories, tags, favorites,
   light prompt versioning
 - **Planning** — daily brief + weekly review composed from live state, local
   reminders, open loop management
-- **Safety** — 6-level risk classification, ApprovalGate modal (high-risk actions
-  are unapprovable in v1), full audit log
-- **Data** — localStorage persistence, JSON export/import, reset-to-seed
+- **Safety** — 6-level risk classification surfaced directly in the command
+  palette (risky unmatched commands show an honest "nothing was sent" no-op),
+  ApprovalGate modal (high-risk actions are unapprovable in v1), full audit log
+- **Data** — localStorage persistence, JSON export/import (Health-Profile-aware
+  conflict handling), type-`RESET`-to-confirm reset that preserves the Health
+  Profile by default
+- **Navigation** — 5-tab bottom bar (Home, Workflows, Projects, Logs, More) with
+  grouped More menu: Build / Personal / System / Data
 
 ## Safety model (short version)
 
