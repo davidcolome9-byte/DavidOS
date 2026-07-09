@@ -65,3 +65,15 @@ Decisions made during the initial build without blocking questions, per the buil
   known-safe navigations); free-text commands are always risk-classified.
 - **Handoffs are append-only** in this version; `status`/`correctsHandoffId`
   exist in the model and retrieval logic but have no edit/correction UI yet.
+
+## v0.3 Drive sync foundation (2026-07-08)
+
+- **Google Drive auth uses the browser token model, not Authorization Code +
+  PKCE.** DavidOS is a static PWA with no backend token-exchange endpoint.
+  Google's current browser guidance requires short-lived access tokens for
+  frontend-only Drive calls. Tokens are kept in memory only and requested through
+  user gestures.
+- **First live Drive slice is backup export only.** Manual JSON backup export can
+  create `DavidOS/06_Exports/Backups` and upload a timestamped backup after
+  ApprovalGate confirmation. Two-way vault sync and conflict review remain
+  pending.

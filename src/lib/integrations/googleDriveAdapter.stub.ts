@@ -4,22 +4,22 @@ import { stubResult } from './integrationTypes';
 export const googleDriveAdapter: IntegrationAdapter = {
   id: 'google_drive',
   name: 'Google Drive',
-  capabilities: ['Vault sync (source of truth)', 'Backups', 'Read/write markdown + JSON'],
-  requiredCredentials: ['Google OAuth (PKCE) with drive.file scope'],
+  capabilities: ['Backup export', 'Vault sync (source of truth)', 'Read/write markdown + JSON'],
+  requiredCredentials: ['Google OAuth web client ID with drive.file scope'],
   riskLevel: 'external_write',
-  enabled: false,
+  enabled: true,
   methods: [
     { name: 'listFiles', description: 'List files in the DavidOS Drive folder', risk: 'read_only', implemented: false },
     { name: 'readFile', description: 'Read a vault file from Drive', risk: 'read_only', implemented: false },
     { name: 'writeFile', description: 'Write a vault file to Drive', risk: 'external_write', implemented: false },
-    { name: 'createFolder', description: 'Create the DavidOS folder structure', risk: 'external_write', implemented: false },
+    { name: 'createFolder', description: 'Create the DavidOS backup folder structure', risk: 'external_write', implemented: true },
     { name: 'syncVault', description: 'Two-way sync of local vault with Drive', risk: 'external_write', implemented: false },
-    { name: 'exportBackup', description: 'Push a JSON backup to Drive/06_Exports', risk: 'external_write', implemented: false },
+    { name: 'exportBackup', description: 'Push a JSON backup to Drive/06_Exports', risk: 'external_write', implemented: true },
   ],
   futureNotes:
-    'Planned for v0.3. Uses drive.file scope so DavidOS can only touch files it created. ' +
-    'Folder layout and conflict rules are specified in docs/google-drive-sync-plan.md. ' +
-    'All write methods go through the ApprovalGate.',
+    'v0.3 foundation: manual JSON backup export is live using drive.file scope and short-lived browser tokens. ' +
+    'Two-way vault sync and conflict review remain pending per docs/google-drive-sync-plan.md. ' +
+    'Drive writes go through the ApprovalGate.',
 };
 
 export const listFiles = () => stubResult(googleDriveAdapter, 'listFiles');

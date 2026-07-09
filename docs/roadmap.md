@@ -18,7 +18,7 @@
 - Editable priorities on Home
 
 ## v0.3 — Google Drive sync
-- OAuth PKCE, `drive.file` scope
+- Google Identity Services browser authorization, `drive.file` scope
 - Folder bootstrap + manual "Sync now"
 - Conflict UI per google-drive-sync-plan.md
 - Backups auto-pushed to 06_Exports/Backups (gated)

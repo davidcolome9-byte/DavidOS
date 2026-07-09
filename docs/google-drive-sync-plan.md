@@ -86,6 +86,7 @@ Priorities/reminders ride inside `Current_Priorities.md` and `Open_Loops.md`.
 - Backups pushed to Drive get a reminder that the JSON contains everything.
 
 ## OAuth notes
-- Authorization Code + PKCE, `drive.file` scope only (app-created files only).
+- Static PWA/browser auth uses the Google Identity Services token model with
+  short-lived access tokens, `drive.file` scope only (app-created files only).
 - Client ID via `VITE_GOOGLE_CLIENT_ID`; no client secret anywhere in the app.
 - Token revocation instructions surfaced in Settings when this ships.

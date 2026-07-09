@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { clearPersistedState } from '../lib/storage/localStore';
@@ -6,6 +6,15 @@ import { buildDefaultState } from '../data/defaultState';
 import { INTEGRATIONS } from '../lib/integrations';
 import { requiresApproval } from '../lib/safety/approvalRules';
 import { stubResult } from '../lib/integrations/integrationTypes';
+import {
+  exportBackupToDrive,
+  isDriveSessionFresh,
+  isGoogleDriveConfigured,
+  loadGoogleIdentityServices,
+  requestDriveAccessToken,
+} from '../lib/integrations/googleDriveClient';
+import type { DriveSession } from '../lib/integrations/googleDriveClient';
+import { DRIVE_BACKUP_FOLDER_PATH, formatDrivePath } from '../lib/integrations/googleDrivePaths';
 import type { AppState, IntegrationAdapter, IntegrationMethod } from '../lib/types';
 import ApprovalGate from './ApprovalGate';
 import type { ApprovalRequest } from './ApprovalGate';
@@ -21,11 +30,18 @@ const EXPORT_WARNING =
   'This backup includes your workflows, saved handoffs, generated artifacts, logs, ' +
   'settings, and Health Profile data. Treat the file itself as sensitive.';
 
+const DRIVE_BACKUP_PATH = formatDrivePath(DRIVE_BACKUP_FOLDER_PATH);
+
 export default function Settings() {
   const { state, update, audit } = useStore();
   const fileInput = useRef<HTMLInputElement>(null);
   const [flash, setFlash] = useState('');
   const [pending, setPending] = useState<PendingCall | null>(null);
+  const [pendingDriveExport, setPendingDriveExport] = useState<ApprovalRequest | null>(null);
+  const [driveSession, setDriveSession] = useState<DriveSession | null>(null);
+  const [driveBusy, setDriveBusy] = useState(false);
+  const [driveAuthReady, setDriveAuthReady] = useState(false);
+  const [driveFlash, setDriveFlash] = useState('');
 
   // Reset modal
   const [resetOpen, setResetOpen] = useState(false);
@@ -34,6 +50,32 @@ export default function Settings() {
 
   // Import health-profile conflict modal
   const [importConflict, setImportConflict] = useState<AppState | null>(null);
+  const driveConfigured = isGoogleDriveConfigured();
+  const driveConnected = isDriveSessionFresh(driveSession);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!driveConfigured) {
+      setDriveAuthReady(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    setDriveAuthReady(false);
+    void loadGoogleIdentityServices()
+      .then(() => {
+        if (!cancelled) setDriveAuthReady(true);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : 'unknown error';
+          setDriveFlash(`Google authorization failed to load: ${message}`);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [driveConfigured]);
 
   function exportData() {
     downloadBackup(state);
@@ -84,6 +126,122 @@ export default function Settings() {
     }
   }
 
+  async function connectDrive() {
+    if (!driveConfigured) {
+      setDriveFlash('Add VITE_GOOGLE_CLIENT_ID before using Google Drive sync.');
+      return;
+    }
+    if (!driveAuthReady) {
+      setDriveFlash('Google authorization is still loading.');
+      return;
+    }
+    setDriveBusy(true);
+    setDriveFlash('');
+    try {
+      const session = await requestDriveAccessToken();
+      setDriveSession(session);
+      audit({
+        command: 'Connect Google Drive',
+        actionType: 'read_only',
+        approvalStatus: 'not_required',
+        actionTaken: true,
+        resultSummary: 'Google Drive access granted for drive.file scope. Token kept in memory only.',
+      });
+      setDriveFlash('Google Drive connected for this session.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unknown error';
+      audit({
+        command: 'Connect Google Drive',
+        actionType: 'read_only',
+        approvalStatus: 'not_required',
+        actionTaken: false,
+        resultSummary: `Google Drive connection failed: ${message}`,
+      });
+      setDriveFlash(`Google Drive connection failed: ${message}`);
+    } finally {
+      setDriveBusy(false);
+    }
+  }
+
+  function forgetDriveSession() {
+    setDriveSession(null);
+    audit({
+      command: 'Forget Google Drive session',
+      actionType: 'read_only',
+      approvalStatus: 'not_required',
+      actionTaken: true,
+      resultSummary: 'Short-lived Google Drive access token removed from memory.',
+    });
+    setDriveFlash('Google Drive session forgotten on this device.');
+  }
+
+  function requestDriveBackupExport() {
+    if (!driveConfigured) {
+      setDriveFlash('Add VITE_GOOGLE_CLIENT_ID before using Google Drive sync.');
+      return;
+    }
+    if (!driveAuthReady) {
+      setDriveFlash('Google authorization is still loading.');
+      return;
+    }
+    setPendingDriveExport({
+      title: 'Export backup to Google Drive',
+      description:
+        `Writes a JSON backup to ${DRIVE_BACKUP_PATH}, creating missing folders if needed. ` +
+        EXPORT_WARNING,
+      risk: 'external_write',
+    });
+  }
+
+  async function getFreshDriveSession(): Promise<DriveSession> {
+    if (isDriveSessionFresh(driveSession)) return driveSession;
+    const session = await requestDriveAccessToken();
+    setDriveSession(session);
+    return session;
+  }
+
+  async function runDriveBackupExport(approved: boolean) {
+    setPendingDriveExport(null);
+    if (!approved) {
+      audit({
+        command: 'Export backup to Google Drive',
+        actionType: 'external_write',
+        approvalStatus: 'denied',
+        actionTaken: false,
+        resultSummary: 'Denied by user - nothing was written to Google Drive.',
+      });
+      setDriveFlash('Denied - nothing was written to Google Drive.');
+      return;
+    }
+
+    setDriveBusy(true);
+    setDriveFlash('');
+    try {
+      const session = await getFreshDriveSession();
+      const result = await exportBackupToDrive(state, session);
+      audit({
+        command: 'Export backup to Google Drive',
+        actionType: 'external_write',
+        approvalStatus: 'approved',
+        actionTaken: true,
+        resultSummary: `Backup exported to Google Drive: ${result.path}/${result.file.name}`,
+      });
+      setDriveFlash(`Backup exported to Google Drive: ${result.file.name}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unknown error';
+      audit({
+        command: 'Export backup to Google Drive',
+        actionType: 'external_write',
+        approvalStatus: 'approved',
+        actionTaken: false,
+        resultSummary: `Google Drive export failed: ${message}`,
+      });
+      setDriveFlash(`Google Drive export failed: ${message}`);
+    } finally {
+      setDriveBusy(false);
+    }
+  }
+
   function openReset() {
     setResetText('');
     setAlsoDeleteHealth(false);
@@ -131,6 +289,18 @@ export default function Settings() {
 
   /** Demonstrates the full approval loop against a stub — honestly. */
   function callIntegrationMethod(adapter: IntegrationAdapter, method: IntegrationMethod) {
+    if (adapter.id === 'google_drive' && method.implemented) {
+      const message = 'Use Google Drive sync above for the live Drive methods.';
+      audit({
+        command: `${adapter.name}.${method.name}()`,
+        actionType: method.risk,
+        approvalStatus: 'not_required',
+        actionTaken: false,
+        resultSummary: message,
+      });
+      setFlash(message);
+      return;
+    }
     if (requiresApproval(method.risk)) {
       setPending({
         adapter,
@@ -191,17 +361,49 @@ export default function Settings() {
         {flash && <p className="notice flash">{flash}</p>}
       </div>
 
-      <div className="card">
-        <h2>Integrations <span className="badge warn">All stubbed in v1</span></h2>
+      <div className="card" id="drive-sync">
+        <h2>
+          Google Drive sync
+          <span className={`badge ${driveConfigured ? (driveConnected ? 'ok' : (driveAuthReady ? 'info' : 'warn')) : 'warn'}`}>
+            {driveConfigured ? (driveConnected ? 'connected' : (driveAuthReady ? 'ready' : 'loading')) : 'client ID needed'}
+          </span>
+        </h2>
         <p className="muted small">
-          Nothing here talks to the outside world yet. Methods marked with an approval badge
-          demonstrate the real gate flow — approving a stub still performs no external action.
+          Manual backup export is live. Two-way vault sync and conflict review are still pending.
+        </p>
+        <p className="muted small">Target: <code>{DRIVE_BACKUP_PATH}</code></p>
+        <div className="btn-row">
+          <button onClick={() => { void connectDrive(); }} disabled={!driveConfigured || !driveAuthReady || driveBusy}>
+            {driveConnected ? 'Reconnect Google Drive' : 'Connect Google Drive'}
+          </button>
+          <button className="primary" onClick={requestDriveBackupExport} disabled={!driveConfigured || !driveAuthReady || driveBusy}>
+            Export backup to Drive
+          </button>
+          {driveSession && <button className="ghost" onClick={forgetDriveSession} disabled={driveBusy}>Forget session</button>}
+          <a className="btn ghost" href="https://myaccount.google.com/permissions" target="_blank" rel="noreferrer">
+            Google permissions
+          </a>
+        </div>
+        {!driveConfigured && (
+          <p className="notice">
+            Set <code>VITE_GOOGLE_CLIENT_ID</code> in your local environment to enable Drive sync.
+          </p>
+        )}
+        {driveFlash && <p className="notice">{driveFlash}</p>}
+      </div>
+
+      <div className="card">
+        <h2>Integrations <span className="badge info">Drive backup live</span></h2>
+        <p className="muted small">
+          Google Drive backup export is available above. Other integration methods remain honest stubs.
         </p>
         {INTEGRATIONS.map((adapter) => (
           <details className="item" key={adapter.id}>
             <summary>
               <span className="small"><strong>{adapter.name}</strong></span>
-              <span className="badge neutral">disabled</span>
+              <span className={`badge ${adapter.enabled ? 'ok' : 'neutral'}`}>
+                {adapter.enabled ? 'enabled' : 'disabled'}
+              </span>
             </summary>
             <h3>Capabilities</h3>
             <ul className="plain small">{adapter.capabilities.map((c) => <li key={c}>{c}</li>)}</ul>
@@ -235,8 +437,8 @@ export default function Settings() {
       <div className="card">
         <h2>About</h2>
         <p className="muted small">
-          DavidOS v0.1 — personal agentic command center. Local-first PWA. Google Drive sync
-          planned for v0.3 (see docs/google-drive-sync-plan.md).
+          DavidOS v0.3 foundation - personal agentic command center. Local-first PWA.
+          Google Drive backup export is live; full vault sync remains on the roadmap.
         </p>
       </div>
 
@@ -301,8 +503,12 @@ export default function Settings() {
       )}
 
       <ApprovalGate
-        request={pending?.request ?? null}
+        request={pendingDriveExport ?? pending?.request ?? null}
         onDecision={(approved) => {
+          if (pendingDriveExport) {
+            void runDriveBackupExport(approved);
+            return;
+          }
           if (pending) {
             const { adapter, method } = pending;
             const result = approved ? stubResult(adapter, method.name) : null;

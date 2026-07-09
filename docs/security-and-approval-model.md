@@ -60,7 +60,8 @@ Local-only, capped at 300 entries, user-clearable.
   by definition). Future options: paste-at-runtime keys or a tiny user-owned proxy.
 
 ## OAuth (future)
-- Authorization Code + PKCE only (public client, no client secret in the app).
+- Static PWA/browser flows use Google Identity Services with short-lived access
+  tokens only; no client secret, refresh token, or long-lived token in the app.
 - Narrowest scopes: `drive.file` (only files the app created), `gmail.readonly` +
   `gmail.compose` (drafts, not sends) first, `calendar.events` read-first.
 - Tokens stored locally, revocable from the Google account page; document this in
