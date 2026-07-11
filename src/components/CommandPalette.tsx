@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { COMMANDS, matchCommand } from '../lib/commands';
+import { COMMANDS, matchCommand, resolveDomainWorkflowRoute } from '../lib/commands';
 import { routeIntent } from '../lib/router/intentRouter';
 import { classifyCommand } from '../lib/safety/riskClassifier';
 import { requiresApproval, requiresLocalNotice, RISK_LABELS } from '../lib/safety/approvalRules';
@@ -39,6 +39,21 @@ export default function CommandPalette() {
       navigate(`/workflows?${params}`);
     } else if (target === 'route') {
       routeFreeText(args);
+    } else if (target === 'domain-route') {
+      const route = resolveDomainWorkflowRoute(args);
+      if (!route) {
+        routeFreeText(args);
+        return;
+      }
+      audit({
+        command: `/route ${args}`.trim(),
+        workflowId: route.workflowId,
+        actionType: 'read_only',
+        approvalStatus: 'not_required',
+        actionTaken: true,
+        resultSummary: `Domain route ${route.domain} -> ${route.workflowId}.`,
+      });
+      navigate(`/workflows?wf=${route.workflowId}`);
     }
   }
 
