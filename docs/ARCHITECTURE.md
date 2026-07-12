@@ -42,6 +42,33 @@ Slash commands (`src/lib/commands.ts`) are matched before routing: `/brief`,
   in a workflow's template. This is the whole "generation" engine in v1 — honest,
   local, no fake AI.
 
+## Continuity engine (v0.2 — the core of the Workflow Runner)
+- `lib/workflows/continuity.ts` — prior-handoff retrieval (3 default /
+  7 fitness, overfetch ×2, status filter, correction dedupe) and prompt
+  assembly: New Entry → Personal Targets → Macro Target Snapshot →
+  Prior Context → Analysis Instructions; SHA-256 prompt fingerprints.
+- `lib/workflows/fitnessExtraction.ts` — regex metric extraction with
+  high/medium/low confidence; weak extraction triggers a raw-excerpt
+  fallback so no data silently disappears.
+- `lib/workflows/dateParsing.ts` — conservative date parsing with explicit
+  confidence levels.
+- `lib/workflows/workflowMeta.ts` — category / historyProfile / outputMode
+  resolution (explicit spec metadata wins; weighted keyword fallback).
+- `lib/utils/hash.ts` — sync pure-JS SHA-256. Sync usage is deliberate
+  (fingerprints are computed in render paths); do not swap for
+  crypto.subtle.
+
+## Health & Fitness Profile
+- `lib/health/profilePrompt.ts` — profile prompt block + hash metadata;
+  bracket-placeholder values are filtered out of prompts.
+- `lib/health/profileValidation.ts` — soft validation and changed-field
+  diffing (audit logs field names + hash, never values).
+- `lib/health/macroAnalysis.ts` — deterministic macro target snapshot:
+  parses current totals from a fitness entry, compares against profile
+  nutrition targets, emits correction cues.
+- `data/healthProfileSeed.ts` — generic bracket-placeholder starter
+  profile (public repo — real values only in the personal backup).
+
 ## Safety system
 `src/lib/safety/`:
 - `riskClassifier.ts` — classifies free text into six levels (read_only → high_risk),

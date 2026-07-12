@@ -8,7 +8,11 @@ assets — with explicit safety gates before anything would ever leave the devic
 **Stack:** Vite + React + TypeScript. No backend, no accounts, no API keys.
 (Next.js was considered and rejected: nothing here needs SSR or server routes, and
 a static Vite bundle is more portable — PWA today, Capacitor wrapper later. See
-`docs/assumptions.md`.)
+`docs/DECISIONS.md`.)
+
+> **AI coding agents:** start with [AGENTS.md](AGENTS.md) — rules,
+> architecture map, commands, and definition of done. The docs index and
+> backlog live in `docs/`.
 
 ## Run it
 
@@ -109,7 +113,7 @@ defaults.
 
 ## Add a new agent / workflow
 
-See the checklists at the bottom of `docs/architecture.md`. Short version: drop a
+See the checklists at the bottom of `docs/ARCHITECTURE.md`. Short version: drop a
 JSON spec into `seed/agents/` or `seed/workflows/`, register it in the matching
 registry file, add router keywords, run `npm test` (registry tests catch wiring
 mistakes automatically).

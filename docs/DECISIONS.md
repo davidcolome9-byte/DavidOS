@@ -1,6 +1,10 @@
-# Assumptions
+# Decisions & Assumptions
 
-Decisions made during the initial build without blocking questions, per the build brief.
+Append-only log of decisions, assumptions, and deviations. Add a dated
+section when you make a judgment call; never rewrite existing entries.
+(Renamed from `assumptions.md` in the 2026-07-12 agent-readiness sprint.)
+
+Initial-build decisions, made without blocking questions per the build brief:
 
 ## Location & environment
 1. **Repo lives at `C:\dev\davidos`, not `G:\My Drive`.** Google Drive's virtual
