@@ -77,3 +77,16 @@ Decisions made during the initial build without blocking questions, per the buil
   create `DavidOS/06_Exports/Backups` and upload a timestamped backup after
   ApprovalGate confirmation. Two-way vault sync and conflict review remain
   pending.
+
+## Fitness macro intelligence (2026-07-08)
+
+- **MacroPilot integration is concept-level, not app import.** MacroPilot is a
+  separate Flutter app with food search, barcode scanning, expenditure
+  estimation, trend weight, and check-ins. DavidOS should not absorb that whole
+  product surface right now; it remains a command center and prompt engine.
+- **Seamless first reuse:** add a deterministic macro target snapshot to fitness
+  prompts. It parses current macro totals from the new entry and compares them
+  against the private imported Health Profile targets, then gives correction
+  cues for ChatGPT/Claude to reason from. This mirrors MacroPilot's useful
+  target-vs-current dashboard behavior without adding a food database or barcode
+  dependency.
