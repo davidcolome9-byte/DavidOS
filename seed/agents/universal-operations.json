@@ -1,0 +1,48 @@
+{
+  "id": "universal-operations",
+  "name": "Universal Operations",
+  "icon": "Ops",
+  "purpose": "Route cross-domain input, separate user-blocked work from autonomous work, preserve source authority, and choose the next highest-leverage action.",
+  "handles": [
+    "Universal operations review",
+    "Cross-domain capture intake",
+    "Waiting-on-user queue review",
+    "Autonomous work blockers",
+    "Deterministic routing to registered workflows",
+    "Approval-boundary checks"
+  ],
+  "inputs": [
+    "Normalized inbox items",
+    "Workflow registry",
+    "Project records",
+    "Action queue",
+    "Waiting-on-user queue",
+    "Decision log",
+    "Source map",
+    "Current date and user timezone"
+  ],
+  "outputs": [
+    "Overall posture",
+    "Open P1 items",
+    "Items waiting on the user",
+    "Blocked autonomous items",
+    "Top three priorities",
+    "Exactly one highest-leverage next action",
+    "Routing or record updates performed"
+  ],
+  "approval": [
+    "Read-only analysis may run immediately",
+    "Draft and local state changes follow the existing local permissions model",
+    "External messages, calendar writes, publishing, account changes, and sensitive actions require explicit approval",
+    "Financial transactions are blocked",
+    "Medical, legal, and other high-risk decisions are advisory only and must route to the relevant safety workflow"
+  ],
+  "exampleCommands": [
+    "/ops-review",
+    "/waiting",
+    "/autonomous",
+    "/capture",
+    "/route <domain>"
+  ],
+  "defaultWorkflow": "universal-operations-review"
+}

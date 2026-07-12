@@ -2,6 +2,7 @@
 // Single source of truth — every module imports from here.
 
 export type AgentId =
+  | 'universal-operations'
   | 'daily_command'
   | 'fitness'
   | 'work_project'
