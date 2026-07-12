@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { COMMANDS, matchCommand, resolveDomainWorkflowRoute } from '../lib/commands';
+import { COMMANDS, matchCommand, resolveDomainRouteCommand, workflowTargetToParams } from '../lib/commands';
 import { routeIntent } from '../lib/router/intentRouter';
 import { classifyCommand } from '../lib/safety/riskClassifier';
 import { requiresApproval, requiresLocalNotice, RISK_LABELS } from '../lib/safety/approvalRules';
@@ -15,7 +15,7 @@ import RiskBadge from './RiskBadge';
  * - Text starting with "/" runs a slash command.
  * - Free text is routed to an agent AND risk-classified.
  * - Risky commands (external write and above) surface an honest no-op: v1 has
- *   no connected executable route, so nothing is sent — and we say so plainly.
+ *   no connected executable route, so nothing is sent - and we say so plainly.
  */
 export default function CommandPalette() {
   const [input, setInput] = useState('');
@@ -34,46 +34,49 @@ export default function CommandPalette() {
     if (target.startsWith('nav:')) {
       navigate(target.slice(4));
     } else if (target.startsWith('wf:')) {
-      const params = new URLSearchParams({ wf: target.slice(3) });
-      if (args) params.set('input', args);
-      navigate(`/workflows?${params}`);
+      const params = workflowTargetToParams(target, args);
+      if (params) navigate(`/workflows?${params}`);
     } else if (target === 'route') {
       routeFreeText(args);
     } else if (target === 'domain-route') {
-      const route = resolveDomainWorkflowRoute(args);
-      if (!route) {
-        routeFreeText(args);
+      const resolution = resolveDomainRouteCommand(args);
+      if (!resolution.route) {
+        routeFreeText(resolution.routeInput ?? args, {
+          command: resolution.auditCommand,
+          resultSummary: resolution.resultSummary,
+        });
         return;
       }
       audit({
-        command: `/route ${args}`.trim(),
-        workflowId: route.workflowId,
+        command: resolution.auditCommand,
+        workflowId: resolution.route.workflowId,
         actionType: 'read_only',
         approvalStatus: 'not_required',
-        actionTaken: true,
-        resultSummary: `Domain route ${route.domain} -> ${route.workflowId}.`,
+        actionTaken: resolution.actionTaken,
+        resultSummary: resolution.resultSummary,
       });
-      navigate(`/workflows?wf=${route.workflowId}`);
+      navigate(resolution.navigationPath ?? `/workflows?wf=${resolution.route.workflowId}`);
     }
   }
 
-  function routeFreeText(text: string) {
+  function routeFreeText(text: string, auditOptions?: { command?: string; resultSummary?: string }) {
     const r = routeIntent(text);
     const commandRisk = classifyCommand(text);
     const blocked = requiresApproval(commandRisk); // external_write and above
+    const defaultSummary = blocked
+      ? `Risky command detected (${RISK_LABELS[commandRisk]}), but no executable route is connected. Nothing was sent or changed.`
+      : `Routed -> ${r.target} (confidence ${r.confidence}). Draft-only, nothing sent.`;
     setResult(r);
     setRisk(commandRisk);
     setRoutedInput(text);
     audit({
-      command: text || '(empty)',
+      command: (auditOptions?.command ?? text) || '(empty)',
       agentId: r.target === 'unknown' ? undefined : r.target,
       workflowId: r.suggestedWorkflowId,
       actionType: commandRisk,
       approvalStatus: blocked ? 'blocked' : 'not_required',
       actionTaken: false,
-      resultSummary: blocked
-        ? `Risky command detected (${RISK_LABELS[commandRisk]}), but no executable route is connected. Nothing was sent or changed.`
-        : `Routed → ${r.target} (confidence ${r.confidence}). Draft-only, nothing sent.`,
+      resultSummary: auditOptions?.resultSummary ?? defaultSummary,
     });
   }
 
@@ -82,15 +85,17 @@ export default function CommandPalette() {
     if (!text) return;
     const cmd = matchCommand(text);
     if (cmd) {
-      audit({
-        command: text,
-        actionType: 'read_only',
-        approvalStatus: 'not_required',
-        actionTaken: true,
-        resultSummary: `Slash command ${cmd.command.slash}`,
-      });
+      if (cmd.command.target !== 'domain-route') {
+        audit({
+          command: text,
+          actionType: 'read_only',
+          approvalStatus: 'not_required',
+          actionTaken: true,
+          resultSummary: `Slash command ${cmd.command.slash}`,
+        });
+      }
       runCommandTarget(cmd.command.target, cmd.args);
-      if (cmd.command.target !== 'route') setInput('');
+      if (cmd.command.target !== 'route' && cmd.command.target !== 'domain-route') setInput('');
       return;
     }
     routeFreeText(text);
@@ -109,7 +114,7 @@ export default function CommandPalette() {
         value={input}
         onChange={(e) => { setInput(e.target.value); setResult(null); setRisk(null); }}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
-        placeholder='Type a request, or "/" for commands…'
+        placeholder='Type a request, or "/" for commands...'
         aria-label="Command input"
       />
       {suggestions.length > 0 && (
@@ -129,20 +134,20 @@ export default function CommandPalette() {
         <button className="ghost" onClick={() => { setInput(''); setResult(null); setRisk(null); }}>Clear</button>
       </div>
 
-      {/* Honest safety banner for risky commands — shown whether or not an agent matched. */}
+      {/* Honest safety banner for risky commands - shown whether or not an agent matched. */}
       {isExternalRisk && (
         <div className="notice risk-block" style={{ borderStyle: 'solid' }}>
           <p className="row">
-            <strong>⛔ This looks like an external action.</strong>
+            <strong>This looks like an external action.</strong>
             {risk && <RiskBadge risk={risk} />}
           </p>
           <p className="muted small">No matching executable route is connected in this version.</p>
-          <p className="muted small"><strong>Nothing was sent or changed.</strong> {agent && 'You can still draft it below — drafting never leaves this device.'}</p>
+          <p className="muted small"><strong>Nothing was sent or changed.</strong> {agent && 'You can still draft it below - drafting never leaves this device.'}</p>
         </div>
       )}
       {isLocalRisk && (
         <div className="notice" style={{ borderStyle: 'solid' }}>
-          <p className="row"><strong>Heads up — local change</strong>{risk && <RiskBadge risk={risk} />}</p>
+          <p className="row"><strong>Heads up - local change</strong>{risk && <RiskBadge risk={risk} />}</p>
           <p className="muted small">This would write to your local DavidOS data on this device only.</p>
         </div>
       )}

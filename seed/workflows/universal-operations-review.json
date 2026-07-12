@@ -9,6 +9,7 @@
   "inputHint": "Paste normalized inbox items, action queue notes, waiting-on-user items, blockers, source aliases, or domain routing requests. Use generic source aliases instead of private links or IDs.",
   "outputStyles": [
     "Operations brief",
+    "Capture processing view",
     "Waiting-on-user view",
     "Autonomous work view",
     "Routing report"

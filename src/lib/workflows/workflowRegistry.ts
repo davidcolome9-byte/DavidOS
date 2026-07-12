@@ -52,3 +52,9 @@ export function getWorkflow(id: string): Workflow | undefined {
 export function workflowsForAgent(agentId: AgentId): Workflow[] {
   return WORKFLOWS.filter((w) => w.agentId === agentId);
 }
+
+export function resolveWorkflowOutputStyle(workflow: Workflow, requestedStyle?: string | null): string {
+  return requestedStyle && workflow.outputStyles.includes(requestedStyle)
+    ? requestedStyle
+    : workflow.outputStyles[0];
+}

@@ -7,6 +7,16 @@ export interface DomainWorkflowRoute {
   aliases: string[];
 }
 
+export interface DomainRouteCommandResolution {
+  auditCommand: string;
+  actionTaken: boolean;
+  route: DomainWorkflowRoute | null;
+  navigationPath?: string;
+  routeInput?: string;
+  resultSummary: string;
+  usesClarificationUx: boolean;
+}
+
 export const DOMAIN_WORKFLOW_ROUTES: DomainWorkflowRoute[] = [
   { domain: 'Universal Operations', workflowId: 'universal-operations-review', aliases: ['ops', 'operations', 'core', 'davidos core'] },
   { domain: 'Daily Command', workflowId: 'daily-brief', aliases: ['daily', 'today', 'command'] },
@@ -34,6 +44,41 @@ export function resolveDomainWorkflowRoute(input: string): DomainWorkflowRoute |
   return route && getWorkflow(route.workflowId) ? route : null;
 }
 
+export function workflowTargetToParams(target: string, args = ''): URLSearchParams | null {
+  if (!target.startsWith('wf:')) return null;
+  const rawTarget = target.slice(3);
+  const queryStart = rawTarget.indexOf('?');
+  const workflowId = queryStart === -1 ? rawTarget : rawTarget.slice(0, queryStart);
+  const targetQuery = queryStart === -1 ? '' : rawTarget.slice(queryStart + 1);
+  const params = new URLSearchParams(targetQuery);
+  params.set('wf', workflowId);
+  if (args) params.set('input', args);
+  return params;
+}
+
+export function resolveDomainRouteCommand(input: string): DomainRouteCommandResolution {
+  const auditCommand = `/route ${input}`.trim();
+  const route = resolveDomainWorkflowRoute(input);
+  if (!route) {
+    return {
+      auditCommand,
+      actionTaken: false,
+      route: null,
+      routeInput: input,
+      resultSummary: `Unknown domain route "${input || '(empty)'}"; using the existing clarification flow.`,
+      usesClarificationUx: true,
+    };
+  }
+  return {
+    auditCommand,
+    actionTaken: true,
+    route,
+    navigationPath: `/workflows?wf=${encodeURIComponent(route.workflowId)}`,
+    resultSummary: `Domain route ${route.domain} -> ${route.workflowId}.`,
+    usesClarificationUx: false,
+  };
+}
+
 /**
  * Slash commands — hidden power-user shortcuts behind the button UI.
  * target 'nav:/path' navigates; 'wf:id' opens the workflow runner
@@ -42,10 +87,10 @@ export function resolveDomainWorkflowRoute(input: string): DomainWorkflowRoute |
 export const COMMANDS: Command[] = [
   { slash: '/os status', label: 'OS Status', description: 'Show the DavidOS status dashboard', target: 'nav:/' },
   { slash: '/os route', label: 'Route input', description: 'Classify text into the right agent', target: 'route' },
-  { slash: '/ops-review', label: 'Universal operations review', description: 'Run the universal operations review workflow', target: 'wf:universal-operations-review' },
-  { slash: '/capture', label: 'Capture inbox', description: 'Process generic capture inbox items through Universal Operations', target: 'wf:universal-operations-review' },
-  { slash: '/waiting', label: 'Waiting on user', description: 'Review items waiting on the user', target: 'wf:universal-operations-review' },
-  { slash: '/autonomous', label: 'Autonomous work', description: 'Review ready autonomous work and blockers', target: 'wf:universal-operations-review' },
+  { slash: '/ops-review', label: 'Universal operations review', description: 'Run the universal operations review workflow', target: 'wf:universal-operations-review?style=Operations%20brief' },
+  { slash: '/capture', label: 'Capture inbox', description: 'Process generic capture inbox items through Universal Operations', target: 'wf:universal-operations-review?style=Capture%20processing%20view' },
+  { slash: '/waiting', label: 'Waiting on user', description: 'Review items waiting on the user', target: 'wf:universal-operations-review?style=Waiting-on-user%20view' },
+  { slash: '/autonomous', label: 'Autonomous work', description: 'Review ready autonomous work and blockers', target: 'wf:universal-operations-review?style=Autonomous%20work%20view' },
   { slash: '/route', label: 'Route domain', description: 'Open the registered workflow for a known domain', target: 'domain-route' },
   { slash: '/brief', label: 'Daily brief', description: 'Generate today’s command brief', target: 'wf:daily-brief' },
   { slash: '/fitness', label: 'Fitness handoff', description: 'Operation David fitness handoff', target: 'wf:fitness-handoff' },

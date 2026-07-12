@@ -131,7 +131,7 @@ export interface UniversalOperationsReview {
 }
 
 const PRIORITY_RANK: Record<UniversalPriority, number> = { P1: 0, P2: 1, P3: 2, P4: 3 };
-const DONE_STATUSES = new Set(['done', 'complete', 'completed', 'cancelled', 'canceled', 'dropped']);
+const DONE_STATUSES = new Set(['done', 'complete', 'completed', 'cancelled', 'canceled', 'dropped', 'resolved', 'finished', 'closed']);
 const WAITING_STATUSES = new Set(['waiting', 'waiting on user', 'needs user', 'needs decision', 'needs approval']);
 const BLOCKED_STATUSES = new Set(['blocked', 'stalled']);
 
@@ -164,10 +164,25 @@ function actionSort(a: UniversalActionRecord, b: UniversalActionRecord): number 
   );
 }
 
-function mergeUniqueActions(actions: UniversalActionRecord[]): UniversalActionRecord[] {
+function mergeActionQueues(
+  actions: UniversalActionRecord[],
+  waitingOnUserQueue: UniversalActionRecord[],
+): UniversalActionRecord[] {
   const byId = new Map<string, UniversalActionRecord>();
   for (const action of actions) {
-    if (!byId.has(action.id)) byId.set(action.id, action);
+    if (!isDone(action) && !byId.has(action.id)) byId.set(action.id, action);
+  }
+  for (const waitingAction of waitingOnUserQueue) {
+    if (isDone(waitingAction)) {
+      byId.delete(waitingAction.id);
+      continue;
+    }
+    const existing = byId.get(waitingAction.id);
+    byId.set(waitingAction.id, {
+      ...(existing ?? waitingAction),
+      ...waitingAction,
+      status: 'waiting_on_user',
+    });
   }
   return [...byId.values()];
 }
@@ -204,7 +219,16 @@ export function approvalBoundaryForAction(action: UniversalActionRecord): Approv
 export function isWaitingOnUser(action: UniversalActionRecord): boolean {
   const status = normalize(action.status);
   const blocker = normalize(action.blockedBy);
-  return WAITING_STATUSES.has(status) || blocker.includes('user') || blocker.includes('approval') || blocker.includes('decision');
+  const boundary = approvalBoundaryForAction(action);
+  if (boundary.blocked) return false;
+  return (
+    action.approvalRequired === true ||
+    boundary.requiresExplicitApproval ||
+    WAITING_STATUSES.has(status) ||
+    blocker.includes('user') ||
+    blocker.includes('approval') ||
+    blocker.includes('decision')
+  );
 }
 
 export function isAutonomousBlocked(action: UniversalActionRecord): boolean {
@@ -239,12 +263,7 @@ export function routeDomainToWorkflow(
 }
 
 export function runUniversalOperationsReview(input: UniversalOperationsInput): UniversalOperationsReview {
-  const queuedWaiting = (input.waitingOnUserQueue ?? []).map((action) => ({
-    ...action,
-    status: action.status ?? 'waiting_on_user',
-  }));
-  const activeActions = mergeUniqueActions([...(input.actions ?? []), ...queuedWaiting])
-    .filter((action) => !isDone(action));
+  const activeActions = mergeActionQueues(input.actions ?? [], input.waitingOnUserQueue ?? []);
 
   const waitingOnUser = activeActions.filter(isWaitingOnUser).sort(actionSort);
   const blockedAutonomous = activeActions.filter(isAutonomousBlocked).sort(actionSort);
