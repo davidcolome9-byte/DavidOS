@@ -1,9 +1,10 @@
 # DavidOS Architecture
 
 ## Overview
-Local-first single-page app. No backend. All state lives on-device; all "AI" in v1
-is local template generation. External systems exist only as typed, disabled stubs
-behind approval gates.
+Local-first single-page app. No backend. All state lives on-device; all "AI"
+is local template generation. External systems exist as typed, disabled stubs
+behind approval gates — with one live, gated exception: manual Google Drive
+backup export (v0.3 foundation; see docs/INTEGRATIONS.md).
 
 ```
 UI (React components)
@@ -15,12 +16,14 @@ UI (React components)
 ## Data model
 Every entity is defined in `src/lib/types.ts` (single source of truth):
 Agent, Workflow, Command, Project, Prompt, ContextItem, Priority, OpenLoop,
-Reminder, Handoff, ApprovalStatus/ApprovalRequest, IntegrationAdapter,
-AuditLogEntry, RiskLevel, AppState.
+Reminder, Handoff, WorkflowArtifact, HealthFitnessProfile, ApprovalStatus,
+IntegrationAdapter, AuditLogEntry, RiskLevel, AppState. (`ApprovalRequest`
+is UI-local in `src/components/ApprovalGate.tsx`.)
 
 Two kinds of data:
-- **Static specs** (agents, workflows, commands): JSON/markdown in `/seed`,
-  imported at build time via registries. Portable — any AI tool can read them.
+- **Static specs** (agents, workflows): JSON/markdown in `/seed`, imported at
+  build time via registries — portable, any AI tool can read them. Slash
+  commands are TS data in `src/lib/commands.ts`.
 - **Live state** (`AppState`): projects, prompts, context, loops, reminders,
   handoffs, audit log, settings. Persisted to localStorage on every change.
 

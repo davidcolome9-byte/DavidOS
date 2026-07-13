@@ -58,6 +58,46 @@ Test data must be invented, clearly fake, and personal-data-free
 (see `AGENTS.md` §2.1). Never derive fixtures from `personal/` or from
 real exports.
 
+## System-wide data rules (program-level contract)
+
+These govern how DavidOS-the-system treats data across the app, Drive,
+and AI-assistant sessions. They come from David's planning layer and are
+binding on agents working in this repo:
+
+1. DavidOS is a **multi-workflow command center**; Universal Operations
+   coordinates specialist workflows but never replaces them. Universal
+   Operations stores coordination metadata and REFERENCES to specialist
+   records, never copies of them.
+2. **Google Drive is the durable private personal record system.**
+   GitHub holds public-safe code, specs, and synthetic fixtures only.
+3. **Temporary provider memory (ChatGPT/Claude session recall) and
+   generated handoffs are not durable authority.** They lose to Drive
+   records and to the personal backup.
+4. **Human corrections outrank imported values** for the corrected fact
+   (the Handoff `status`/`correctsHandoffId` mechanism implements this
+   for continuity history).
+5. **Missing, stale, unsupported, provisional, and zero are different
+   states.** Never render or export one as another; prompts must say
+   "not parsed"/"no data" rather than 0.
+6. **One writable worktree owner at a time.** Coding agents must not
+   run concurrent writing sessions against this repo.
+7. Credentials, tokens, private Drive file IDs, personal records, and
+   restricted employer material must never enter this repository.
+8. **Identity Vault and Credential Vault are future architectural
+   boundaries — proposed, not implemented.** Do not claim or build them
+   without explicit instruction (see docs/OPEN_LOOPS.md OL-025).
+9. **Retention periods from planning docs are defaults for future
+   design, never triggers for destructive deletion.**
+10. **Health Connect architecture is provisional** — research only; not
+    implemented in this repo.
+11. **America/Chicago is the provisional home timezone** for
+    home-routine scheduling in planning docs. Conflicting schedule data
+    must be FLAGGED, never silently converted. (The app itself currently
+    uses device-local time everywhere.)
+12. External writes, destructive actions, public releases, and sensitive
+    disclosures require approval — in-app via ApprovalGate, in-repo via
+    AGENTS.md §3.
+
 ## Documentation
 
 Docs describe; code defines. On conflict: trust code + passing tests,

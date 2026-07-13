@@ -41,25 +41,40 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-12)
+## Verification status (2026-07-12, post-stabilization)
 
-- Unit tests: 12 files, 81 tests, all passing (`npm test`).
-- Typecheck + production build: passing (`npm run build`).
-- Deployed and installed as PWA on David's Android phone.
+- Unit tests: 14 files, 101 tests, all passing (`npm test`).
+- Browser smoke tests: 8 passing (`npm run test:smoke`, Playwright
+  chromium, mobile viewport, production build).
+- Lint (`npm run lint`), seed validation (`npm run validate:seed`),
+  typecheck + production build (`npm run build`): all passing.
+- CI (`.github/workflows/ci.yml`) runs the identical gate on every
+  push; Pages deploys run the unit suite first.
+- Deployed and installed as PWA on David's Android phone (pre-sprint
+  build; next push to main redeploys).
+
+## Stabilization sprint highlights (2026-07-12)
+
+- Agent operating layer added (AGENTS.md + docs/), deterministic
+  commands (setup/doctor/lint/verify), CI, smoke tests.
+- Data-safety repairs: import can no longer fabricate a placeholder
+  Health Profile over the real one; malformed stored state is repaired
+  instead of white-screening; unreadable blobs are quarantined; persist
+  failures show a visible warning.
 
 ## Known gaps / in progress
 
 The authoritative list with priorities lives in
 [docs/OPEN_LOOPS.md](docs/OPEN_LOOPS.md). Headlines:
 
-- Handoff correction/edit UI (model fields exist; retrieval respects
-  them; no UI yet).
-- v0.3 Drive sync beyond backup export (plan:
+- Service-worker offline gaps after deploys (OL-001, highest priority).
+- Handoff correction/edit UI (OL-007; model fields exist, retrieval
+  respects them, no UI yet).
+- v0.3 Drive sync beyond backup export (OL-024; plan:
   docs/google-drive-sync-plan.md).
 - Dating Wingman, Cooking & Meal Prep, and Daily Log surfaces exist as
   domains in David's life system but have no dedicated agents yet —
   they currently route to the closest existing agent.
-- No linter/CI until the agent-readiness sprint lands them.
 
 ## Environment facts (David's machine)
 

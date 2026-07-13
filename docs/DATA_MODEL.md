@@ -101,3 +101,23 @@ values.
 
 `uid()` (timestamp base36 + random) and `nowIso()` from types.ts.
 Good enough for a single-user local app; don't import a UUID library.
+
+## Backup & restore assessment (evidence-based, 2026-07-12)
+
+Classification: **Verified** (working, with evidence) / **Partial** /
+**Missing** / **Proposed** (future work, not implemented).
+
+| Aspect | Status | Evidence |
+|---|---|---|
+| What is exported | **Verified** — the entire AppState (all vaults, handoffs, artifacts, audit log, settings, Health Profile) | `serializeState` wraps the full state; round-trip unit test |
+| What is omitted | **Verified** — static seed specs (rebuilt from the bundle by design) and the corrupt-quarantine blob | `seed/` loads via registries, not state |
+| Format & versioning | **Partial** — versioned envelope `{app, exportedAt, schemaVersion, state}`; no forward-version guard yet | OL-006 |
+| Import validation | **Partial** — envelope + required arrays + settings verified; item-level types repaired by `normalizeState`, not validated | OL-005 |
+| Invalid-import handling | **Verified** — readable errors, nothing applied on failure | `exportImport.test.ts` |
+| Atomicity | **Partial** — single setState + single persist per tab; multi-tab last-write-wins remains | OL-004 |
+| Existing-state preservation | **Verified** — confirm dialog before replace; Health Profile conflict dialog; pre-profile backups can no longer clobber the real profile | sprint fix `fb76122`, regression tests |
+| Duplicate prevention | **Verified by design** — import replaces rather than merges, so duplicates are impossible (merge is future work) |
+| Audit-state preservation | **Verified** (minor: an imported log >300 entries trims on next append, not at import) | `auditLog.ts:4` |
+| Correction preservation | **Verified** — handoff `status`/`correctsHandoffId` round-trip inside `handoffs` |
+| Sensitive-data exposure | **Partial** — export contains everything incl. Health Profile, plaintext; UI warns at export. Encryption at rest is **Proposed** (OL-025, requires David) |
+| Device replacement | **Verified** — export on old device → import on new device restores all state (unit round-trip + persistence smoke test); Drive copy is a manual gated export |
