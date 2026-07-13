@@ -39,10 +39,19 @@ export interface LoadResult {
 
 const CLEAN: RecoveryInfo = { kind: 'none', rawPreserved: false, canPersist: true, message: '' };
 
-/** Arrays must be arrays of objects; anything else is dropped, not crashed on. */
+/**
+ * Strict plain-object predicate: rejects null, arrays, and primitives.
+ * `typeof x === 'object'` alone accepts arrays, which once let an
+ * array-valued `settings` be silently replaced without quarantine.
+ */
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/** Collections must be arrays of plain objects; anything else is dropped, not crashed on. */
 function objectArray<T>(value: unknown): T[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((x) => x !== null && typeof x === 'object') as T[];
+  return value.filter((x) => isPlainObject(x)) as T[];
 }
 
 function stringArray(value: unknown): string[] {
@@ -79,15 +88,17 @@ export function normalizeState(state: AppState): AppState {
     artifacts: objectArray(state.artifacts),
     // Seed-if-missing: `undefined` means the state predates Health Profiles →
     // seed one. `null` means the user explicitly deleted it → respect that.
-    // Anything that isn't an object is unusable → reseed the generic starter.
+    // Anything that isn't a plain object is unusable → reseed the generic starter.
     healthProfile:
       state.healthProfile === undefined
         ? seedHealthProfile()
-        : state.healthProfile === null || typeof state.healthProfile === 'object'
+        : state.healthProfile === null || isPlainObject(state.healthProfile)
           ? state.healthProfile
           : seedHealthProfile(),
     auditLog: objectArray(state.auditLog),
-    settings: { theme: state.settings?.theme === 'light' ? 'light' : 'dark' },
+    settings: {
+      theme: isPlainObject(state.settings) && state.settings.theme === 'light' ? 'light' : 'dark',
+    },
   };
 }
 
@@ -107,13 +118,17 @@ function checkCollection(report: StructuralReport, name: string, value: unknown)
     report.invalid.push(name);
     return null;
   }
-  if (value.some((x) => x === null || typeof x !== 'object')) report.invalid.push(name);
+  // Items must be PLAIN objects — normalizeState drops arrays/primitives/null.
+  if (value.some((x) => !isPlainObject(x))) report.invalid.push(name);
   return value;
 }
 
 function checkItemList(report: StructuralReport, name: string, value: unknown, kind: 'string' | 'object') {
-  if (value === undefined) return; // additive backfill, nothing lost
-  if (!Array.isArray(value) || value.some((x) => (kind === 'string' ? typeof x !== 'string' : x === null || typeof x !== 'object'))) {
+  if (value === undefined) {
+    report.missing.push(name); // additive backfill, nothing lost
+    return;
+  }
+  if (!Array.isArray(value) || value.some((x) => (kind === 'string' ? typeof x !== 'string' : !isPlainObject(x)))) {
     report.invalid.push(name);
   }
 }
@@ -142,10 +157,10 @@ export function inspectStructure(state: AppState): StructuralReport {
   }
 
   if (state.healthProfile === undefined) report.missing.push('healthProfile');
-  else if (state.healthProfile !== null && typeof state.healthProfile !== 'object') report.invalid.push('healthProfile');
+  else if (state.healthProfile !== null && !isPlainObject(state.healthProfile)) report.invalid.push('healthProfile');
 
   if (state.settings === undefined) report.missing.push('settings');
-  else if (state.settings === null || typeof state.settings !== 'object') report.invalid.push('settings');
+  else if (!isPlainObject(state.settings)) report.invalid.push('settings'); // null, array, primitive
   else if (state.settings.theme === undefined) report.missing.push('settings.theme');
   else if (state.settings.theme !== 'dark' && state.settings.theme !== 'light') report.invalid.push('settings.theme');
 
@@ -187,12 +202,15 @@ export function loadPersistedState(): LoadResult {
       },
     };
   }
-  if (!raw) return { state: null, recovery: CLEAN };
+  // Only null means "key absent" (clean first run). An EXISTING empty
+  // string is an unreadable blob and must go through recovery below —
+  // `!raw` would have silently treated it as a fresh install.
+  if (raw === null) return { state: null, recovery: CLEAN };
 
   let parsed: AppState;
   try {
     const candidate = JSON.parse(raw) as AppState;
-    if (candidate === null || typeof candidate !== 'object' || typeof candidate.schemaVersion !== 'number') {
+    if (candidate === null || typeof candidate !== 'object' || Array.isArray(candidate) || typeof candidate.schemaVersion !== 'number') {
       throw new Error('not a DavidOS state object (missing schemaVersion)');
     }
     parsed = candidate;

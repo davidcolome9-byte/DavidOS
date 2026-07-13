@@ -4,7 +4,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { StoreProvider } from '../store';
+import { StoreProvider, useStore } from '../store';
 import Layout from '../../components/Layout';
 import { RECOVERY_KEY_PREFIX, STORAGE_KEY } from '../../lib/storage/localStore';
 
@@ -46,6 +46,24 @@ afterEach(async () => {
   container.remove();
 });
 
+/** Test-only page exposing a button that performs a real user state update. */
+function MutatePage() {
+  const { update } = useStore();
+  return (
+    <button
+      data-testid="mutate"
+      onClick={() =>
+        update((s) => ({
+          ...s,
+          openLoops: [{ id: 'x1', label: 'added after boot', status: 'open', createdAt: 'now' }, ...s.openLoops],
+        }))
+      }
+    >
+      mutate
+    </button>
+  );
+}
+
 async function mountApp() {
   root = createRoot(container);
   await act(async () => {
@@ -54,7 +72,7 @@ async function mountApp() {
         <MemoryRouter>
           <Routes>
             <Route element={<Layout />}>
-              <Route path="/" element={<p>home</p>} />
+              <Route path="/" element={<MutatePage />} />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -93,6 +111,46 @@ describe('StoreProvider recovery behavior', () => {
     expect(banner?.textContent).toContain('Saving is paused');
     // The damaged blob is still the ONLY stored copy — untouched.
     expect(storage.store.get(STORAGE_KEY)).toBe(DAMAGED);
+    expect([...storage.store.keys()]).toEqual([STORAGE_KEY]);
+  });
+
+  it('a LATER user update still cannot overwrite the primary blob after suppression', async () => {
+    const storage = fakeLocalStorage({ [STORAGE_KEY]: DAMAGED }, true);
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+
+    await mountApp();
+    await act(async () => {
+      (container.querySelector('[data-testid="mutate"]') as HTMLButtonElement).click();
+    });
+
+    // The in-memory state changed, but persistence stays suppressed for the
+    // whole session — the damaged original remains the only stored copy.
+    expect(storage.store.get(STORAGE_KEY)).toBe(DAMAGED);
+    expect([...storage.store.keys()]).toEqual([STORAGE_KEY]);
+  });
+
+  it('an array-valued settings is repaired only after byte-exact preservation', async () => {
+    const arraySettings = JSON.stringify({ schemaVersion: 1, settings: ['dark'] });
+    const storage = fakeLocalStorage({ [STORAGE_KEY]: arraySettings }, false);
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+
+    await mountApp();
+
+    expect(container.querySelector('[data-testid="recovery-banner"]')?.textContent).toContain('preserved');
+    const recoveryKey = [...storage.store.keys()].find((k) => k.startsWith(RECOVERY_KEY_PREFIX));
+    expect(storage.store.get(recoveryKey!)).toBe(arraySettings);
+    expect(JSON.parse(storage.store.get(STORAGE_KEY)!).settings).toEqual({ theme: 'dark' });
+  });
+
+  it('an existing empty-string blob is preserved, warned about, and not treated as a fresh install', async () => {
+    const storage = fakeLocalStorage({ [STORAGE_KEY]: '' }, true); // preservation fails
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+
+    await mountApp();
+
+    const banner = container.querySelector('[data-testid="recovery-banner"]');
+    expect(banner?.textContent).toContain('Saving is paused');
+    expect(storage.store.get(STORAGE_KEY)).toBe(''); // untouched
     expect([...storage.store.keys()]).toEqual([STORAGE_KEY]);
   });
 

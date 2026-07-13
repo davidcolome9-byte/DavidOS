@@ -73,6 +73,43 @@ describe('inspectStructure', () => {
     expect(report.invalid).toEqual([]);
     expect(report.missing).toEqual([]);
   });
+
+  // DAV-001-A: arrays satisfy `typeof === 'object'` — they must classify as
+  // lossy (invalid), never as valid objects or as merely-missing fields.
+  it('classifies a non-empty ARRAY-valued settings as lossy, not missing', () => {
+    const report = inspectStructure({
+      ...buildDefaultState(),
+      settings: ['dark'],
+    } as unknown as AppState);
+    expect(report.invalid).toContain('settings');
+    expect(report.missing).not.toContain('settings');
+    expect(report.missing).not.toContain('settings.theme');
+  });
+
+  it('classifies an array-valued healthProfile as lossy', () => {
+    const report = inspectStructure({
+      ...buildDefaultState(),
+      healthProfile: [],
+    } as unknown as AppState);
+    expect(report.invalid).toContain('healthProfile');
+  });
+
+  it('classifies array items inside collections as lossy', () => {
+    const report = inspectStructure({
+      ...buildDefaultState(),
+      priorities: [['not', 'an', 'object']],
+    } as unknown as AppState);
+    expect(report.invalid).toContain('priorities');
+  });
+
+  it('a valid plain-object settings stays clean; a missing settings is additive', () => {
+    expect(inspectStructure(buildDefaultState()).invalid).toEqual([]);
+    const noSettings = { ...buildDefaultState() } as Partial<AppState>;
+    delete noSettings.settings;
+    const report = inspectStructure(noSettings as AppState);
+    expect(report.missing).toContain('settings');
+    expect(report.invalid).toEqual([]);
+  });
 });
 
 describe('normalizeState', () => {
@@ -203,6 +240,51 @@ describe('loadPersistedState — recovery contract', () => {
     expect(first.recovery.recoveryKey).not.toBe(second.recovery.recoveryKey);
     expect(storage.getItem(first.recovery.recoveryKey!)).toBe('{"schemaVersion": ');
     expect(storage.getItem(second.recovery.recoveryKey!)).toBe('{"schemaVersion":  ');
+  });
+
+  // DAV-001-A: array-valued settings is a lossy repair → quarantine first.
+  it('quarantines before repairing an array-valued settings', () => {
+    const raw = JSON.stringify({ ...buildDefaultState(), settings: ['dark'] });
+    storage.setItem(STORAGE_KEY, raw);
+    const r = loadPersistedState();
+    expect(r.recovery.kind).toBe('repaired');
+    expect(r.recovery.rawPreserved).toBe(true);
+    expect(storage.getItem(r.recovery.recoveryKey!)).toBe(raw); // byte-identical
+    expect(r.state!.settings).toEqual({ theme: 'dark' });
+  });
+
+  it('suppresses persistence for an array-valued settings when quarantine fails', () => {
+    const raw = JSON.stringify({ ...buildDefaultState(), settings: ['dark'] });
+    storage = storageWhereQuarantineFails({ [STORAGE_KEY]: raw });
+    (globalThis as { localStorage?: Storage }).localStorage = storage;
+    const r = loadPersistedState();
+    expect(r.recovery.kind).toBe('repaired');
+    expect(r.recovery.canPersist).toBe(false);
+    expect(storage.getItem(STORAGE_KEY)).toBe(raw); // only copy untouched
+  });
+
+  // DAV-001-B: an EXISTING empty string is an unreadable blob, not a fresh
+  // install — it must enter the recovery path.
+  it('treats an empty-string blob as unreadable and preserves it', () => {
+    storage.setItem(STORAGE_KEY, '');
+    const r = loadPersistedState();
+    expect(r.state).toBeNull();
+    expect(r.recovery.kind).toBe('unreadable');
+    expect(r.recovery.rawPreserved).toBe(true);
+    expect(r.recovery.canPersist).toBe(true);
+    expect(storage.getItem(r.recovery.recoveryKey!)).toBe('');
+  });
+
+  it('suppresses persistence when an empty-string blob cannot be preserved', () => {
+    storage = storageWhereQuarantineFails({ [STORAGE_KEY]: '' });
+    (globalThis as { localStorage?: Storage }).localStorage = storage;
+    const r = loadPersistedState();
+    expect(r.state).toBeNull();
+    expect(r.recovery.kind).toBe('unreadable');
+    expect(r.recovery.rawPreserved).toBe(false);
+    expect(r.recovery.canPersist).toBe(false);
+    expect(r.recovery.message).toContain('Saving is paused');
+    expect(storage.getItem(STORAGE_KEY)).toBe(''); // untouched
   });
 });
 
