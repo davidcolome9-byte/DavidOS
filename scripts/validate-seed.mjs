@@ -5,10 +5,14 @@
 // (an unregistered seed file, or a registry import whose backing file is
 // gone, fails the build).
 import { readFileSync, readdirSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join, dirname, resolve } from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+// DAVIDOS_ROOT is a test-only override so CLI failure paths can be
+// exercised against an isolated fixture tree without touching real seeds.
+const root = process.env.DAVIDOS_ROOT
+  ? resolve(process.env.DAVIDOS_ROOT)
+  : join(dirname(fileURLToPath(import.meta.url)), '..');
 
 export const AGENT_IDS = [
   'universal-operations', 'daily_command', 'fitness', 'work_project',
@@ -171,7 +175,11 @@ export function validateSeeds() {
   return { errors, counts: `${agents.length} agents, ${workflows.length} workflows, ${projects.length} projects` };
 }
 
-const invokedDirectly = process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replace(/\\/g, '/')}`).href;
+// Cross-platform direct-invocation check. The previous string-built
+// file:/// comparison never matched on Linux (four leading slashes), so
+// the CLI body silently no-oped in CI.
+const invokedDirectly =
+  !!process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
 if (invokedDirectly) {
   const { errors, counts } = validateSeeds();
   if (errors.length) {

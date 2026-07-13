@@ -1,110 +1,165 @@
-// Repository privacy validation: fails when personal location or home-
-// timezone literals (or other known-personal markers) appear in tracked
-// text files. This repo is PUBLIC — see AGENTS.md §2.1.
+// Repository privacy validation for a PUBLIC repo (see AGENTS.md §2.1).
 //
-// Genuinely generic synthetic examples are permitted only through the
-// narrow ALLOWLIST below (exact file + exact literal). localhost and
-// public repository URLs are not private data and are never flagged.
+// GENERIC rules only — this file contains NO real personal values in any
+// form (plaintext, fragments, encodings, or reconstructions). It enforces
+// public-repository hygiene:
+//   1. no concrete IANA home-timezone declarations;
+//   2. no private home-configuration fields carrying concrete values
+//      (placeholders like [PRIVATE_HOME_TIMEZONE] are required instead).
+//
+// An OPTIONAL private denylist of concrete personal literals can be
+// supplied outside the repo via:
+//   - env var  DAVIDOS_PRIVATE_DENYLIST  (comma-separated literals), or
+//   - gitignored file  personal/privacy-denylist.txt  (one per line, # comments).
+// Its absence does NOT weaken the generic rules above; the public CI gate
+// never requires it.
+//
+// Scanning is content-aware over ALL git-tracked files (no extension
+// allowlist): binary files are detected by content sniff; generated and
+// declared-fixture skips are explicit and printed.
 import { execSync } from 'child_process';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, existsSync } from 'fs';
+import { join, dirname, resolve } from 'path';
+import { fileURLToPath, pathToFileURL } from 'url';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const root = process.env.DAVIDOS_ROOT
+  ? resolve(process.env.DAVIDOS_ROOT)
+  : join(dirname(fileURLToPath(import.meta.url)), '..');
 
-/**
- * Patterns that indicate PERSONAL data. Keep them personal-specific:
- * generic tech words, localhost, and public URLs must not match.
- * Each entry: { name, regex } — regex is applied per line.
- *
- * Personal term fragments are stored base64-encoded so this public file
- * never contains the literals it guards against (decode locally if you
- * need to audit them).
- */
-const b64 = (s) => Buffer.from(s, 'base64').toString('utf8');
-
-export const PRIVACY_PATTERNS = [
+export const GENERIC_RULES = [
   {
-    name: 'IANA home-timezone literal',
-    // Region/City timezone identifiers. The app uses device-local time;
-    // a concrete home timezone is personal scheduling data.
+    name: 'concrete IANA home-timezone literal',
+    // Region/City identifiers. The app uses device-local time; committing a
+    // concrete home timezone declares personal scheduling data publicly.
     regex: /\b(?:America|Europe|Asia|Africa|Australia|Antarctica|Atlantic|Indian|Pacific)\/[A-Z][A-Za-z_]+(?:\/[A-Z][A-Za-z_]+)?\b/g,
   },
   {
-    name: 'personal location',
-    regex: new RegExp(`\\b${b64('UGVuc2Fjb2xh')}\\b`, 'gi'),
-  },
-  {
-    name: 'personal surname',
-    // The public GitHub handle (scrubbed below) is allowed; the bare
-    // surname is not.
-    regex: new RegExp(`\\b${b64('Q29sb20=')}[eé]\\b`, 'gi'),
+    name: 'private home-configuration field with a concrete value',
+    // home/my/private + city/town/location/address/timezone assigned a
+    // concrete value. Placeholder values (starting with "[") are the
+    // required public form and do not match.
+    regex: /\b(?:home|my|private)[_ -]?(?:city|town|location|address|timezone|tz)\s*[:=]\s*["'`]?(?!\[)[A-Za-z]/gi,
   },
 ];
 
 /**
- * Exact-match allowlist: [repo-relative path, exact literal].
- * Only genuinely synthetic examples belong here — never real values.
+ * Optional PRIVATE denylist — never tracked, never required. Missing
+ * sources simply contribute nothing.
  */
-export const ALLOWLIST = [
-  // Synthetic fixture used by the privacy-validation unit tests.
-  ['src/lib/__tests__/privacyValidation.test.ts', 'Antarctica/South_Pole'],
-];
-
-// The GitHub owner handle is public repo metadata, not private data.
-const PUBLIC_LITERALS = [new RegExp(b64('ZGF2aWRjb2xvbWU5'), 'gi')];
-
-function isAllowlisted(relPath, literal) {
-  return ALLOWLIST.some(([p, l]) => p === relPath.replace(/\\/g, '/') && l === literal);
+export function loadPrivateDenylist(env = process.env) {
+  const items = [];
+  if (env.DAVIDOS_PRIVATE_DENYLIST) {
+    items.push(...env.DAVIDOS_PRIVATE_DENYLIST.split(',').map((s) => s.trim()).filter(Boolean));
+  }
+  const file = join(root, 'personal', 'privacy-denylist.txt');
+  if (existsSync(file)) {
+    items.push(
+      ...readFileSync(file, 'utf8')
+        .split(/\r?\n/)
+        .map((s) => s.trim())
+        .filter((s) => s && !s.startsWith('#')),
+    );
+  }
+  return items;
 }
 
-/** Scan one file's text. Returns [{path, line, name, literal}]. */
-export function findPrivacyViolations(text, relPath) {
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** Scan one file's text with the generic rules + an optional denylist. */
+export function findPrivacyViolations(text, relPath, denylist = []) {
   const findings = [];
-  const lines = text.split(/\r?\n/);
-  lines.forEach((lineText, i) => {
-    const scrubbed = PUBLIC_LITERALS.reduce((t, re) => t.replace(re, ''), lineText);
-    for (const { name, regex } of PRIVACY_PATTERNS) {
+  const rules = [
+    ...GENERIC_RULES,
+    ...denylist.map((literal) => ({
+      name: 'private denylist literal',
+      regex: new RegExp(escapeRegex(literal), 'gi'),
+    })),
+  ];
+  text.split(/\r?\n/).forEach((lineText, i) => {
+    for (const { name, regex } of rules) {
       regex.lastIndex = 0;
       let m;
-      while ((m = regex.exec(scrubbed)) !== null) {
-        const literal = m[0];
-        if (isAllowlisted(relPath, literal)) continue;
-        findings.push({ path: relPath, line: i + 1, name, literal });
+      while ((m = regex.exec(lineText)) !== null) {
+        findings.push({ path: relPath, line: i + 1, name, literal: m[0] });
       }
     }
   });
   return findings;
 }
 
-const SCAN_EXTENSIONS = /\.(md|ts|tsx|js|mjs|cjs|json|yml|yaml|css|html|txt)$/i;
-// package-lock is machine-generated dependency metadata (no prose);
-// this script and its test define the patterns/fixtures themselves.
-const SKIP_FILES = new Set(['package-lock.json', 'scripts/validate-privacy.mjs']);
-
-export function scanRepository() {
-  const files = execSync('git ls-files', { cwd: root, encoding: 'utf8' })
-    .split('\n')
-    .map((f) => f.trim())
-    .filter((f) => f && SCAN_EXTENSIONS.test(f) && !SKIP_FILES.has(f));
-  const findings = [];
-  for (const f of files) {
-    const text = readFileSync(join(root, f), 'utf8');
-    findings.push(...findPrivacyViolations(text, f));
-  }
-  return { files: files.length, findings };
+/** Content sniff: a NUL byte in the first 8KB marks a file as binary. */
+export function isProbablyBinary(buffer) {
+  const n = Math.min(buffer.length, 8000);
+  for (let i = 0; i < n; i++) if (buffer[i] === 0) return true;
+  return false;
 }
 
-const invokedDirectly = process.argv[1] && import.meta.url === new URL(`file:///${process.argv[1].replace(/\\/g, '/')}`).href;
-if (invokedDirectly) {
-  const { files, findings } = scanRepository();
-  if (findings.length > 0) {
-    console.error(`Privacy validation FAILED — personal data must not enter this public repo:`);
-    for (const f of findings) {
-      console.error(`  - ${f.path}:${f.line} [${f.name}] "${f.literal}"`);
+/** Explicit, justified skips — everything else tracked gets scanned. */
+export const DECLARED_SKIPS = new Map([
+  ['package-lock.json', 'machine-generated npm metadata'],
+  ['src/lib/__tests__/privacyValidation.test.ts', 'declared privacy-rule test fixture (synthetic examples only)'],
+]);
+
+/** Binary extensions whose skip needs no per-file callout in the output. */
+const OBVIOUS_BINARY = /\.(png|jpg|jpeg|gif|ico|webp|woff2?|ttf|otf|pdf|zip)$/i;
+
+export function scanRepository(denylist = loadPrivateDenylist()) {
+  const tracked = execSync('git ls-files', { cwd: root, encoding: 'utf8' })
+    .split('\n')
+    .map((f) => f.trim())
+    .filter(Boolean);
+
+  const findings = [];
+  const errors = [];
+  const skipped = [];
+  let scanned = 0;
+
+  for (const f of tracked) {
+    const declaredReason = DECLARED_SKIPS.get(f);
+    if (declaredReason) {
+      skipped.push({ path: f, reason: declaredReason, notable: true });
+      continue;
     }
-    console.error('If a literal is a genuinely synthetic example, add it to the ALLOWLIST in scripts/validate-privacy.mjs with justification.');
+    let buffer;
+    try {
+      buffer = readFileSync(join(root, f));
+    } catch (e) {
+      errors.push(`cannot read tracked file ${f}: ${e.message}`); // fail safely
+      continue;
+    }
+    if (isProbablyBinary(buffer)) {
+      skipped.push({ path: f, reason: 'binary content', notable: !OBVIOUS_BINARY.test(f) });
+      continue;
+    }
+    scanned++;
+    findings.push(...findPrivacyViolations(buffer.toString('utf8'), f, denylist));
+  }
+
+  return { tracked: tracked.length, scanned, skipped, findings, errors };
+}
+
+const invokedDirectly =
+  !!process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+
+if (invokedDirectly) {
+  const denylist = loadPrivateDenylist();
+  const { tracked, scanned, skipped, findings, errors } = scanRepository(denylist);
+
+  for (const s of skipped.filter((s) => s.notable)) {
+    console.log(`  skipped: ${s.path} (${s.reason})`);
+  }
+  if (errors.length) {
+    console.error('Privacy validation FAILED — unreadable tracked files:');
+    for (const e of errors) console.error(`  - ${e}`);
     process.exit(1);
   }
-  console.log(`Privacy validation OK — ${files} tracked text files scanned, no personal location/timezone literals.`);
+  if (findings.length) {
+    console.error('Privacy validation FAILED — personal data must not enter this public repo:');
+    for (const f of findings) console.error(`  - ${f.path}:${f.line} [${f.name}] "${f.literal}"`);
+    process.exit(1);
+  }
+  console.log(
+    `Privacy validation OK — ${tracked} tracked files considered, ${scanned} scanned as text, ` +
+      `${skipped.length} skipped (binary/generated/fixture); generic rules${denylist.length ? ` + ${denylist.length} private denylist entries` : ''}, no findings.`,
+  );
 }
