@@ -24,12 +24,14 @@ function blankProfile(): HealthFitnessProfile {
   };
 }
 
-const numToStr = (n?: number) => (n === undefined ? '' : String(n));
+const numToStr = (n?: number | null) =>
+  n === undefined || n === null || Number.isNaN(n) ? '' : String(n);
 const strToNum = (s: string): number | undefined => {
-  const t = s.trim();
-  if (!t) return undefined;
-  const n = Number(t.replace(/,/g, ''));
-  return Number.isNaN(n) ? NaN : n;
+  // Keep the leading numeric part of whatever was typed. Returning NaN here
+  // used to lock the controlled input on the literal text "NaN" (and "null"
+  // after a JSON clone) with no way to type past it.
+  const match = s.trim().replace(/,/g, '').match(/-?\d+(?:\.\d+)?/);
+  return match ? Number(match[0]) : undefined;
 };
 const listToStr = (l?: string[]) => (l ?? []).join('\n');
 const strToList = (s: string): string[] | undefined => {

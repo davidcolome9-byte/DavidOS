@@ -49,7 +49,7 @@ export default function Settings() {
   const [alsoDeleteHealth, setAlsoDeleteHealth] = useState(false);
 
   // Import health-profile conflict modal
-  const [importConflict, setImportConflict] = useState<AppState | null>(null);
+  const [importConflict, setImportConflict] = useState<{ state: AppState; fileName: string } | null>(null);
   const driveConfigured = isGoogleDriveConfigured();
   const driveConnected = isDriveSessionFresh(driveSession);
 
@@ -112,9 +112,10 @@ export default function Settings() {
   async function importData(file: File) {
     try {
       const imported = parseImport(await file.text());
-      // Health Profile is never silently overwritten.
+      // Health Profile is never silently overwritten. (Backups that predate
+      // profiles arrive with healthProfile === null — no false conflict.)
       if (imported.healthProfile && state.healthProfile) {
-        setImportConflict(imported);
+        setImportConflict({ state: imported, fileName: file.name });
         return;
       }
       if (!window.confirm('Importing replaces your current DavidOS data on this device. Continue?')) return;
@@ -488,10 +489,10 @@ export default function Settings() {
               will be imported either way — choose what happens to your Health Profile.
             </p>
             <div className="btn-row">
-              <button className="primary" onClick={() => applyImport(importConflict, 'keep-current', 'backup')}>
+              <button className="primary" onClick={() => applyImport(importConflict.state, 'keep-current', importConflict.fileName)}>
                 Keep current
               </button>
-              <button onClick={() => applyImport(importConflict, 'imported', 'backup')}>
+              <button onClick={() => applyImport(importConflict.state, 'imported', importConflict.fileName)}>
                 Replace with imported
               </button>
               <button className="ghost" onClick={() => { setImportConflict(null); setFlash('Import cancelled.'); }}>

@@ -35,7 +35,7 @@ export default function StatusDashboard() {
       <div className="card">
         <h2>
           OS Status
-          <span className="badge ok">Local-first · v0.1</span>
+          <span className="badge ok">Local-first</span>
         </h2>
         <h3>Top priorities</h3>
         <ul className="plain small">
