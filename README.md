@@ -27,9 +27,13 @@ Production build + preview:
 ```bash
 npm run build      # type-checks, then bundles to dist/
 npm run preview    # serves dist/ → http://localhost:4173
-npm test           # vitest: router, safety, storage, template tests
-npm run icons      # regenerate PWA icons (already committed)
+npm test           # vitest unit suite (router, safety, storage, continuity,
+                   # health, macros, extraction, dates, hash, drive paths)
+npm run verify     # lint + tests + seed validation + build — the full gate
+npm run doctor     # diagnose environment problems
 ```
+
+Full command list: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Install on Android (PWA)
 
@@ -41,7 +45,7 @@ npm run icons      # regenerate PWA icons (already committed)
 2. In Chrome: menu (⋮) → **Add to Home screen** → **Install**.
 3. DavidOS opens standalone, works offline, and keeps all data on the device.
 
-## Current features (v0.1)
+## Current features
 
 - **Home / OS Status** — priorities, suggested next move, quick actions, agent
   launcher, open loops, recent activity
@@ -82,8 +86,10 @@ npm run icons      # regenerate PWA icons (already committed)
 Read-only and draft-only actions proceed. Local writes proceed with a visible
 notice. External writes require explicit approval. Sensitive external writes
 require approval + review. Financial/medical/legal actions are blocked outright.
-All integrations in v1 are **stubs that say so** — they never simulate success.
-Details: `docs/security-and-approval-model.md`.
+Integrations are **stubs that say so** — they never simulate success — with one
+gated exception: manual Google Drive backup export (v0.3 foundation) is live
+behind the ApprovalGate. Details: `docs/security-and-approval-model.md` and
+`docs/INTEGRATIONS.md`.
 
 ## Folder structure
 
@@ -101,7 +107,9 @@ davidos/
     lib/         types, router, safety, storage, agents, workflows,
                  integrations (stubs), audit
   public/        manifest, service worker, icons
-  scripts/       icon generator (zero-dependency PNG writer)
+  scripts/       build/verify utilities: sw version stamping, seed validation,
+                 environment doctor, icon generator, seed→personal backup
+  tests/smoke/   Playwright browser smoke tests (production build)
 ```
 
 ## Export / import
@@ -118,7 +126,7 @@ JSON spec into `seed/agents/` or `seed/workflows/`, register it in the matching
 registry file, add router keywords, run `npm test` (registry tests catch wiring
 mistakes automatically).
 
-## Known limitations (v0.1)
+## Known limitations
 
 - No real AI calls — workflows generate prompts to paste into ChatGPT/Claude/etc.
 - Reminders are local placeholders: free-text due dates, no notifications

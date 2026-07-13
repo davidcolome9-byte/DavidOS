@@ -37,6 +37,9 @@ Android, on the go. Personal specifics live in on-device context, not in this re
 
 ## Non-goals (v1)
 - No real AI API calls, OAuth, or external writes of any kind
+  *(amended: the v0.3 foundation added exactly one gated external write —
+  manual Google Drive backup export behind the ApprovalGate; see
+  docs/INTEGRATIONS.md)*
 - No multi-user, no cloud backend, no accounts
 - No notifications/alarms
 - No native Android build (PWA first; Capacitor later)

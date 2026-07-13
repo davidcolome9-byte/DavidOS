@@ -9,19 +9,22 @@
 - Risk classifier, approval gates, audit log
 - Export/import JSON, integration stubs
 
-## v0.2 — Polish & routing depth
-- Better router: weights tuned from real usage, multi-intent detection,
-  "did you mean" alternatives
-- Richer workflow outputs: per-style templates, chained workflows
-- Audit log filters/search; handoff → project linking
-- Mobile polish: swipe actions, larger empty states, install prompt UX
-- Editable priorities on Home
+## v0.2 — Continuity & Health Profile (shipped) ✅
+What actually shipped as v0.2 (the originally planned "polish & routing
+depth" scope was deferred — those items now live in docs/OPEN_LOOPS.md):
+- Continuity-aware Workflow Runner: prior-handoff retrieval, metric
+  extraction with confidence, date parsing, prompt fingerprints, typed
+  full-prompt artifacts
+- Global Health & Fitness Profile with import/reset safety
+- Risk gating surfaced in the palette; honest no-ops
+- 5-tab nav + More menu; type-RESET-to-confirm reset
+- Deterministic macro target snapshot in fitness prompts
 
-## v0.3 — Google Drive sync
-- Google Identity Services browser authorization, `drive.file` scope
-- Folder bootstrap + manual "Sync now"
+## v0.3 — Google Drive sync (foundation shipped ✅, rest pending)
+- ✅ Google Identity Services browser authorization, `drive.file` scope
+- ✅ Folder bootstrap + gated manual backup export to 06_Exports/Backups
+- Manual "Sync now" for vaults
 - Conflict UI per google-drive-sync-plan.md
-- Backups auto-pushed to 06_Exports/Backups (gated)
 
 ## v0.4 — Calendar read/draft
 - Google Calendar read-only: today/week views feed the daily brief
