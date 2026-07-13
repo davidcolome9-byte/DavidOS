@@ -56,7 +56,7 @@ count changes. (History: see git log and docs/DECISIONS.md.)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 19 files, 169 tests, all passing (`npm test`).
+- Unit tests: 19 files, 182 tests, all passing (`npm test`).
 - Browser smoke tests: 8 passing (`npm run test:smoke`, Playwright
   chromium, mobile viewport, production build).
 - Lint, seed validation (ids + registry parity), privacy validation

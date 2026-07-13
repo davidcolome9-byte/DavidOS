@@ -94,11 +94,17 @@ export function validateSeeds() {
   const workflows = readJsonDir('workflows');
   const projects = readJsonDir('projects');
 
+  // Agent ids actually present as seed files. Workflow references are
+  // validated against THIS set (not the TypeScript union alone) so a
+  // dangling union entry whose seed file was removed cannot hide a broken
+  // workflow → agent relationship.
+  const discoveredAgentIds = new Set();
   for (const { path, data } of agents) {
     requireFields(errors, path, data, [
       'id', 'name', 'icon', 'purpose', 'handles', 'inputs', 'outputs',
       'approval', 'exampleCommands', 'defaultWorkflow',
     ]);
+    if (data.id) discoveredAgentIds.add(data.id);
     if (data.id && !AGENT_IDS.includes(data.id)) {
       errors.push(`${path}: id "${data.id}" is not in the AgentId union (src/lib/types.ts)`);
     }
@@ -112,7 +118,10 @@ export function validateSeeds() {
     ]);
     workflowIds.add(data.id);
     if (data.agentId && !AGENT_IDS.includes(data.agentId)) {
-      errors.push(`${path}: agentId "${data.agentId}" is not a known agent`);
+      errors.push(`${path}: agentId "${data.agentId}" is not in the AgentId union (src/lib/types.ts)`);
+    }
+    if (data.agentId && !discoveredAgentIds.has(data.agentId)) {
+      errors.push(`${path}: agentId "${data.agentId}" has no discovered agent seed in seed/agents/ — the workflow would reference a nonexistent agent`);
     }
     if (data.risk && !RISK_LEVELS.includes(data.risk)) {
       errors.push(`${path}: risk "${data.risk}" is not a valid RiskLevel`);

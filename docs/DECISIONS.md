@@ -179,3 +179,18 @@ Initial-build decisions, made without blocking questions per the build brief:
   the DATA_MODEL "Load & recovery states" section, known-obsolete
   phrases, ci.yml pull_request trigger, and verify-before-upload
   ordering in deploy.yml.
+
+## Final micro-correction pass (2026-07-13)
+
+- **isPlainObject prototype policy (DAV-001-A-R1):** accepts ONLY records
+  whose prototype is exactly `Object.prototype`. Date/Map/Set/RegExp/
+  class instances AND null-prototype objects classify as lossy. Rationale:
+  every legitimate record producer here (JSON.parse, object literals)
+  yields `Object.prototype`; null-prototype objects never arise from
+  valid flows, so the stricter policy loses nothing and rejects more
+  corruption.
+- **Workflow→agent validation uses DISCOVERED agents (DAV-007-R1):**
+  `validate:seed` now requires every `workflow.agentId` to have an actual
+  agent seed file (the TypeScript-union check remains as a separate
+  compatibility check), so a dangling union entry can no longer hide a
+  workflow pointing at a removed agent.
