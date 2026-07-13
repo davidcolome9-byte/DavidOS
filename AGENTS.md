@@ -49,7 +49,11 @@ Point-in-time status: [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).
    blocked outright (gate renders no Approve button). Full policy:
    [docs/security-and-approval-model.md](docs/security-and-approval-model.md).
 4. **Local-first.** No backend, no accounts, no API keys in the repo or
-   bundle (see `.env.example`). The app must keep working offline.
+   bundle (see `.env.example`). Offline operation is a design
+   requirement, but is only PARTIALLY delivered today: the service
+   worker caches the app shell, and a documented gap can white-screen
+   offline launches after a deploy (docs/OPEN_LOOPS.md OL-001). Do not
+   document offline reliability beyond that until OL-001 is fixed.
 5. **Canonical history stays clean.** Saved handoffs store the cleaned
    current entry only — never full generated prompts (those are separate
    typed artifacts). No recursive history bloat.
@@ -147,9 +151,11 @@ npm run lint        # ESLint
 npm run typecheck   # tsc --noEmit
 npm test            # vitest unit tests
 npm run test:smoke  # Playwright browser smoke tests (needs: npx playwright install chromium)
-npm run validate:seed  # seed JSON schema validation
+npm run validate:seed     # seed schema + duplicate ids + registry parity
+npm run validate:privacy  # no personal location/timezone literals in the repo
+npm run validate:docs     # JSON, md links, version sync, documented commands
 npm run build       # typecheck + vite build + stamp sw version
-npm run verify      # lint + typecheck + unit tests + seed validation + build
+npm run verify      # lint + unit tests + all validations + build
 npm run verify:full # verify + browser smoke tests
 ```
 

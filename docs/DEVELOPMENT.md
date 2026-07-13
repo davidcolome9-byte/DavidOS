@@ -24,8 +24,11 @@ npx playwright install chromium    # one-time, only if running smoke tests
 npm run doctor                     # verifies the environment
 ```
 
-No `.env` is needed — v1 has no secrets (see `.env.example` for future
-variables).
+No `.env` is needed for the core local app — it has no secrets and no
+required environment variables. The one optional variable today is
+`VITE_GOOGLE_CLIENT_ID`: the gated "Export backup to Drive" feature only
+activates when it is set (see `.env.example`). Without it the Drive
+export UI stays disabled and everything else works.
 
 ## Commands
 
@@ -39,22 +42,29 @@ variables).
 | `npm test` | Vitest unit suite (`src/lib/__tests__/`) |
 | `npm run test:watch` | Vitest watch mode |
 | `npm run test:smoke` | Playwright browser smoke tests (builds first; chromium required) |
-| `npm run validate:seed` | Validates every seed JSON file against required fields |
+| `npm run validate:seed` | Seed JSON validation: required fields, known ids, duplicates, seed↔registry parity both directions |
+| `npm run validate:privacy` | Fails on personal location/home-timezone literals anywhere in tracked text files |
+| `npm run validate:docs` | JSON validity, markdown link targets, package/lock version sync, documented npm commands exist |
 | `npm run build` | `tsc --noEmit` + `vite build` + stamp sw version |
 | `npm run preview` | Serve `dist/` → http://localhost:4173 |
-| `npm run verify` | lint + typecheck + unit tests + seed validation + build — the definition-of-done gate |
+| `npm run verify` | lint + unit tests + seed/privacy/docs validation + build (build includes typecheck) — the definition-of-done gate |
 | `npm run verify:full` | `verify` + browser smoke tests |
 | `npm run icons` | Regenerate PWA icons (rarely needed; committed) |
 
-CI (`.github/workflows/ci.yml`) runs `verify` + smoke tests on every push
-and PR; deploy (`deploy.yml`) builds and publishes `main` to GitHub Pages.
+CI (`.github/workflows/ci.yml`) runs `verify` + the smoke suite on every
+**pull request**, on pushes to **main**, and on manual dispatch (PR
+branches are covered by the pull_request event only, so no duplicate
+statuses). Deploy (`deploy.yml`) runs the SAME full gate — `npm ci`,
+`npm run verify`, Playwright smoke — on the exact deployed SHA before
+anything is uploaded to GitHub Pages; a failing gate aborts the deploy.
 
 ## Testing guide
 
-- Unit tests live in `src/lib/__tests__/*.test.ts` (Vitest, node env).
-  All pure logic (router, safety, storage, continuity, extraction,
-  health, macros) is covered there — extend the sibling test file when
-  you touch a module.
+- Unit tests live in `src/**/__tests__/*.test.ts{,x}` (Vitest; node env
+  by default, `happy-dom` per-file where a DOM is required). All pure
+  logic (router, safety, storage, continuity, extraction, health,
+  macros) is covered there — extend the sibling test file when you touch
+  a module.
 - Browser smoke tests live in `tests/smoke/*.spec.ts` (Playwright,
   chromium). They cover app boot, navigation, persistence round-trip,
   and recovery from malformed stored state. Keep them fast and few —

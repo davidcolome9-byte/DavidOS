@@ -114,3 +114,31 @@ Initial-build decisions, made without blocking questions per the build brief:
 - **package.json version bumped 0.1.0 → 0.2.0** to match the shipped
   v0.2 feature set; `engines: node >=20` documents the supported floor
   (CI pins 20; David's machine runs 24).
+
+## Correction pass after independent review (2026-07-13)
+
+- **Fail-safe storage recovery (DAV-001):** the loader now classifies
+  stored state as valid / additively-migratable / lossy-repairable /
+  unreadable. Lossy repair and unreadable paths preserve the EXACT raw
+  blob under a unique `davidos-state-v1-recovery-<timestamp>` key and
+  CONFIRM the write by reading it back before anything may replace the
+  stored value. **Policy: if preservation fails, persistence is
+  suppressed for the whole session** (banner explains; the stored copy
+  is never overwritten) — chosen over persist-on-first-user-edit because
+  any auto-persist would destroy the only copy.
+- **Reset preserve semantics are exact (DAV-002):** `state.healthProfile`
+  is carried through as-is; a deleted (null) profile stays deleted. The
+  old `?? fresh.healthProfile` fallback silently recreated it.
+- **happy-dom devDependency** added solely to run mounted StoreProvider
+  recovery tests (per-file `@vitest-environment happy-dom`); runtime
+  dependencies unchanged.
+- **Privacy validator (DAV-003):** `validate:privacy` fails the build on
+  personal location/IANA-home-timezone literals; genuinely synthetic
+  examples require an exact file+literal ALLOWLIST entry in
+  `scripts/validate-privacy.mjs`. The public GitHub handle is repo
+  metadata, not private data.
+- **CI triggers (DAV-004):** pull_request + push-to-main + dispatch
+  (was: every push) so PRs get exactly one status; deploys run the full
+  verify + smoke gate on the deployed SHA before uploading.
+- **Test-count policy (DAV-005):** exact counts are stated only in
+  docs/CURRENT_STATE.md; other docs point there.

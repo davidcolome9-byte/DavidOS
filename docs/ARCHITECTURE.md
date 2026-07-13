@@ -108,8 +108,11 @@ type, approval status, result summary). Capped at 300 entries, newest first.
 - `lib/storage/localStore.ts` — load/persist/clear against localStorage. The ONLY
   file that knows where state lives; swap point for IndexedDB or Drive sync.
 - `lib/storage/exportImport.ts` — versioned JSON envelope
-  (`{app: "davidos", schemaVersion, state}`), strict validation on import,
-  download helper for backups.
+  (`{app: "davidos", schemaVersion, state}`); import validates the
+  envelope and top-level structure (required arrays + settings), then
+  repairs item-level damage via `normalizeState`. Deep per-field
+  validation and a forward-schemaVersion guard are pending (OL-005,
+  OL-006). Download helper for backups.
 
 ## Integration adapter pattern
 `lib/integrations/` — one file per adapter (`*.stub.ts`), each exporting:

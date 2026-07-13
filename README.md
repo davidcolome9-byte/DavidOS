@@ -43,7 +43,10 @@ Full command list: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
    - Any static host (Netlify/Cloudflare Pages/GitHub Pages): upload `dist/`.
      PWA install requires HTTPS (localhost is exempt).
 2. In Chrome: menu (⋮) → **Add to Home screen** → **Install**.
-3. DavidOS opens standalone, works offline, and keeps all data on the device.
+3. DavidOS opens standalone and keeps all data on the device. App-shell
+   offline support exists but has a known gap: after a new deploy (or on a
+   first-ever visit) an offline launch can fail until the app is opened
+   online once (tracked as OL-001 in `docs/OPEN_LOOPS.md`).
 
 ## Current features
 

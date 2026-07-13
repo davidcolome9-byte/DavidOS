@@ -13,7 +13,10 @@ count changes. (History: see git log and docs/DECISIONS.md.)
 
 - **Command center shell**: 5-tab bottom nav (Home, Workflows, Projects,
   Logs, More) + grouped More menu; dark/light theme; installable PWA with
-  offline app-shell caching and reliable update flow (stamped sw version).
+  a reliable update flow (stamped sw version). App-shell offline caching
+  exists but offline launch can fail right after a deploy or on a
+  first-ever visit — OL-001 is the authoritative description; do not
+  claim full offline reliability until it is fixed.
 - **8 agents / 8 workflows** as portable JSON specs in `seed/` (7 domain
   agents + the Universal Operations coordination hub, merged from main
   during this sprint), rendered as cards, launched via palette, buttons,
@@ -43,15 +46,20 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-12, post-stabilization)
+## Verification status (2026-07-13, post-correction-pass)
 
-- Unit tests: 14 files, 101 tests, all passing (`npm test`).
+Exact counts live here ONLY (other docs reference this file):
+
+- Unit tests: 18 files, 148 tests, all passing (`npm test`).
 - Browser smoke tests: 8 passing (`npm run test:smoke`, Playwright
   chromium, mobile viewport, production build).
-- Lint (`npm run lint`), seed validation (`npm run validate:seed`),
-  typecheck + production build (`npm run build`): all passing.
-- CI (`.github/workflows/ci.yml`) runs the identical gate on every
-  push; Pages deploys run the unit suite first.
+- Lint, seed validation (ids + registry parity), privacy validation,
+  docs/metadata consistency, typecheck + production build: all passing
+  (`npm run verify`).
+- CI (`.github/workflows/ci.yml`) runs the identical gate on every pull
+  request and on pushes to main; Pages deploys (`deploy.yml`) run the
+  same full gate — including smoke tests — on the deployed SHA before
+  publishing.
 - Deployed and installed as PWA on David's Android phone (pre-sprint
   build; next push to main redeploys).
 

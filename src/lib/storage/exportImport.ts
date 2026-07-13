@@ -26,8 +26,11 @@ export function serializeState(state: AppState): string {
 }
 
 /**
- * Parse and validate an exported backup. Throws with a readable
- * message on anything malformed — never silently imports bad data.
+ * Parse and validate an exported backup. Validation covers the envelope
+ * and top-level structure (required arrays + settings) and throws a
+ * readable message when those fail; item-level damage inside accepted
+ * sections is repaired by normalizeState rather than rejected (deep
+ * per-field validation is OL-005; forward-schemaVersion guard is OL-006).
  */
 export function parseImport(json: string): AppState {
   let parsed: unknown;
