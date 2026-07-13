@@ -86,6 +86,14 @@ test('recovers to seed state when stored data is malformed JSON', async ({ page 
   );
   await gotoHome(page); // no white screen — the app fell back to defaults
   await expect(page.locator('.bottom-nav')).toBeVisible();
+  // The user sees a visible recovery warning and the original is preserved.
+  await expect(page.getByTestId('recovery-banner')).toBeVisible();
+  await expect(page.getByTestId('recovery-banner')).toContainText('preserved');
+  const preserved = await page.evaluate(([key]) => {
+    const k = Object.keys(window.localStorage).find((x) => x.startsWith(`${key}-recovery-`));
+    return k ? window.localStorage.getItem(k) : null;
+  }, [STORAGE_KEY]);
+  expect(preserved).toBe('{"schemaVersion": ');
 });
 
 test('recovers when stored state is valid JSON but structurally wrong', async ({ page }) => {
@@ -96,6 +104,7 @@ test('recovers when stored state is valid JSON but structurally wrong', async ({
     [STORAGE_KEY],
   );
   await gotoHome(page);
+  await expect(page.getByTestId('recovery-banner')).toContainText('repaired');
   await page.goto('/#/prompts'); // state.prompts.map would crash pre-repair
   await expect(page.getByRole('heading', { name: /Prompt Vault/ })).toBeVisible();
 });

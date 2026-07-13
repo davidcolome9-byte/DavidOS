@@ -12,7 +12,7 @@ const PRIMARY_NAV = [
 ];
 
 export default function Layout() {
-  const { persistFailed } = useStore();
+  const { persistFailed, recovery } = useStore();
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -20,6 +20,12 @@ export default function Layout() {
         <span className="date">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
       </header>
       <main>
+        {recovery.message && (
+          <div className="notice risk-block" role="alert" data-testid="recovery-banner" style={{ borderStyle: 'solid' }}>
+            <strong>⚠️ Data recovery notice.</strong>{' '}
+            <span className="small">{recovery.message}</span>
+          </div>
+        )}
         {persistFailed && (
           <div className="notice risk-block" role="alert" style={{ borderStyle: 'solid' }}>
             <strong>⚠️ Saving to this device is failing.</strong>{' '}
