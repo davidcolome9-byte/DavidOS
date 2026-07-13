@@ -72,9 +72,9 @@ for (const port of [5173, 4173]) {
   else ok(`Port ${port} free`);
 }
 
-// 8. No .env needed — but warn if one exists with content (v1 uses no secrets)
-if (existsSync(join(root, '.env'))) warn('.env exists — v1 needs no env vars; make sure it is not committed (it is gitignored)');
-else ok('No .env (none needed in v1)');
+// 8. .env is optional — only the gated Drive export uses VITE_GOOGLE_CLIENT_ID
+if (existsSync(join(root, '.env'))) warn('.env exists (fine for the optional Drive export) — make sure it is never committed (it is gitignored)');
+else ok('No .env (core app needs none; optional Drive export uses VITE_GOOGLE_CLIENT_ID)');
 
 console.log(`\n${failures} failure(s), ${warnings} warning(s).`);
 if (failures > 0) {

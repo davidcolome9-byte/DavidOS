@@ -90,10 +90,11 @@ binding on agents working in this repo:
    design, never triggers for destructive deletion.**
 10. **Health Connect architecture is provisional** — research only; not
     implemented in this repo.
-11. **America/Chicago is the provisional home timezone** for
-    home-routine scheduling in planning docs. Conflicting schedule data
-    must be FLAGGED, never silently converted. (The app itself currently
-    uses device-local time everywhere.)
+11. **The user's home timezone is privately configured** —
+    `[PRIVATE_HOME_TIMEZONE]` in planning docs; the real value lives only
+    in private storage, never in this repository. Conflicting schedule
+    data must be FLAGGED, never silently converted. (The app itself
+    currently uses device-local time everywhere.)
 12. External writes, destructive actions, public releases, and sensitive
     disclosures require approval — in-app via ApprovalGate, in-repo via
     AGENTS.md §3.
