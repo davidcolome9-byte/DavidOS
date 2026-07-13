@@ -24,6 +24,12 @@
   --text-dim: #475569;
   --accent: #0e7490;
   --accent-dim: #22d3ee;
+  /* Status colors darkened for contrast on white cards (the dark-theme
+     values sit at ~1.6–2.6:1 on white — unreadable). */
+  --ok: #047857;
+  --info: #1d4ed8;
+  --warn: #b45309;
+  --danger: #b91c1c;
   color-scheme: light;
 }
 

@@ -1,9 +1,10 @@
-import type { Handoff, IncludedHandoffSnapshot, Workflow, WorkflowOutputMode } from '../types';
+import type { Handoff, HealthFitnessProfile, IncludedHandoffSnapshot, Workflow, WorkflowOutputMode } from '../types';
 import { renderTemplate } from './templateRenderer';
 import { extractFitnessData, buildRawExcerpt } from './fitnessExtraction';
 import type { ExtractionResult } from './fitnessExtraction';
 import { resolveCategory, resolveHistoryProfile, resolveOutputMode, historyTargetCount } from './workflowMeta';
 import { sha256Hex } from '../utils/hash';
+import { buildMacroTargetSnapshot } from '../health/macroAnalysis';
 
 // ---------- Retrieval (Phase 4) ----------
 
@@ -119,7 +120,7 @@ const DASHBOARD_INSTRUCTIONS = `Produce a dashboard-style full analysis in this 
 Analysis confidence: High / Medium / Low
 
 ### Nutrition & Macros
-[Analyze calories, protein, carbs, fats, fiber, meal timing, adherence, and missing data.]
+[Analyze calories, protein, carbs, fats, fiber, meal timing, adherence, and missing data. When a Macro Target Snapshot is provided, explicitly compare target vs current vs remaining/overage and give a correction plan.]
 
 ### Hydration
 [Analyze water intake and hydration context.]
@@ -152,6 +153,7 @@ Analysis rules:
 - Macro/calorie consistency: treat logged totals as primary unless clearly inconsistent; label recalculated numbers as estimates; ignore tiny rounding differences; mention ~5–10% variance only if relevant; flag ~10–15% discrepancies; strongly flag >15%. Do not overcorrect messy entries (sauces, cooked/raw ambiguity, restaurant food, approximate portions).
 - Give one overall confidence rating; add section-level confidence only when needed.
 - Compare against the Personal Targets / Regimen Context when provided; if the profile looks old or incomplete, mention uncertainty rather than assuming targets are current.
+- Use the Macro Target Snapshot when present; it is a deterministic calculator result, but treat it as provisional if the new entry came from incomplete screenshot/OCR text.
 - Address David by first name. Do not use a full name unless it appears in the profile.
 - Never recommend medication, TRT, CPAP, or dosing changes. When profile context is present, respect the movement safety context at all times.`;
 
@@ -211,6 +213,8 @@ export interface BuildPromptArgs {
   allHandoffs: Handoff[];
   /** Rendered Health Profile block ('' when excluded/unavailable). */
   profileBlock?: string;
+  /** Structured profile, used only for deterministic target-vs-current helpers. */
+  healthProfile?: HealthFitnessProfile | null;
 }
 
 /**
@@ -220,7 +224,7 @@ export interface BuildPromptArgs {
  *   ## Prior Context for Analysis
  *   ## Analysis Instructions
  */
-export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock }: BuildPromptArgs): BuiltPrompt {
+export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock, healthProfile }: BuildPromptArgs): BuiltPrompt {
   const historyProfile = resolveHistoryProfile(workflow);
   const outputMode = resolveOutputMode(workflow);
   const fitnessMode = resolveCategory(workflow) === 'fitness_health';
@@ -230,9 +234,16 @@ export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock 
   const history = formatHistory(prior, fitnessMode);
 
   const currentOnly = input.trim() || '(no input provided)';
+  const macroSnapshot =
+    fitnessMode && input.trim()
+      ? buildMacroTargetSnapshot(healthProfile ?? null, input)
+      : null;
   const sections: string[] = [];
   sections.push('## New Entry to Analyze', '', currentOnly);
   if (profileBlock) sections.push('', '## Personal Targets / Regimen Context', '', profileBlock);
+  if (macroSnapshot?.hasNutritionData && macroSnapshot.text) {
+    sections.push('', '## Macro Target Snapshot', '', macroSnapshot.text);
+  }
   if (prior.length > 0) {
     sections.push('', '## Prior Context for Analysis', '', history.text);
   } else {

@@ -1,0 +1,32 @@
+name: CI
+
+# Runs the SAME verification available locally (npm run verify, then the
+# Playwright smoke suite) so local green == CI green.
+# Triggers: every pull request, pushes to main (post-merge safety), and
+# manual dispatch. PR branches are covered by the pull_request event only,
+# so a PR never produces duplicate/contradictory statuses.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+      - run: npx playwright install chromium --with-deps
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

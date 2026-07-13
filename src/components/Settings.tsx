@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { clearPersistedState } from '../lib/storage/localStore';
-import { buildDefaultState } from '../data/defaultState';
+import { buildResetState } from '../lib/storage/resetState';
 import { INTEGRATIONS } from '../lib/integrations';
 import { requiresApproval } from '../lib/safety/approvalRules';
 import { stubResult } from '../lib/integrations/integrationTypes';
@@ -49,7 +49,7 @@ export default function Settings() {
   const [alsoDeleteHealth, setAlsoDeleteHealth] = useState(false);
 
   // Import health-profile conflict modal
-  const [importConflict, setImportConflict] = useState<AppState | null>(null);
+  const [importConflict, setImportConflict] = useState<{ state: AppState; fileName: string } | null>(null);
   const driveConfigured = isGoogleDriveConfigured();
   const driveConnected = isDriveSessionFresh(driveSession);
 
@@ -112,9 +112,10 @@ export default function Settings() {
   async function importData(file: File) {
     try {
       const imported = parseImport(await file.text());
-      // Health Profile is never silently overwritten.
+      // Health Profile is never silently overwritten. (Backups that predate
+      // profiles arrive with healthProfile === null — no false conflict.)
       if (imported.healthProfile && state.healthProfile) {
-        setImportConflict(imported);
+        setImportConflict({ state: imported, fileName: file.name });
         return;
       }
       if (!window.confirm('Importing replaces your current DavidOS data on this device. Continue?')) return;
@@ -269,12 +270,10 @@ export default function Settings() {
   function confirmReset() {
     if (resetText !== 'RESET') return;
     clearPersistedState();
-    const fresh = buildDefaultState();
-    // Health Profile preserved by default; only wiped if explicitly chosen.
+    // Health Profile preserved EXACTLY by default (null stays null);
+    // only the explicit checkbox deletes it.
     const preserved = !alsoDeleteHealth;
-    const next: AppState = preserved
-      ? { ...fresh, healthProfile: state.healthProfile ?? fresh.healthProfile }
-      : { ...fresh, healthProfile: null };
+    const next = buildResetState(state, alsoDeleteHealth);
     update(() => next);
     setResetOpen(false);
     audit({
@@ -488,10 +487,10 @@ export default function Settings() {
               will be imported either way — choose what happens to your Health Profile.
             </p>
             <div className="btn-row">
-              <button className="primary" onClick={() => applyImport(importConflict, 'keep-current', 'backup')}>
+              <button className="primary" onClick={() => applyImport(importConflict.state, 'keep-current', importConflict.fileName)}>
                 Keep current
               </button>
-              <button onClick={() => applyImport(importConflict, 'imported', 'backup')}>
+              <button onClick={() => applyImport(importConflict.state, 'imported', importConflict.fileName)}>
                 Replace with imported
               </button>
               <button className="ghost" onClick={() => { setImportConflict(null); setFlash('Import cancelled.'); }}>

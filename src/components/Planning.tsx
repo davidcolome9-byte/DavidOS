@@ -125,7 +125,7 @@ export default function Planning() {
                 <button className="chip" onClick={() => update((s) => ({ ...s, reminders: upsert(s.reminders, { ...r, done: !r.done }) }))}>
                   {r.done ? 'Undo' : 'Done'}
                 </button>
-                <button className="chip danger" onClick={() => update((s) => ({ ...s, reminders: removeById(s.reminders, r.id) }))}>
+                <button className="chip danger" aria-label={`Delete reminder: ${r.label}`} onClick={() => update((s) => ({ ...s, reminders: removeById(s.reminders, r.id) }))}>
                   ✕
                 </button>
               </span>
@@ -161,7 +161,7 @@ export default function Planning() {
                     <button className="chip" onClick={() => update((s) => ({ ...s, openLoops: upsert(s.openLoops, { ...l, status: 'open' }) }))}>
                       Reopen
                     </button>
-                    <button className="chip danger" onClick={() => update((s) => ({ ...s, openLoops: removeById(s.openLoops, l.id) }))}>
+                    <button className="chip danger" aria-label={`Delete closed loop: ${l.label}`} onClick={() => update((s) => ({ ...s, openLoops: removeById(s.openLoops, l.id) }))}>
                       ✕
                     </button>
                   </span>

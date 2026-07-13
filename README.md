@@ -8,7 +8,11 @@ assets — with explicit safety gates before anything would ever leave the devic
 **Stack:** Vite + React + TypeScript. No backend, no accounts, no API keys.
 (Next.js was considered and rejected: nothing here needs SSR or server routes, and
 a static Vite bundle is more portable — PWA today, Capacitor wrapper later. See
-`docs/assumptions.md`.)
+`docs/DECISIONS.md`.)
+
+> **AI coding agents:** start with [AGENTS.md](AGENTS.md) — rules,
+> architecture map, commands, and definition of done. The docs index and
+> backlog live in `docs/`.
 
 ## Run it
 
@@ -23,9 +27,13 @@ Production build + preview:
 ```bash
 npm run build      # type-checks, then bundles to dist/
 npm run preview    # serves dist/ → http://localhost:4173
-npm test           # vitest: router, safety, storage, template tests
-npm run icons      # regenerate PWA icons (already committed)
+npm test           # vitest unit suite (router, safety, storage, continuity,
+                   # health, macros, extraction, dates, hash, drive paths)
+npm run verify     # lint + tests + seed validation + build — the full gate
+npm run doctor     # diagnose environment problems
 ```
+
+Full command list: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Install on Android (PWA)
 
@@ -35,16 +43,20 @@ npm run icons      # regenerate PWA icons (already committed)
    - Any static host (Netlify/Cloudflare Pages/GitHub Pages): upload `dist/`.
      PWA install requires HTTPS (localhost is exempt).
 2. In Chrome: menu (⋮) → **Add to Home screen** → **Install**.
-3. DavidOS opens standalone, works offline, and keeps all data on the device.
+3. DavidOS opens standalone and keeps all data on the device. App-shell
+   offline support exists but has a known gap: after a new deploy (or on a
+   first-ever visit) an offline launch can fail until the app is opened
+   online once (tracked as OL-001 in `docs/OPEN_LOOPS.md`).
 
-## Current features (v0.1)
+## Current features
 
 - **Home / OS Status** — priorities, suggested next move, quick actions, agent
   launcher, open loops, recent activity
 - **Command palette** — free text routed to the right agent with confidence +
   reasoning; slash commands (`/brief`, `/fitness`, `/work`, `/weekly`, `/os route`, …)
-- **7 agents** — Daily Command, Operation David Fitness, Work/Fraud/Cyber, Prompt
-  Vault, Calendar/Planning, Dogs/Home/Life Admin, Content/Side-Income
+- **8 agents** — Universal Operations (cross-domain hub), Daily Command,
+  Operation David Fitness, Work/Fraud/Cyber, Prompt Vault,
+  Calendar/Planning, Dogs/Home/Life Admin, Content/Side-Income
 - **Workflow runner (continuity-aware, v0.2)** — messy input → output style →
   AI-ready prompt built from the current entry **plus prior saved handoffs**
   (3 for default workflows, 7 for Health & Fitness), with structured metric
@@ -78,8 +90,10 @@ npm run icons      # regenerate PWA icons (already committed)
 Read-only and draft-only actions proceed. Local writes proceed with a visible
 notice. External writes require explicit approval. Sensitive external writes
 require approval + review. Financial/medical/legal actions are blocked outright.
-All integrations in v1 are **stubs that say so** — they never simulate success.
-Details: `docs/security-and-approval-model.md`.
+Integrations are **stubs that say so** — they never simulate success — with one
+gated exception: manual Google Drive backup export (v0.3 foundation) is live
+behind the ApprovalGate. Details: `docs/security-and-approval-model.md` and
+`docs/INTEGRATIONS.md`.
 
 ## Folder structure
 
@@ -97,24 +111,28 @@ davidos/
     lib/         types, router, safety, storage, agents, workflows,
                  integrations (stubs), audit
   public/        manifest, service worker, icons
-  scripts/       icon generator (zero-dependency PNG writer)
+  scripts/       build/verify utilities: sw version stamping, seed validation,
+                 environment doctor, icon generator, seed→personal backup
+  tests/smoke/   Playwright browser smoke tests (production build)
 ```
 
 ## Export / import
 
 Settings → **Export backup (JSON)** downloads everything (treat the file as
-sensitive — it contains all vaults). **Import backup** validates the file and
-replaces local state after confirmation. **Reset to seed** restores the shipped
-defaults.
+sensitive — it contains all vaults). **Import backup** checks the envelope and
+top-level structure (deep per-item validation is still pending — see
+docs/OPEN_LOOPS.md OL-005/OL-006) and replaces local state after confirmation.
+**Reset to seed** restores the shipped defaults, preserving the Health Profile
+exactly unless you explicitly delete it.
 
 ## Add a new agent / workflow
 
-See the checklists at the bottom of `docs/architecture.md`. Short version: drop a
+See the checklists at the bottom of `docs/ARCHITECTURE.md`. Short version: drop a
 JSON spec into `seed/agents/` or `seed/workflows/`, register it in the matching
 registry file, add router keywords, run `npm test` (registry tests catch wiring
 mistakes automatically).
 
-## Known limitations (v0.1)
+## Known limitations
 
 - No real AI calls — workflows generate prompts to paste into ChatGPT/Claude/etc.
 - Reminders are local placeholders: free-text due dates, no notifications

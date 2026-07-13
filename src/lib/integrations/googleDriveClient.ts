@@ -24,11 +24,17 @@ interface GoogleTokenClient {
   requestAccessToken: (overrideConfig?: { prompt?: string }) => void;
 }
 
+interface GoogleTokenClientError {
+  type?: string;
+  message?: string;
+}
+
 interface GoogleOauth2 {
   initTokenClient: (config: {
     client_id: string;
     scope: string;
     callback: (response: GoogleTokenResponse) => void;
+    error_callback?: (error: GoogleTokenClientError) => void;
   }) => GoogleTokenClient;
   revoke?: (token: string, done: (response: { successful?: boolean; error?: string }) => void) => void;
 }
@@ -100,6 +106,12 @@ export function loadGoogleIdentityServices(): Promise<void> {
     document.head.appendChild(script);
   });
 
+  // Don't cache a rejection forever: one offline/blocked load should not
+  // disable Drive for the whole session — let the next click retry.
+  gisLoadPromise.catch(() => {
+    gisLoadPromise = null;
+  });
+
   return gisLoadPromise;
 }
 
@@ -130,6 +142,11 @@ export async function requestDriveAccessToken(): Promise<DriveSession> {
           accessToken: response.access_token,
           expiresAt: Date.now() + expiresInMs,
         });
+      },
+      // Without this, closing/blocking the consent popup never settles the
+      // promise and the Settings Drive buttons stay disabled until reload.
+      error_callback: (error) => {
+        reject(new Error(error?.message || error?.type || 'Google authorization was closed before completing.'));
       },
     });
     client.requestAccessToken();

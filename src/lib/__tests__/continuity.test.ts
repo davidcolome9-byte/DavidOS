@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getPriorHandoffs, buildPrompt } from '../workflows/continuity';
-import type { Handoff, Workflow } from '../types';
+import type { Handoff, HealthFitnessProfile, Workflow } from '../types';
 
 const mkHandoff = (over: Partial<Handoff>): Handoff => ({
   id: over.id ?? Math.random().toString(36).slice(2),
@@ -26,6 +26,19 @@ const fitnessWf: Workflow = {
 const generalWf: Workflow = {
   ...fitnessWf, id: 'work-teachback', agentId: 'work_project', name: 'Work Teachback',
   category: 'work', historyProfile: 'default', outputMode: 'handoff_with_continuity_notes',
+};
+
+const healthProfile: HealthFitnessProfile = {
+  id: 'hp',
+  createdAt: '2026-07-08T00:00:00.000Z',
+  updatedAt: '2026-07-08T00:00:00.000Z',
+  nutritionTargets: {
+    calories: 2000,
+    proteinGrams: 190,
+    fatGrams: 75,
+    fiberGrams: 30,
+    waterMl: 3000,
+  },
 };
 
 describe('getPriorHandoffs', () => {
@@ -113,6 +126,20 @@ describe('buildPrompt', () => {
     const b = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'Claude handoff', allHandoffs: history });
     expect(b.fullPrompt).toContain('## Fitness Dashboard Analysis');
     expect(b.fullPrompt).toContain('Never recommend medication');
+  });
+
+  it('adds a macro target snapshot when current nutrition and profile targets are available', () => {
+    const b = buildPrompt({
+      workflow: fitnessWf,
+      input: 'Midday screenshot: 1240 kcal, protein 112g, carbs 130g, fat 62g, fiber 12g',
+      style: 'Claude handoff',
+      allHandoffs: [],
+      profileBlock: 'PROFILE-BLOCK-CONTENT',
+      healthProfile,
+    });
+    expect(b.fullPrompt).toContain('## Macro Target Snapshot');
+    expect(b.fullPrompt).toContain('Protein: floor 190g | current 112g | remaining 78g');
+    expect(b.fullPrompt).toContain('MacroPilot-style correction cues');
   });
 
   it('says so when no profile targets are available on a fitness workflow', () => {

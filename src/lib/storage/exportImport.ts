@@ -26,8 +26,11 @@ export function serializeState(state: AppState): string {
 }
 
 /**
- * Parse and validate an exported backup. Throws with a readable
- * message on anything malformed — never silently imports bad data.
+ * Parse and validate an exported backup. Validation covers the envelope
+ * and top-level structure (required arrays + settings) and throws a
+ * readable message when those fail; item-level damage inside accepted
+ * sections is repaired by normalizeState rather than rejected (deep
+ * per-field validation is OL-005; forward-schemaVersion guard is OL-006).
  */
 export function parseImport(json: string): AppState {
   let parsed: unknown;
@@ -55,7 +58,16 @@ export function parseImport(json: string): AppState {
   if (!state.settings || typeof state.settings !== 'object') {
     throw new Error('Backup missing settings.');
   }
-  return normalizeState(state);
+  // A backup that predates Health Profiles carries no profile AT ALL. That
+  // must import as "nothing to say about the profile" (null → the import
+  // flow keeps the device's current profile), NOT as a freshly seeded
+  // generic placeholder — normalizeState's seed-if-undefined rule is right
+  // at boot but would fabricate a fake "imported profile" here, creating a
+  // false conflict dialog that could overwrite the user's real profile.
+  const hadProfileKey = state.healthProfile !== undefined;
+  const normalized = normalizeState(state);
+  if (!hadProfileKey) normalized.healthProfile = null;
+  return normalized;
 }
 
 /** Trigger a browser download of the backup file. */

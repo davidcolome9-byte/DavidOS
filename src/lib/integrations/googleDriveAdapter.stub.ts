@@ -25,6 +25,8 @@ export const googleDriveAdapter: IntegrationAdapter = {
 export const listFiles = () => stubResult(googleDriveAdapter, 'listFiles');
 export const readFile = () => stubResult(googleDriveAdapter, 'readFile');
 export const writeFile = () => stubResult(googleDriveAdapter, 'writeFile');
-export const createFolder = () => stubResult(googleDriveAdapter, 'createFolder');
 export const syncVault = () => stubResult(googleDriveAdapter, 'syncVault');
-export const exportBackup = () => stubResult(googleDriveAdapter, 'exportBackup');
+// createFolder / exportBackup are NOT stubbed: they are live (marked
+// implemented above) via googleDriveClient.ts (ensureDriveFolderPath /
+// exportBackupToDrive), always behind ApprovalGate. Stub functions for them
+// were removed so nothing can honestly-but-wrongly report "no call was made".

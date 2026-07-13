@@ -110,10 +110,13 @@ export const COMMANDS: Command[] = [
 export function matchCommand(input: string): { command: Command; args: string } | null {
   const text = input.trim();
   if (!text.startsWith('/')) return null;
+  // Case-insensitive: the palette's suggestions already match that way, and
+  // mobile keyboards love to capitalize ("/Settings" must work like "/settings").
+  const lower = text.toLowerCase();
   // Longest slash first so "/os status" beats a hypothetical "/os".
   const sorted = [...COMMANDS].sort((a, b) => b.slash.length - a.slash.length);
   for (const command of sorted) {
-    if (text === command.slash || text.startsWith(command.slash + ' ')) {
+    if (lower === command.slash || lower.startsWith(command.slash + ' ')) {
       return { command, args: text.slice(command.slash.length).trim() };
     }
   }

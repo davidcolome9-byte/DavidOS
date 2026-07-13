@@ -1,9 +1,10 @@
 # DavidOS Architecture
 
 ## Overview
-Local-first single-page app. No backend. All state lives on-device; all "AI" in v1
-is local template generation. External systems exist only as typed, disabled stubs
-behind approval gates.
+Local-first single-page app. No backend. All state lives on-device; all "AI"
+is local template generation. External systems exist as typed, disabled stubs
+behind approval gates — with one live, gated exception: manual Google Drive
+backup export (v0.3 foundation; see docs/INTEGRATIONS.md).
 
 ```
 UI (React components)
@@ -15,12 +16,14 @@ UI (React components)
 ## Data model
 Every entity is defined in `src/lib/types.ts` (single source of truth):
 Agent, Workflow, Command, Project, Prompt, ContextItem, Priority, OpenLoop,
-Reminder, Handoff, ApprovalStatus/ApprovalRequest, IntegrationAdapter,
-AuditLogEntry, RiskLevel, AppState.
+Reminder, Handoff, WorkflowArtifact, HealthFitnessProfile, ApprovalStatus,
+IntegrationAdapter, AuditLogEntry, RiskLevel, AppState. (`ApprovalRequest`
+is UI-local in `src/components/ApprovalGate.tsx`.)
 
 Two kinds of data:
-- **Static specs** (agents, workflows, commands): JSON/markdown in `/seed`,
-  imported at build time via registries. Portable — any AI tool can read them.
+- **Static specs** (agents, workflows): JSON/markdown in `/seed`, imported at
+  build time via registries — portable, any AI tool can read them. Slash
+  commands are TS data in `src/lib/commands.ts`.
 - **Live state** (`AppState`): projects, prompts, context, loops, reminders,
   handoffs, audit log, settings. Persisted to localStorage on every change.
 
@@ -58,6 +61,33 @@ workflows. Private long-term personal source material belongs in Google Drive or
 another private store; public seed files contain only reusable schemas, generic
 workflow instructions, and source aliases.
 
+## Continuity engine (v0.2 — the core of the Workflow Runner)
+- `lib/workflows/continuity.ts` — prior-handoff retrieval (3 default /
+  7 fitness, overfetch ×2, status filter, correction dedupe) and prompt
+  assembly: New Entry → Personal Targets → Macro Target Snapshot →
+  Prior Context → Analysis Instructions; SHA-256 prompt fingerprints.
+- `lib/workflows/fitnessExtraction.ts` — regex metric extraction with
+  high/medium/low confidence; weak extraction triggers a raw-excerpt
+  fallback so no data silently disappears.
+- `lib/workflows/dateParsing.ts` — conservative date parsing with explicit
+  confidence levels.
+- `lib/workflows/workflowMeta.ts` — category / historyProfile / outputMode
+  resolution (explicit spec metadata wins; weighted keyword fallback).
+- `lib/utils/hash.ts` — sync pure-JS SHA-256. Sync usage is deliberate
+  (fingerprints are computed in render paths); do not swap for
+  crypto.subtle.
+
+## Health & Fitness Profile
+- `lib/health/profilePrompt.ts` — profile prompt block + hash metadata;
+  bracket-placeholder values are filtered out of prompts.
+- `lib/health/profileValidation.ts` — soft validation and changed-field
+  diffing (audit logs field names + hash, never values).
+- `lib/health/macroAnalysis.ts` — deterministic macro target snapshot:
+  parses current totals from a fitness entry, compares against profile
+  nutrition targets, emits correction cues.
+- `data/healthProfileSeed.ts` — generic bracket-placeholder starter
+  profile (public repo — real values only in the personal backup).
+
 ## Safety system
 `src/lib/safety/`:
 - `riskClassifier.ts` — classifies free text into six levels (read_only → high_risk),
@@ -78,8 +108,11 @@ type, approval status, result summary). Capped at 300 entries, newest first.
 - `lib/storage/localStore.ts` — load/persist/clear against localStorage. The ONLY
   file that knows where state lives; swap point for IndexedDB or Drive sync.
 - `lib/storage/exportImport.ts` — versioned JSON envelope
-  (`{app: "davidos", schemaVersion, state}`), strict validation on import,
-  download helper for backups.
+  (`{app: "davidos", schemaVersion, state}`); import validates the
+  envelope and top-level structure (required arrays + settings), then
+  repairs item-level damage via `normalizeState`. Deep per-field
+  validation and a forward-schemaVersion guard are pending (OL-005,
+  OL-006). Download helper for backups.
 
 ## Integration adapter pattern
 `lib/integrations/` — one file per adapter (`*.stub.ts`), each exporting:

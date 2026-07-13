@@ -84,6 +84,7 @@ export default function WorkflowRunner() {
       style,
       allHandoffs: state.handoffs,
       profileBlock: profileBlock && !profileBlock.empty ? profileBlock.text : undefined,
+      healthProfile: includeProfile ? state.healthProfile : null,
     });
     setBuilt(result);
     setProfileRevealLevel(0);
