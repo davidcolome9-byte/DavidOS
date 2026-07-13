@@ -94,3 +94,23 @@ Initial-build decisions, made without blocking questions per the build brief:
   cues for ChatGPT/Claude to reason from. This mirrors MacroPilot's useful
   target-vs-current dashboard behavior without adding a food database or barcode
   dependency.
+
+## Agent-readiness stabilization sprint (2026-07-12)
+
+- **Tooling devDependencies added** (eslint + typescript-eslint +
+  eslint-plugin-react-hooks, @playwright/test) to give agents a
+  deterministic `lint` / `verify` / smoke-test gate. Runtime dependencies
+  are unchanged (still only react, react-dom, react-router-dom).
+- **ESLint rule scoping:** `react-hooks/set-state-in-effect` is off — the
+  URL-param→state sync effects in WorkflowRunner/Settings predate the
+  rule and refactoring them is behavior risk for zero user gain.
+  `no-useless-escape` is off for `fitnessExtraction.ts` only — its
+  defensive `\-` escapes inside character classes are intentional;
+  "fixing" them can silently create regex ranges.
+- **`npm run verify` is the definition-of-done gate** (lint + unit tests
+  + seed validation + build; build already includes `tsc --noEmit`).
+  `verify:full` adds Playwright smoke tests. CI runs the same steps —
+  local and CI verification are deliberately identical.
+- **package.json version bumped 0.1.0 → 0.2.0** to match the shipped
+  v0.2 feature set; `engines: node >=20` documents the supported floor
+  (CI pins 20; David's machine runs 24).
