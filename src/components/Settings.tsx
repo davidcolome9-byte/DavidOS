@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { clearPersistedState } from '../lib/storage/localStore';
-import { buildDefaultState } from '../data/defaultState';
+import { buildResetState } from '../lib/storage/resetState';
 import { INTEGRATIONS } from '../lib/integrations';
 import { requiresApproval } from '../lib/safety/approvalRules';
 import { stubResult } from '../lib/integrations/integrationTypes';
@@ -270,12 +270,10 @@ export default function Settings() {
   function confirmReset() {
     if (resetText !== 'RESET') return;
     clearPersistedState();
-    const fresh = buildDefaultState();
-    // Health Profile preserved by default; only wiped if explicitly chosen.
+    // Health Profile preserved EXACTLY by default (null stays null);
+    // only the explicit checkbox deletes it.
     const preserved = !alsoDeleteHealth;
-    const next: AppState = preserved
-      ? { ...fresh, healthProfile: state.healthProfile ?? fresh.healthProfile }
-      : { ...fresh, healthProfile: null };
+    const next = buildResetState(state, alsoDeleteHealth);
     update(() => next);
     setResetOpen(false);
     audit({
