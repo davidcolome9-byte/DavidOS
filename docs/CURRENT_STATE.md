@@ -65,7 +65,7 @@ count changes. (History: see git log and docs/DECISIONS.md.)
 ## Known gaps / in progress
 
 The authoritative list with priorities lives in
-[docs/OPEN_LOOPS.md](docs/OPEN_LOOPS.md). Headlines:
+[docs/OPEN_LOOPS.md](OPEN_LOOPS.md). Headlines:
 
 - Service-worker offline gaps after deploys (OL-001, highest priority).
 - Handoff correction/edit UI (OL-007; model fields exist, retrieval
