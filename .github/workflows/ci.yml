@@ -1,10 +1,14 @@
 name: CI
 
 # Runs the SAME verification available locally (npm run verify, then the
-# Playwright smoke suite) so local green == CI green. Deploys are handled
-# separately by deploy.yml on main.
+# Playwright smoke suite) so local green == CI green.
+# Triggers: every pull request, pushes to main (post-merge safety), and
+# manual dispatch. PR branches are covered by the pull_request event only,
+# so a PR never produces duplicate/contradictory statuses.
 on:
+  pull_request:
   push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
