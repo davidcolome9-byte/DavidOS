@@ -3,6 +3,7 @@ import {
   RECOVERY_KEY_PREFIX,
   STORAGE_KEY,
   inspectStructure,
+  isPlainObject,
   loadPersistedState,
   normalizeState,
   persistState,
@@ -54,6 +55,41 @@ afterEach(() => {
 function recoveryKeys() {
   return [...storage.data.keys()].filter((k) => k.startsWith(RECOVERY_KEY_PREFIX));
 }
+
+describe('isPlainObject (prototype policy: Object.prototype only)', () => {
+  it('accepts ordinary records and JSON.parse results', () => {
+    expect(isPlainObject({})).toBe(true);
+    expect(isPlainObject({ theme: 'dark' })).toBe(true);
+    expect(isPlainObject(JSON.parse('{"a":1}'))).toBe(true);
+  });
+
+  it('rejects null, undefined, and primitives', () => {
+    expect(isPlainObject(null)).toBe(false);
+    expect(isPlainObject(undefined)).toBe(false);
+    expect(isPlainObject('record')).toBe(false);
+    expect(isPlainObject(42)).toBe(false);
+  });
+
+  it('rejects arrays', () => {
+    expect(isPlainObject([])).toBe(false);
+    expect(isPlainObject(['dark'])).toBe(false);
+  });
+
+  it('rejects exotic objects: Date, Map, Set, RegExp, class instances', () => {
+    expect(isPlainObject(new Date())).toBe(false);
+    expect(isPlainObject(new Map())).toBe(false);
+    expect(isPlainObject(new Set())).toBe(false);
+    expect(isPlainObject(/re/)).toBe(false);
+    class Exotic {
+      theme = 'dark';
+    }
+    expect(isPlainObject(new Exotic())).toBe(false);
+  });
+
+  it('rejects null-prototype objects (never produced by valid flows)', () => {
+    expect(isPlainObject(Object.create(null))).toBe(false);
+  });
+});
 
 describe('inspectStructure', () => {
   it('classifies absent fields as missing (additive), damaged fields as invalid (lossy)', () => {
@@ -109,6 +145,44 @@ describe('inspectStructure', () => {
     const report = inspectStructure(noSettings as AppState);
     expect(report.missing).toContain('settings');
     expect(report.invalid).toEqual([]);
+  });
+
+  // DAV-001-A-R1: exotic prototypes must classify as LOSSY (invalid) in
+  // inspectStructure — and normalizeState replaces them, so the only route
+  // to persistence is the protected lossy-recovery path. Never "missing".
+  it('classifies exotic-prototype values as lossy in agreement with normalizeState', () => {
+    class Exotic {
+      theme = 'dark';
+    }
+    const cases: Array<[string, Partial<AppState>]> = [
+      ['settings (Date)', { settings: new Date() as unknown as AppState['settings'] }],
+      ['settings (class instance)', { settings: new Exotic() as unknown as AppState['settings'] }],
+      ['healthProfile (Map)', { healthProfile: new Map() as unknown as AppState['healthProfile'] }],
+      ['healthProfile (class instance)', { healthProfile: new Exotic() as unknown as AppState['healthProfile'] }],
+    ];
+    for (const [label, patch] of cases) {
+      const state = { ...buildDefaultState(), ...patch } as AppState;
+      const report = inspectStructure(state);
+      const field = label.split(' ')[0];
+      expect(report.invalid, label).toContain(field);
+      expect(report.missing, label).not.toContain(field);
+      // normalizeState repairs the exotic value away (replacement, not keep)
+      const repaired = normalizeState(state);
+      expect(isPlainObject(repaired.settings), label).toBe(true);
+      expect(
+        repaired.healthProfile === null || isPlainObject(repaired.healthProfile),
+        label,
+      ).toBe(true);
+    }
+  });
+
+  it('classifies a collection containing a non-plain object (Date item) as lossy', () => {
+    const state = {
+      ...buildDefaultState(),
+      priorities: [new Date()],
+    } as unknown as AppState;
+    expect(inspectStructure(state).invalid).toContain('priorities');
+    expect(normalizeState(state).priorities).toEqual([]); // dropped via repair
   });
 });
 

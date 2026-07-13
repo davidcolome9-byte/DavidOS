@@ -40,12 +40,22 @@ export interface LoadResult {
 const CLEAN: RecoveryInfo = { kind: 'none', rawPreserved: false, canPersist: true, message: '' };
 
 /**
- * Strict plain-object predicate: rejects null, arrays, and primitives.
- * `typeof x === 'object'` alone accepts arrays, which once let an
- * array-valued `settings` be silently replaced without quarantine.
+ * Strict plain-object predicate: accepts ONLY ordinary records whose
+ * prototype is exactly `Object.prototype`. Rejects null, arrays,
+ * primitives, and every exotic object (Date, Map, Set, RegExp, class
+ * instances, and null-prototype objects).
+ *
+ * Policy (deliberate): every legitimate producer of state records here —
+ * `JSON.parse` and in-app object literals — yields `Object.prototype`
+ * records. Null-prototype objects never arise from valid flows, so they
+ * classify as lossy like any other exotic object rather than being
+ * quietly accepted.
  */
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+  return Object.getPrototypeOf(value) === Object.prototype;
 }
 
 /** Collections must be arrays of plain objects; anything else is dropped, not crashed on. */
