@@ -52,7 +52,7 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-13, post-second-correction-pass)
+## Verification status (2026-07-13, post-final-micro-correction-pass)
 
 Exact counts live here ONLY (other docs reference this file):
 
