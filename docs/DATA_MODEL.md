@@ -31,22 +31,52 @@ load from `seed/` via registries at build time.
 
 - Key: `davidos-state-v1` in `localStorage`
   (`src/lib/storage/localStore.ts` is the ONLY file that knows this).
-- Persist on every state change (`src/state/store.tsx` effect).
-- Persist failures (quota, unavailable) log to console and the app keeps
-  running in-memory.
-- Corrupt/unparseable stored JSON → `loadPersistedState()` returns null →
-  fresh default state (no crash, but silent data loss; see OPEN_LOOPS).
+- Persist on every state change (`src/state/store.tsx` effect), UNLESS
+  boot-time recovery suppressed persistence for the session (below).
+- Persist failures (quota, unavailable) return `false` from
+  `persistState()` and surface as a visible warning banner.
+
+## Load & recovery states
+
+`loadPersistedState()` classifies stored state (`inspectStructure`) and
+returns `{ state, recovery }`. `recovery.canPersist === false` means
+StoreProvider suppresses ALL automatic persistence for the session — a
+later user edit cannot overwrite the stored blob either. "Preserved"
+always means: the exact raw blob was written to a UNIQUE key
+(`davidos-state-v1-recovery-<timestamp>`, collision-suffixed so earlier
+recovery records are never overwritten) AND read back byte-identical.
+
+| State | Raw preserved? | Auto-persist? | User sees | On preservation failure |
+|---|---|---|---|---|
+| **1. Valid current** | not needed | yes | nothing | n/a |
+| **2. Valid older (additive migration)** — fields are absent, none damaged; `normalizeState` only backfills | not needed (nothing lost) | yes | nothing (console info) | n/a |
+| **3. Parseable but lossy-repairable** — a present value would be dropped/replaced (wrong-typed collection, array-valued `settings`/`healthProfile`, non-object items, invalid theme) | yes, confirmed BEFORE repair may persist | only if preservation confirmed | banner naming the damaged fields and the recovery key | repaired copy stays in-memory only; persistence suppressed; banner says saving is paused |
+| **4. Unreadable** (unparseable JSON, empty-string blob, non-object root, missing `schemaVersion`) | yes, confirmed | defaults persist only if preservation confirmed | banner: original preserved (with key), app started fresh | boot with in-memory defaults; persistence suppressed; banner says saving is paused |
+
+Notes:
+- An **absent key (`null`)** is a clean first run. An **existing empty
+  string** is state 4, not a first run.
+- A plain-object check (`isPlainObject`) governs object-valued fields —
+  arrays and primitives are never treated as objects.
+- Storage entirely unavailable → in-memory session, persistence
+  suppressed, banner shown; nothing is overwritten.
+- Console messages state exactly which of preserved / preservation-failed
+  / repaired-in-memory / defaults-used happened.
 
 ## Migration: normalizeState()
 
-`normalizeState()` in `localStore.ts` backfills fields added after a
-user's state was first written. Rules:
+`normalizeState()` in `localStore.ts` backfills absent fields and repairs
+damaged ones (repair is only reachable after the recovery contract above).
+Rules:
 
-- Arrays added later (`handoffs`, `artifacts`, `auditLog`) → `?? []`.
+- Absent collections → `[]`; absent item-level lists (prompt `tags`/
+  `versions`, project `related*`) → `[]`.
 - `healthProfile`: `undefined` → seed generic profile; explicit `null`
-  (user deletion) → respected, never re-seeded.
-- **Every new AppState field must get a backfill here** (and a test in
-  `src/lib/__tests__/`), or old devices and old backups will crash.
+  (user deletion) → respected, never re-seeded; non-plain-object →
+  reseeded (classified lossy).
+- **Every new AppState field must get a backfill here, a matching
+  `inspectStructure` classification, and a test** — or old devices and
+  old backups will crash or lose data silently.
 
 There is no schemaVersion bump/downgrade machinery yet; additive optional
 fields + normalizeState IS the migration strategy. Bumping schemaVersion
@@ -110,7 +140,7 @@ Classification: **Verified** (working, with evidence) / **Partial** /
 | Aspect | Status | Evidence |
 |---|---|---|
 | What is exported | **Verified** — the entire AppState (all vaults, handoffs, artifacts, audit log, settings, Health Profile) | `serializeState` wraps the full state; round-trip unit test |
-| What is omitted | **Verified** — static seed specs (rebuilt from the bundle by design) and the corrupt-quarantine blob | `seed/` loads via registries, not state |
+| What is omitted | **Verified** — static seed specs (rebuilt from the bundle by design) and any `-recovery-*` quarantine records | `seed/` loads via registries, not state |
 | Format & versioning | **Partial** — versioned envelope `{app, exportedAt, schemaVersion, state}`; no forward-version guard yet | OL-006 |
 | Import validation | **Partial** — envelope + required arrays + settings verified; item-level types repaired by `normalizeState`, not validated | OL-005 |
 | Invalid-import handling | **Verified** — readable errors, nothing applied on failure | `exportImport.test.ts` |

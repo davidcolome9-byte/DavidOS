@@ -1,4 +1,4 @@
-# Current State — 2026-07-12
+# Current State — 2026-07-13
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.)
@@ -39,23 +39,32 @@ count changes. (History: see git log and docs/DECISIONS.md.)
 - **Safety**: 6-level risk classifier surfaced in the palette, honest
   no-ops for risky unmatched commands, ApprovalGate (high-risk renders no
   Approve button), audit log capped at 300.
-- **Data**: localStorage persistence with normalizeState migration,
-  JSON export/import with strict envelope validation,
-  type-RESET-to-confirm reset preserving the Health Profile.
+- **Data**: localStorage persistence with a fail-safe recovery contract
+  (damaged state is classified, the exact original is quarantined and
+  confirmed before any lossy repair may persist, and saving is paused
+  rather than ever overwriting the only stored copy — see
+  docs/DATA_MODEL.md → "Load & recovery states"); JSON export/import
+  with envelope + partial top-level structural validation (deep
+  per-item validation is OL-005, forward-schema guard OL-006);
+  type-RESET-to-confirm reset preserving the Health Profile exactly
+  (an explicitly deleted profile stays deleted).
 - **Google Drive backup export foundation**: token-model auth scaffold +
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-13, post-correction-pass)
+## Verification status (2026-07-13, post-second-correction-pass)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 18 files, 148 tests, all passing (`npm test`).
+- Unit tests: 19 files, 169 tests, all passing (`npm test`).
 - Browser smoke tests: 8 passing (`npm run test:smoke`, Playwright
   chromium, mobile viewport, production build).
-- Lint, seed validation (ids + registry parity), privacy validation,
+- Lint, seed validation (ids + registry parity), privacy validation
+  (generic rules, content-aware scan of all tracked text files),
   docs/metadata consistency, typecheck + production build: all passing
-  (`npm run verify`).
+  (`npm run verify`). The three validators run as real CLIs on Windows
+  and Linux (cross-platform entrypoints, child-process-tested) and
+  print visible success summaries in CI logs.
 - CI (`.github/workflows/ci.yml`) runs the identical gate on every pull
   request and on pushes to main; Pages deploys (`deploy.yml`) run the
   same full gate — including smoke tests — on the deployed SHA before

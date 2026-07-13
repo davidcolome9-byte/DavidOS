@@ -63,11 +63,43 @@ for (const doc of ['AGENTS.md', 'README.md', 'docs/DEVELOPMENT.md']) {
   }
 }
 
+// 5. Recovery behavior is documented where the code contract points
+//    (localStore.ts references this exact section).
+const dataModel = readFileSync(join(root, 'docs/DATA_MODEL.md'), 'utf8');
+if (!dataModel.includes('## Load & recovery states')) {
+  errors.push('docs/DATA_MODEL.md is missing the "## Load & recovery states" section that localStore.ts references');
+}
+
+// 6. Known-obsolete phrases must not reappear in the operating docs.
+const OBSOLETE_PHRASES = [
+  ['davidos-state-v1-corrupt', 'the single fixed corrupt-backup key was replaced by unique -recovery-* keys'],
+  ['strict validation on import', 'import validation is envelope + partial structural, not "strict"'],
+  ['silent data loss', 'lossy paths now quarantine + warn; docs must not describe silent loss as expected behavior'],
+];
+for (const doc of ls('*.md').filter((f) => f === 'AGENTS.md' || f === 'README.md' || f.startsWith('docs/'))) {
+  const text = readFileSync(join(root, doc), 'utf8');
+  for (const [phrase, why] of OBSOLETE_PHRASES) {
+    if (text.includes(phrase)) errors.push(`${doc} contains obsolete phrase "${phrase}" (${why})`);
+  }
+}
+
+// 7. Workflow triggers/gating stay consistent with what the docs promise
+//    (structured string checks on the YAML, not prose parsing).
+const ciYml = readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8');
+if (!/^\s*pull_request:/m.test(ciYml)) errors.push('.github/workflows/ci.yml no longer triggers on pull_request');
+const deployYml = readFileSync(join(root, '.github/workflows/deploy.yml'), 'utf8');
+const verifyAt = deployYml.indexOf('npm run verify');
+const uploadAt = deployYml.indexOf('upload-pages-artifact');
+if (verifyAt === -1 || uploadAt === -1 || verifyAt > uploadAt) {
+  errors.push('.github/workflows/deploy.yml must run "npm run verify" BEFORE upload-pages-artifact (full gate before deploy)');
+}
+
 if (errors.length) {
   console.error('Docs/metadata consistency FAILED:');
   for (const e of errors) console.error(`  - ${e}`);
   process.exit(1);
 }
 console.log(
-  `Docs/metadata consistency OK — ${jsonCount} JSON files, ${linkCount} relative links, version ${pkg.version} in sync, ${cmdCount} documented npm commands exist.`,
+  `Docs/metadata consistency OK — ${jsonCount} JSON files, ${linkCount} relative links, version ${pkg.version} in sync, ` +
+    `${cmdCount} documented npm commands exist, recovery section present, no obsolete phrases, workflow gates intact.`,
 );

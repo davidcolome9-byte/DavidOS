@@ -142,3 +142,40 @@ Initial-build decisions, made without blocking questions per the build brief:
   verify + smoke gate on the deployed SHA before uploading.
 - **Test-count policy (DAV-005):** exact counts are stated only in
   docs/CURRENT_STATE.md; other docs point there.
+
+## Second correction pass after delta review (2026-07-13)
+
+- **Strict plain-object classification (DAV-001-A):** `isPlainObject`
+  (rejects null/arrays/primitives) now governs every object-valued state
+  position in BOTH `normalizeState` and `inspectStructure`; an
+  array-valued `settings`/`healthProfile` or an array item inside a
+  collection classifies as LOSSY (quarantine-before-repair), never as
+  valid or merely missing. Item-level absent lists now count as additive
+  migration rather than silent rewrites.
+- **Empty-string storage (DAV-001-B):** only `raw === null` means "no
+  stored state"; an existing empty string is an unreadable blob and goes
+  through the recovery path (preserve → confirm → else suppress).
+- **Privacy validator is GENERIC (DAV-003-A):** the previous validator
+  embedded David-specific literals in Base64 and the tests rebuilt them
+  from fragments — both removed entirely. The public validator now
+  enforces generic public-repo rules (no concrete IANA home-timezone
+  declarations; no private home-configuration fields with concrete
+  values; placeholders required). An OPTIONAL private denylist can be
+  supplied via `DAVIDOS_PRIVATE_DENYLIST` or the gitignored
+  `personal/privacy-denylist.txt`; its absence never weakens the generic
+  rules. Test fixtures use clearly synthetic non-David values.
+- **Content-aware scanning (DAV-003-B):** the scan enumerates ALL
+  git-tracked files (no extension allowlist), sniffs binary by content
+  (NUL byte), and prints counts plus every non-obvious skip. Declared
+  skips: package-lock.json (generated) and the privacy test fixture.
+- **Cross-platform CLI entrypoints (DAV-004-A):** the hand-built
+  `file:///` comparison never matched on Linux, so validator CLI bodies
+  silently no-oped in CI. Both validators now use
+  `pathToFileURL(resolve(argv[1])).href === import.meta.url`, are
+  child-process-tested (success summaries AND nonzero failure paths),
+  and `DAVIDOS_ROOT` exists as a test-only fixture override for the seed
+  validator.
+- **validate:docs hardening (DAV-005-A):** structured checks added for
+  the DATA_MODEL "Load & recovery states" section, known-obsolete
+  phrases, ci.yml pull_request trigger, and verify-before-upload
+  ordering in deploy.yml.

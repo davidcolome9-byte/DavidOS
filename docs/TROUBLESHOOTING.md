@@ -44,10 +44,16 @@ Workers → "Update on reload", or unregister the worker.
 
 ## Data / state
 
-**App boots to seed data unexpectedly.** localStorage under key
-`davidos-state-v1` was missing or corrupt — `loadPersistedState()`
-falls back to defaults rather than crash. Re-import the latest backup
-via Settings → Import.
+**App boots to seed data unexpectedly, or shows a "Data recovery
+notice" banner.** The stored state under `davidos-state-v1` was
+unreadable or damaged. The exact original blob is preserved under a
+unique `davidos-state-v1-recovery-<timestamp>` key (the banner names
+it) — inspect it via DevTools → Application → Local Storage and
+re-import your latest backup via Settings → Import. If the banner says
+"Saving is paused", preservation itself failed (storage full): nothing
+was overwritten, but changes stay in memory only — export a backup,
+free storage, then reload. Details: docs/DATA_MODEL.md → "Load &
+recovery states".
 
 **Import rejects a backup.** The validator names the missing piece
 (envelope tag, schemaVersion, required array, settings). Backups are
