@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AGENTS, getAgent } from '../lib/agents/agentRegistry';
-import { WORKFLOWS, getWorkflow } from '../lib/workflows/workflowRegistry';
+import { WORKFLOWS, getWorkflow, resolveWorkflowOutputStyle } from '../lib/workflows/workflowRegistry';
 import { summarizeInput } from '../lib/workflows/templateRenderer';
 import { buildPrompt } from '../lib/workflows/continuity';
 import type { BuiltPrompt } from '../lib/workflows/continuity';
@@ -30,7 +30,7 @@ export default function WorkflowRunner() {
   const [agentFilter, setAgentFilter] = useState<AgentId | 'all'>(preselected?.agentId ?? 'all');
   const [workflow, setWorkflow] = useState<Workflow | null>(preselected ?? null);
   const [input, setInput] = useState(params.get('input') ?? '');
-  const [style, setStyle] = useState(preselected?.outputStyles[0] ?? '');
+  const [style, setStyle] = useState(preselected ? resolveWorkflowOutputStyle(preselected, params.get('style')) : '');
   const [built, setBuilt] = useState<BuiltPrompt | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [includeProfile, setIncludeProfile] = useState(true);
@@ -40,10 +40,12 @@ export default function WorkflowRunner() {
   // Sync when arriving via a link like /workflows?wf=fitness-handoff
   useEffect(() => {
     const wf = getWorkflow(params.get('wf') ?? '');
-    if (wf && wf.id !== workflow?.id) {
+    const requestedStyle = params.get('style');
+    const nextStyle = wf ? resolveWorkflowOutputStyle(wf, requestedStyle) : '';
+    if (wf && (wf.id !== workflow?.id || (requestedStyle !== null && nextStyle !== style))) {
       setWorkflow(wf);
       setAgentFilter(wf.agentId);
-      setStyle(wf.outputStyles[0]);
+      setStyle(nextStyle);
       setBuilt(null);
       const linkedInput = params.get('input');
       if (linkedInput) setInput(linkedInput);

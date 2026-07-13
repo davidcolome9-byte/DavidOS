@@ -51,8 +51,9 @@ Full command list: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
   launcher, open loops, recent activity
 - **Command palette** — free text routed to the right agent with confidence +
   reasoning; slash commands (`/brief`, `/fitness`, `/work`, `/weekly`, `/os route`, …)
-- **7 agents** — Daily Command, Operation David Fitness, Work/Fraud/Cyber, Prompt
-  Vault, Calendar/Planning, Dogs/Home/Life Admin, Content/Side-Income
+- **8 agents** — Universal Operations (cross-domain hub), Daily Command,
+  Operation David Fitness, Work/Fraud/Cyber, Prompt Vault,
+  Calendar/Planning, Dogs/Home/Life Admin, Content/Side-Income
 - **Workflow runner (continuity-aware, v0.2)** — messy input → output style →
   AI-ready prompt built from the current entry **plus prior saved handoffs**
   (3 for default workflows, 7 for Health & Fitness), with structured metric

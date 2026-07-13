@@ -9,6 +9,13 @@ const kw = (term: string, weight = 1): Keyword => ({ term, weight });
 
 /** Keyword tables per agent. Multi-word phrases carry more weight. */
 export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
+  'universal-operations': [
+    kw('universal operations', 4), kw('ops review', 4), kw('operations review', 3),
+    kw('waiting on me', 3), kw('waiting on user', 3), kw('autonomous work', 3),
+    kw('autonomous blockers', 3), kw('capture inbox', 3), kw('process my capture', 3),
+    kw('cross-domain', 2), kw('cross domain', 2), kw('source authority', 2),
+    kw('one next action', 2), kw('approval boundary', 2),
+  ],
   daily_command: [
     kw('today'), kw('priorities'), kw('priority'), kw('focus'), kw('overwhelmed'),
     kw('daily brief', 2), kw('command brief', 2), kw('next move', 2),

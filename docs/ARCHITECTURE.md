@@ -37,13 +37,29 @@ Two kinds of data:
 Slash commands (`src/lib/commands.ts`) are matched before routing: `/brief`,
 `/fitness`, `/work`, etc. → navigation or workflow launch.
 
+Universal Operations commands (`/ops-review`, `/waiting`, `/autonomous`,
+`/capture`, and `/route <domain>`) use the same command framework. `/route`
+resolves known domains to registered workflow ids deterministically and falls
+back to the current clarification/routing UX when a domain is unknown.
+
 ## Agent & workflow registries
-- `lib/agents/agentRegistry.ts` — loads the 7 agent JSON specs, lookup by id.
-- `lib/workflows/workflowRegistry.ts` — loads the 7 workflow specs, lookup by id
+- `lib/agents/agentRegistry.ts` — loads the agent JSON specs, lookup by id.
+- `lib/workflows/workflowRegistry.ts` — loads the workflow specs, lookup by id
   or agent.
 - `lib/workflows/templateRenderer.ts` — fills `{{input}}`, `{{style}}`, `{{date}}`
   in a workflow's template. This is the whole "generation" engine in v1 — honest,
   local, no fake AI.
+
+Registry modules validate stable ids, duplicate ids, and workflow-to-agent
+references at startup while preserving the existing unknown-id lookup behavior.
+`lib/workflows/universalOperations.ts` contains pure Universal Operations review
+logic for cross-domain posture, waiting-on-user separation, autonomous blockers,
+deterministic domain routing, approval boundaries, and one next action.
+
+Universal Operations is a generic hub, not a replacement for specialized domain
+workflows. Private long-term personal source material belongs in Google Drive or
+another private store; public seed files contain only reusable schemas, generic
+workflow instructions, and source aliases.
 
 ## Continuity engine (v0.2 — the core of the Workflow Runner)
 - `lib/workflows/continuity.ts` — prior-handoff retrieval (3 default /

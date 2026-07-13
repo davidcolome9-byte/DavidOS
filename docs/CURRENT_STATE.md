@@ -14,8 +14,10 @@ count changes. (History: see git log and docs/DECISIONS.md.)
 - **Command center shell**: 5-tab bottom nav (Home, Workflows, Projects,
   Logs, More) + grouped More menu; dark/light theme; installable PWA with
   offline app-shell caching and reliable update flow (stamped sw version).
-- **7 agents / 7 workflows** as portable JSON specs in `seed/`, rendered
-  as cards, launched via palette, buttons, or slash commands.
+- **8 agents / 8 workflows** as portable JSON specs in `seed/` (7 domain
+  agents + the Universal Operations coordination hub, merged from main
+  during this sprint), rendered as cards, launched via palette, buttons,
+  or slash commands.
 - **Rule-based intent router** with confidence (capped 0.9), reasoning,
   and matched-term display; slash commands bypass routing.
 - **Continuity-aware Workflow Runner**: prior-handoff retrieval (3

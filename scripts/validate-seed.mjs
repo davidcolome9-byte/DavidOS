@@ -33,8 +33,8 @@ function requireFields(path, obj, fields) {
 }
 
 const AGENT_IDS = [
-  'daily_command', 'fitness', 'work_project', 'prompt_vault',
-  'calendar_planning', 'dogs_home_life_admin', 'content_asset',
+  'universal-operations', 'daily_command', 'fitness', 'work_project',
+  'prompt_vault', 'calendar_planning', 'dogs_home_life_admin', 'content_asset',
 ];
 const RISK_LEVELS = [
   'read_only', 'draft_only', 'local_write', 'external_write',

@@ -24,10 +24,13 @@ describe('matchCommand', () => {
     expect(matchCommand('/nope')).toBeNull();
   });
 
-  it('every command target is a nav:, wf:, or route target', () => {
+  it('every command target is a nav:, wf:, route, or domain-route target', () => {
     for (const c of COMMANDS) {
       expect(
-        c.target === 'route' || c.target.startsWith('nav:/') || c.target.startsWith('wf:'),
+        c.target === 'route' ||
+          c.target === 'domain-route' ||
+          c.target.startsWith('nav:/') ||
+          c.target.startsWith('wf:'),
         `bad target for ${c.slash}: ${c.target}`,
       ).toBe(true);
     }

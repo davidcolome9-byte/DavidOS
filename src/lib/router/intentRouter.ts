@@ -2,6 +2,7 @@ import type { RouteResult } from '../types';
 import { scoreInput } from './routeScoring';
 
 const AGENT_NAMES: Record<string, string> = {
+  'universal-operations': 'Universal Operations',
   daily_command: 'Daily Command',
   fitness: 'Operation David Fitness',
   work_project: 'Work / Fraud / Cybersecurity',
@@ -12,6 +13,7 @@ const AGENT_NAMES: Record<string, string> = {
 };
 
 const DEFAULT_WORKFLOW: Record<string, string> = {
+  'universal-operations': 'universal-operations-review',
   daily_command: 'daily-brief',
   fitness: 'fitness-handoff',
   work_project: 'work-teachback',
