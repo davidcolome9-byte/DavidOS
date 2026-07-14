@@ -25,9 +25,40 @@ describe('resolveFitnessWorkflow', () => {
   });
 
   it('offers both workflows (no silent pick) on a genuine tie', () => {
-    // "review" (gravl, 2) ties "organize" (handoff, 2), both non-zero.
-    const r = resolveFitnessWorkflow('review and organize');
+    // A genuine tie now requires WORKOUT CONTEXT on both sides:
+    // "workout" (gravl anchor, 2) ties "log" (handoff, 2), both non-zero.
+    const r = resolveFitnessWorkflow('log this workout');
     expect(r.tie).toBe(true);
     expect(r.options?.map((o) => o.workflowId).sort()).toEqual(['fitness-handoff', 'gravl-review']);
+  });
+
+  // DOS-WF-001 correction: a generic verb (review/optimize/progression) must
+  // NOT route to Gravl without workout context. Previously "review and
+  // organize" produced a Gravl tie; it now routes to the handoff, and the
+  // non-workout "review my …" requests never reach Gravl.
+  it('does not route generic "review …" requests to Gravl without workout context', () => {
+    for (const text of [
+      'Review my meal plan',
+      'Review my macros',
+      'Review my nutrition',
+      'Review my recovery progress',
+      'review and organize',
+    ]) {
+      const r = resolveFitnessWorkflow(text);
+      expect(r.workflowId, text).toBe('fitness-handoff');
+      expect(r.tie, text).toBe(false);
+    }
+  });
+
+  it('routes workout-context requests to Gravl', () => {
+    for (const text of [
+      'Review this workout',
+      'Optimize this workout',
+      'Is this workout safe for my back?',
+      'I need help with a workout plan',
+      'Review the workout Gravl gave me',
+    ]) {
+      expect(resolveFitnessWorkflow(text).workflowId, text).toBe('gravl-review');
+    }
   });
 });

@@ -28,8 +28,10 @@ export interface GravlPromptArgs {
   /** David indicates he has Gravl screenshots (DavidOS cannot read them). */
   hasScreenshots?: boolean;
   /**
-   * Rendered Health Profile block, already filtered to relevant context with
-   * medications/supplements EXCLUDED. Undefined/empty when not included.
+   * Rendered Health Profile block, already restricted to the Gravl-safe field
+   * whitelist (medications, supplements, and free-text summaries excluded).
+   * Undefined/empty when the profile is not included — in that case the built
+   * prompt contains no private profile facts at all.
    */
   profileBlock?: string;
   /** Structured profile, used only for the phase/constraints summary. */
@@ -144,11 +146,17 @@ export function buildGravlPrompt(args: GravlPromptArgs): GravlBuiltPrompt {
     'direct question. Only create a fresh workout when David explicitly requests one or says ' +
     'Gravl gave him nothing usable.');
 
+  // Generic safety language only. Any specific medical detail (e.g. an L4/L5
+  // history and axial-loading caution) appears ONLY when it was supplied
+  // through the included, approved Health Profile context above — never
+  // hardcoded here, so a prompt built with the profile excluded carries no
+  // private medical facts.
   sections.push('', '## Safety Boundaries', '',
-    'Do not diagnose. Do not recommend medications, supplements, or dosing changes. Respect ' +
-    'David’s movement-safety context at all times — in particular avoid axial loading given a ' +
-    'lower-back (L4/L5) history, and flag any exercise likely to provoke back, leg, nerve-like, ' +
-    'weakness, or radiating symptoms. For severe, worsening, neurological, or persistent ' +
+    'Do not diagnose, and do not recommend medications, supplements, or dosing changes. Respect ' +
+    'every pain, injury, and movement restriction David has reported — including any noted in the ' +
+    'health and fitness context above — and avoid loading patterns or exercises he has flagged as ' +
+    'problematic. Flag any exercise likely to provoke pain, nerve-like, weakness, or radiating ' +
+    'symptoms and prefer a safer substitution. For severe, worsening, neurological, or persistent ' +
     'symptoms, recommend he seek professional medical input rather than pushing through.');
 
   const fullPrompt = sections.join('\n');

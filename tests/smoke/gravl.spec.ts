@@ -114,3 +114,87 @@ test.describe('laptop viewport', () => {
     await expect(copyBtn(page)).toBeEnabled();
   });
 });
+
+// DOS-WF-001 correction 3 — URL input synchronization, separated from
+// workflow/style sync.
+
+test('same-workflow input A → B updates the field and the built prompt', async ({ page }) => {
+  await openGravl(page, 'Review my push day');
+  await expect(requestBox(page)).toHaveValue('Review my push day');
+
+  // Same workflow (wf unchanged), different input param.
+  await page.goto(`${GRAVL_URL}&input=${encodeURIComponent('Optimize my pull day')}`);
+  await expect(requestBox(page)).toHaveValue('Optimize my pull day');
+
+  await buildBtn(page).click();
+  await page.getByRole('button', { name: 'Full Prompt' }).click();
+  await expect(page.locator('pre.output')).toContainText('Optimize my pull day');
+  await expect(page.locator('pre.output')).not.toContainText('Review my push day');
+});
+
+test('browser back/forward restores the correct same-workflow input', async ({ page }) => {
+  await openGravl(page, 'first request');
+  await page.goto(`${GRAVL_URL}&input=${encodeURIComponent('second request')}`);
+  await expect(requestBox(page)).toHaveValue('second request');
+
+  await page.goBack();
+  await expect(requestBox(page)).toHaveValue('first request');
+  await page.goForward();
+  await expect(requestBox(page)).toHaveValue('second request');
+});
+
+test('removing the input parameter clears the prior routed input', async ({ page }) => {
+  await openGravl(page, 'clear me please');
+  await expect(requestBox(page)).toHaveValue('clear me please');
+
+  await page.goto(GRAVL_URL); // no input param
+  await expect(requestBox(page)).toHaveValue('');
+  await expect(buildBtn(page)).toBeDisabled();
+});
+
+test('the real Command Palette route into Gravl preserves the exact request', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: /OS Status/ })).toBeVisible();
+  await page.getByLabel('Command input').fill('Review this workout');
+  await page.getByRole('button', { name: 'Route This' }).click();
+
+  await page.getByRole('link', { name: /Gravl Workout Review/ }).click();
+  await expect(page.getByRole('heading', { name: 'Gravl Workout Review & Optimization' })).toBeVisible();
+  await expect(requestBox(page)).toHaveValue('Review this workout');
+
+  await buildBtn(page).click();
+  await page.getByRole('button', { name: 'Full Prompt' }).click();
+  await expect(page.locator('pre.output')).toContainText('Review this workout');
+});
+
+// DOS-WF-001 correction 6 — a stale result performs no local write.
+
+test('a stale prompt performs no local write (defense-in-depth)', async ({ page }) => {
+  const artifactCount = () =>
+    page.evaluate(() => {
+      const raw = window.localStorage.getItem('davidos-state-v1');
+      return raw ? (JSON.parse(raw).artifacts?.length ?? 0) : 0;
+    });
+
+  await openGravl(page, 'Review my workout');
+  await buildBtn(page).click();
+  await savePromptBtn(page).click();
+  await expect.poll(artifactCount).toBe(1);
+
+  // Edit the request → the built prompt is stale.
+  await requestBox(page).fill('Review my workout and add volume');
+  await expect(page.getByTestId('stale-notice')).toBeVisible();
+  await expect(savePromptBtn(page)).toBeDisabled();
+
+  // No new artifact is written while stale.
+  await page.waitForTimeout(200);
+  expect(await artifactCount()).toBe(1);
+});
+
+// DOS-WF-001 correction 5 — no false history claim.
+
+test('Gravl does not claim prior handoff history is included', async ({ page }) => {
+  await openGravl(page, 'Review my workout');
+  await expect(page.getByText(/history integration is deferred/i)).toBeVisible();
+  await expect(page.getByText('Uses expanded history context', { exact: false })).toHaveCount(0);
+});

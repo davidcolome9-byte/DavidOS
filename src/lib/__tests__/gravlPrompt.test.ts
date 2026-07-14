@@ -56,4 +56,43 @@ describe('buildGravlPrompt', () => {
     expect(b.fullPrompt).toContain('L4/L5 back history');
     expect(b.fullPrompt).toContain('## Relevant Health and Fitness Context');
   });
+
+  // DOS-WF-001 correction 1: no private profile facts when the profile is
+  // excluded — including in the Safety Boundaries section.
+  it('contains NO L4/L5 / injury / axial / medication facts when the profile is excluded', () => {
+    const b = buildGravlPrompt({ request: 'Optimize this workout', workoutText: 'Squat 5x5' });
+    const p = b.fullPrompt.toLowerCase();
+    expect(p).not.toContain('l4');
+    expect(p).not.toContain('l5');
+    expect(p).not.toContain('axial');
+    expect(p).not.toContain('laminectomy');
+    expect(p).not.toContain('herniat');
+    // Generic safety language is still present.
+    expect(b.fullPrompt).toContain('## Safety Boundaries');
+    expect(p).toMatch(/pain, injury, and movement restriction|reported/);
+    expect(b.fullPrompt).toContain('No Health Profile context was included for this prompt.');
+  });
+
+  it('includes the L4/L5 movement-safety summary ONLY via the included profile context', () => {
+    const withProfile = buildGravlPrompt({
+      request: 'Is this workout safe for my back?',
+      workoutText: 'Deadlift 3x3',
+      profileBlock:
+        'Health Profile last updated: 2026-01-02\n\n- Movement safety context: L4/L5 back history. Avoid axial loading.',
+    });
+    // The L4/L5 text appears, and only inside the context section.
+    expect(withProfile.fullPrompt).toContain('L4/L5 back history');
+    const contextIdx = withProfile.fullPrompt.indexOf('## Relevant Health and Fitness Context');
+    const safetyIdx = withProfile.fullPrompt.indexOf('## Safety Boundaries');
+    expect(withProfile.fullPrompt.indexOf('L4/L5')).toBeGreaterThan(contextIdx);
+    expect(withProfile.fullPrompt.indexOf('L4/L5')).toBeLessThan(safetyIdx);
+  });
+
+  it('no longer claims prior handoff history is included (truthful metadata)', () => {
+    const b = buildGravlPrompt({ request: 'Review', workoutText: 'Bench 3x8' });
+    expect(b.priorCount).toBe(0);
+    expect(b.includedHandoffIds).toEqual([]);
+    expect(b.fullPrompt.toLowerCase()).not.toContain('prior handoff');
+    expect((b.helperText ?? '').toLowerCase()).not.toContain('history');
+  });
 });

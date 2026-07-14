@@ -25,18 +25,28 @@ interface Signal {
 
 const sig = (term: string, weight = 1): Signal => ({ term, weight });
 
-/** Review / optimize / plan a Gravl workout → gravl-review. */
-const GRAVL_SIGNALS: Signal[] = [
+/**
+ * Workout-context ANCHORS. Gravl is only eligible when at least one of these
+ * is present — a generic verb like "review", "optimize", or "progression"
+ * must never route to Gravl on its own (that would hijack "review my meal
+ * plan", "review my macros", etc.).
+ */
+const GRAVL_ANCHORS: Signal[] = [
   sig('gravl', 3),
-  sig('workout plan', 3), sig('workout program', 3), sig('training program', 2),
-  sig('training plan', 2), sig('program review', 3),
-  sig('workout review', 3), sig('review the workout', 3), sig('review my workout', 3),
-  sig('review this workout', 3), sig('review a workout', 3),
-  sig('optimize this workout', 3), sig('optimize my workout', 3),
+  sig('workout', 2), sig('exercise', 2),
+  sig('workout plan', 3), sig('workout program', 3),
+  sig('training plan', 2), sig('training program', 2),
+  sig('program review', 3),
+];
+
+/**
+ * Generic MODIFIERS. These sharpen the Gravl score but are counted ONLY when
+ * a workout anchor above is also present. Alone they carry no Gravl weight.
+ */
+const GRAVL_MODIFIERS: Signal[] = [
+  sig('review', 2), sig('improve', 2),
   sig('optimize', 2), sig('optimise', 2), sig('optimization', 2), sig('optimisation', 2),
-  sig('help with a workout', 3), sig('help with my workout', 3),
-  sig('review', 2), sig('improve this workout', 3), sig('improve my workout', 3),
-  sig('phase fit', 2), sig('phase-fit', 2), sig('progression', 1), sig('is this workout safe', 3),
+  sig('phase fit', 2), sig('phase-fit', 2), sig('progression', 1), sig('is this workout safe', 2),
 ];
 
 /** Clean / log / organize existing notes → fitness-handoff. */
@@ -65,6 +75,17 @@ function scoreSignals(text: string, signals: Signal[]): number {
 }
 
 /**
+ * Gravl score, gated on workout context: no anchor → 0 (Gravl ineligible),
+ * so generic "review/optimize" requests never route here. With an anchor,
+ * anchors + generic modifiers both count.
+ */
+function scoreGravl(text: string): number {
+  const anchorPresent = GRAVL_ANCHORS.some(({ term }) => text.includes(term));
+  if (!anchorPresent) return 0;
+  return scoreSignals(text, GRAVL_ANCHORS) + scoreSignals(text, GRAVL_MODIFIERS);
+}
+
+/**
  * Resolve fitness free text to a specific fitness workflow.
  * - clear Gravl signal wins → gravl-review
  * - clear cleaning/logging signal wins → fitness-handoff
@@ -73,7 +94,7 @@ function scoreSignals(text: string, signals: Signal[]): number {
  */
 export function resolveFitnessWorkflow(input: string): FitnessWorkflowResolution {
   const text = input.toLowerCase();
-  const gravlScore = scoreSignals(text, GRAVL_SIGNALS);
+  const gravlScore = scoreGravl(text);
   const handoffScore = scoreSignals(text, HANDOFF_SIGNALS);
 
   if (gravlScore > handoffScore) return { workflowId: GRAVL_WORKFLOW_ID, tie: false };

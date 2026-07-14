@@ -46,14 +46,50 @@ export interface PromptConfigParts {
   /** Whether Health Profile context is included. */
   includeProfile: boolean;
   /**
-   * Identity of the included Health Profile context (fingerprint/hash).
-   * Changing profile content changes this, marking the prompt stale.
+   * FULL context identity of the included Health Profile (the complete
+   * `healthProfilePromptMetadata.promptContextHash`, NOT the shortened
+   * display fingerprint). Any change to profile content changes this, marking
+   * the prompt stale. A truncated fingerprint could collide and miss a real
+   * change, so callers must pass the full hash here.
    */
   profileFingerprint?: string;
   /** Gravl-only: optional pasted workout text. */
   workoutText?: string;
   /** Gravl-only: whether screenshots were flagged. */
   hasScreenshots?: boolean;
+}
+
+export interface Actability {
+  ok: boolean;
+  /** Explanatory message to surface when an action is refused. */
+  message?: string;
+}
+
+/**
+ * Defense-in-depth gate for copy/save/history/follow-up actions. Disabled
+ * buttons are the first line of defense; every action handler ALSO calls this
+ * before any clipboard write or local write, so a stale/invalid/mismatched
+ * result can never be persisted or copied even if a disabled control is
+ * bypassed. Pure and unit-testable — the component holds no guard logic of
+ * its own.
+ */
+export function evaluateActability(input: {
+  hasBuilt: boolean;
+  validity: PromptValidity | null;
+  builtConfigKey: string | null;
+  currentConfigKey: string;
+}): Actability {
+  if (!input.hasBuilt) {
+    return { ok: false, message: 'Build a prompt first — there is nothing to copy or save yet.' };
+  }
+  if (!input.validity || !input.validity.valid) {
+    const why = input.validity?.reasons.join(' ') ?? 'the prompt is not valid.';
+    return { ok: false, message: `This prompt can’t be copied or saved: ${why}` };
+  }
+  if (input.builtConfigKey === null || input.builtConfigKey !== input.currentConfigKey) {
+    return { ok: false, message: 'Prompt is out of date — rebuild before copying or saving.' };
+  }
+  return { ok: true };
 }
 
 /**

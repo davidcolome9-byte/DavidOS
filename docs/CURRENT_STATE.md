@@ -74,12 +74,12 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-14, post-DOS-WF-001)
+## Verification status (2026-07-14, post-DOS-WF-001 correction pass)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 23 files, 211 tests, all passing (`npm test`).
-- Browser smoke tests: 19 passing (`npm run test:smoke`, Playwright
+- Unit tests: 23 files, 227 tests, all passing (`npm test`).
+- Browser smoke tests: 25 passing (`npm run test:smoke`, Playwright
   chromium, production build; phone + laptop viewports).
 - Lint, seed validation (ids + registry parity), privacy validation
   (generic rules, content-aware scan of all tracked text files),
@@ -96,9 +96,20 @@ Exact counts live here ONLY (other docs reference this file):
 
 ### DOS-WF-001 (2026-07-14) — local implementation, not yet deployed
 
-- Implemented locally on branch `fix/dos-wf-001-workflow-reliability`; one
-  local commit, no push, no PR, no deploy. Phone/laptop deployment is still
+- Implemented locally on branch `fix/dos-wf-001-workflow-reliability`; two
+  local commits, no push, no PR, no deploy. Phone/laptop deployment is still
   pending review.
+- **Correction pass (2026-07-14)** applied ChatGPT-review findings, all
+  local: Gravl builder carries generic safety language only (no hardcoded
+  L4/L5 — private movement-safety detail appears solely via the included,
+  whitelisted Health Profile context); a Gravl-safe profile field whitelist
+  drops meds/supplements, `promptSummary`, `freeformContext`, and nutrition;
+  Gravl routing requires workout context (generic "review …" no longer
+  hijacks meal/macro/nutrition/recovery requests); the false "expanded
+  history" claim is removed (Gravl history deferred, OL-026); action handlers
+  re-check validity/staleness before any write (defense-in-depth); staleness
+  keys on the full profile-context hash; and URL input hydration is split from
+  workflow/style sync. See docs/DECISIONS.md correction entry.
 - **Local-only save**: saved prompts persist to this browser/device's
   localStorage only. No Google Drive sync.
 - **Deferred / excluded on purpose**: Google Drive Prompt Vault deferred

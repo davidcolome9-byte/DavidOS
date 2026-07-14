@@ -13,8 +13,9 @@
     "David's request is required; the Gravl workout itself is optional (intake mode asks for it)",
     "The output is one provider-neutral Universal AI Prompt — no AI is called here",
     "DavidOS cannot read screenshots; they are attached in the AI app after copying the prompt",
-    "Medications and supplements are excluded from this prompt by default",
-    "The L4/L5 movement-safety summary is preserved whenever a back history is on file"
+    "Health Profile context is opt-in; with it excluded, no private profile facts appear. When included, only a training-relevant field whitelist is used — medications, supplements, and free-text summaries are excluded",
+    "When the included Health Profile reports a movement restriction or back history, its generated movement-safety summary is carried in the context",
+    "Prior saved handoffs are not used by this workflow yet — history integration is deferred"
   ],
   "nextAction": "Copy the Universal AI Prompt, paste it into ChatGPT or Claude, and attach any Gravl screenshots there.",
   "template": "Review and optimize this Gravl workout for style {{style}} on {{date}}. Request:\n\n{{input}}\n\n(This fallback template is not used by the Gravl builder; the Universal AI Prompt is assembled deterministically.)"

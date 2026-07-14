@@ -6,7 +6,7 @@ import { summarizeInput } from '../lib/workflows/templateRenderer';
 import { buildPrompt } from '../lib/workflows/continuity';
 import type { BuiltPrompt } from '../lib/workflows/continuity';
 import { buildGravlPrompt } from '../lib/workflows/gravlPrompt';
-import { evaluatePromptValidity, buildPromptConfigKey } from '../lib/workflows/promptValidity';
+import { evaluatePromptValidity, buildPromptConfigKey, evaluateActability } from '../lib/workflows/promptValidity';
 import { GRAVL_WORKFLOW_ID } from '../lib/router/fitnessRouting';
 import { resolveCategory, resolveHistoryProfile, historyTargetCount } from '../lib/workflows/workflowMeta';
 import { buildProfilePromptBlock } from '../lib/health/profilePrompt';
@@ -43,7 +43,10 @@ export default function WorkflowRunner() {
   const [profileRevealLevel, setProfileRevealLevel] = useState(0); // 0=summary 1=metadata 2=text
   const [flash, setFlash] = useState('');
 
-  // Sync when arriving via a link like /workflows?wf=fitness-handoff
+  // Effect 1 — WORKFLOW / STYLE sync only. Arriving via a link like
+  // /workflows?wf=fitness-handoff (or a style change) selects the workflow and
+  // resets workout inputs; it deliberately does NOT touch the request input,
+  // which Effect 2 owns.
   useEffect(() => {
     const wf = getWorkflow(params.get('wf') ?? '');
     const requestedStyle = params.get('style');
@@ -60,11 +63,22 @@ export default function WorkflowRunner() {
         setWorkoutText('');
         setHasScreenshots(false);
       }
-      const linkedInput = params.get('input');
-      if (linkedInput) setInput(linkedInput);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
+
+  // Effect 2 — URL INPUT sync only, keyed on the exact `input` search param so
+  // it fires on every navigation that changes routed input (including
+  // same-workflow A→B and browser back/forward) but NEVER on ordinary typing
+  // (typing changes local state, not the URL, so `urlInput` is unchanged).
+  // Absent or empty input clears the prior routed input; any URL-provided
+  // change also invalidates a stale built result.
+  const urlInput = params.get('input');
+  useEffect(() => {
+    setInput(urlInput ?? '');
+    setBuilt(null);
+    setBuiltConfigKey(null);
+  }, [urlInput]);
 
   const visibleWorkflows = useMemo(
     () => (agentFilter === 'all' ? WORKFLOWS : WORKFLOWS.filter((w) => w.agentId === agentFilter)),
@@ -79,9 +93,10 @@ export default function WorkflowRunner() {
 
   const profileBlock = useMemo(() => {
     if (!isFitness || !includeProfile || !state.healthProfile) return null;
-    // The Gravl review excludes medications/supplements by default — they are
-    // not relevant to critiquing a training plan.
-    return buildProfilePromptBlock(state.healthProfile, { deepAnalysis, excludeSupplementsMedications: isGravl });
+    // The Gravl review uses a strict training-relevant field whitelist and
+    // drops medications/supplements plus the free-text summary; non-Gravl
+    // fitness workflows keep the full existing behavior.
+    return buildProfilePromptBlock(state.healthProfile, { deepAnalysis, gravlSafe: isGravl });
   }, [isFitness, includeProfile, state.healthProfile, deepAnalysis, isGravl]);
 
   function pick(wf: Workflow) {
@@ -92,11 +107,17 @@ export default function WorkflowRunner() {
     setWorkoutText('');
     setHasScreenshots(false);
     setFlash('');
-    setParams({ wf: wf.id }, { replace: true });
+    // Carry the current request into the URL so Effect 2 (keyed on the input
+    // param) does not clear a typed request when switching workflows.
+    const trimmed = input.trim();
+    setParams(trimmed ? { wf: wf.id, input } : { wf: wf.id }, { replace: true });
   }
 
-  const profileFingerprint = profileBlock && !profileBlock.empty
-    ? profileBlock.metadata.promptContextFingerprint
+  // Staleness keys on the FULL context hash, not the shortened display
+  // fingerprint — a truncated fingerprint could collide and miss a real
+  // change to the included Health Profile context.
+  const profileContextHash = profileBlock && !profileBlock.empty
+    ? profileBlock.metadata.promptContextHash
     : undefined;
 
   /** Identity of the values a prompt would be built from right now. */
@@ -106,7 +127,7 @@ export default function WorkflowRunner() {
       workflowId: wf.id,
       style,
       includeProfile,
-      profileFingerprint,
+      profileFingerprint: profileContextHash,
       workoutText: isGravl ? workoutText : undefined,
       hasScreenshots: isGravl ? hasScreenshots : undefined,
     });
@@ -149,7 +170,30 @@ export default function WorkflowRunner() {
     setFlash('');
   }
 
+  /**
+   * Defense-in-depth guard shared by every action handler. Disabled buttons
+   * are the first line; this re-verifies (built exists, valid, fresh, belongs
+   * to the current workflow+config) before ANY clipboard or local write, and
+   * shows an explanatory message on failure. Uses the pure evaluateActability
+   * helper so the rule is unit-tested and identical to the button-enable rule.
+   */
+  function guardAction(): boolean {
+    const v = built ? evaluatePromptValidity(built.fullPrompt, input) : null;
+    const res = evaluateActability({
+      hasBuilt: Boolean(built),
+      validity: v,
+      builtConfigKey,
+      currentConfigKey: workflow ? currentConfigKey(workflow) : '',
+    });
+    if (!res.ok) {
+      setFlash(res.message ?? 'This action is unavailable right now.');
+      return false;
+    }
+    return true;
+  }
+
   async function copyText(text: string, label: string) {
+    if (!guardAction()) return;
     try {
       await navigator.clipboard.writeText(text);
       setFlash(`${label} copied to clipboard.`);
@@ -171,7 +215,7 @@ export default function WorkflowRunner() {
 
   /** Canonical save: cleaned current entry ONLY — never the generated prompt. */
   function saveHandoff() {
-    if (!workflow || !input.trim()) return;
+    if (!guardAction() || !workflow || !input.trim()) return;
     const content = input.trim();
     const { entryDate, dateConfidence } = parseEntryDate(content);
     const handoff: Handoff = {
@@ -204,7 +248,7 @@ export default function WorkflowRunner() {
 
   /** Save Prompt: the built prompt saved locally, on this device only. */
   function saveArtifact() {
-    if (!workflow || !built) return;
+    if (!guardAction() || !workflow || !built) return;
     const artifact: WorkflowArtifact = {
       id: uid(),
       workflowId: workflow.id,
@@ -238,7 +282,7 @@ export default function WorkflowRunner() {
   }
 
   function addOpenLoop() {
-    if (!workflow) return;
+    if (!guardAction() || !workflow) return;
     const label = `Follow up: ${workflow.name} — ${summarizeInput(input)}`;
     update((s) => ({
       ...s,
@@ -258,7 +302,12 @@ export default function WorkflowRunner() {
   // A built prompt is safe to copy/save only when it is valid AND fresh.
   const validity = built ? evaluatePromptValidity(built.fullPrompt, input) : null;
   const stale = Boolean(built && workflow && builtConfigKey !== null && builtConfigKey !== currentConfigKey(workflow));
-  const canAct = Boolean(built && validity?.valid && !stale);
+  const canAct = evaluateActability({
+    hasBuilt: Boolean(built),
+    validity,
+    builtConfigKey,
+    currentConfigKey: workflow ? currentConfigKey(workflow) : '',
+  }).ok;
 
   return (
     <>
@@ -301,12 +350,19 @@ export default function WorkflowRunner() {
             <RiskBadge risk={workflow.risk} />
           </h2>
           <p className="muted small">{workflow.description}</p>
-          <p className="muted small">
-            {historyProfile === 'fitness_health'
-              ? `Uses expanded history context — pulls up to ${historyTargetCount(historyProfile)} prior saved handoffs.`
-              : `Pulls up to ${historyTargetCount(historyProfile)} prior saved handoffs.`}
-            {' '}({priorAvailable} saved so far)
-          </p>
+          {isGravl ? (
+            <p className="muted small">
+              Builds from your request and the Gravl workout you provide. Prior saved handoffs are
+              not pulled into this prompt yet — Gravl history integration is deferred.
+            </p>
+          ) : (
+            <p className="muted small">
+              {historyProfile === 'fitness_health'
+                ? `Uses expanded history context — pulls up to ${historyTargetCount(historyProfile)} prior saved handoffs.`
+                : `Pulls up to ${historyTargetCount(historyProfile)} prior saved handoffs.`}
+              {' '}({priorAvailable} saved so far)
+            </p>
+          )}
 
           <label className="field" htmlFor="wf-input">
             {isGravl ? 'Your request — what do you want from this workout? (required)' : 'Input — messy notes are fine'}

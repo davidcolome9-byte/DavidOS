@@ -214,6 +214,23 @@ git history (`fb76122`) and docs/DECISIONS.md.
   from a shared JSON manifest. Keep output in `personal/` only.
 - **Complexity:** M · **Approval:** no
 
+### OL-026 · Gravl workflow does not use prior handoff history yet
+- **Domain:** workflow runner / continuity · **Status:** Deferred
+  (DOS-WF-001 correction, 2026-07-14)
+- **Problem:** the Gravl Workout Review builder (`gravlPrompt.ts`) assembles
+  its prompt from the current request + workout only; unlike the continuity
+  engine it does NOT retrieve prior saved handoffs. Earlier UI copy implied
+  "expanded history"; that claim was removed (the Runner now says history is
+  deferred, `priorCount` stays 0, and the workflow assumptions state it).
+- **Approach (when picked up):** feed Gravl through the same prior-handoff
+  retrieval the continuity engine uses (fitness window), or a Gravl-specific
+  retrieval, and only then restore any "uses prior history" language. Keep the
+  Gravl-safe profile whitelist and privacy posture intact.
+- **Acceptance:** Gravl prompts include prior fitness handoffs with truthful
+  `priorCount`/`includedHandoffIds`; UI history claims match reality.
+- **Complexity:** M · **Approval:** no (truthful deferral; enabling history is
+  a bounded enhancement)
+
 ## P3 — polish, a11y, hardening
 
 ### OL-015 · Modals lack focus management (aria-modal without the behavior)

@@ -244,3 +244,62 @@ Initial-build decisions, made without blocking questions per the build brief:
   extended with optional `title` + `sourceInput` (additive, no migration).
   "Saved on this device only." Google Drive Prompt Vault remains deferred
   (OL-024); embedded AI execution and screenshot OCR remain out of scope.
+
+## DOS-WF-001 — Correction pass after independent review (2026-07-14)
+
+Appended (not rewritten) per the append-only rule; the original DOS-WF-001
+entry above stands. These correct material findings from ChatGPT's review of
+the DOS-WF-001 bundle. Implementation stays local; not deployed/merged/accepted.
+
+- **Health Profile exclusion is honored (privacy).** The Gravl builder's
+  Safety Boundaries section no longer hardcodes David's L4/L5 history or the
+  axial-loading restriction. It now carries generic safety language only
+  (respect reported pain/injuries/restrictions, flag likely-provoking
+  exercises, escalate severe/neurological symptoms). The specific L4/L5 +
+  axial-loading movement-safety summary appears ONLY when the approved Health
+  Profile context is included and reports a back history/restriction — so a
+  prompt built with the profile excluded contains no private medical facts.
+  The existing UI privacy warning already fires exactly when profile text is
+  inserted (`profileBlock` non-empty).
+- **Gravl-safe profile whitelist.** `buildProfilePromptBlock` gains a
+  `gravlSafe` option (an explicit field whitelist, not keyword redaction):
+  goals, training plan + movement restrictions, generated movement-safety
+  summary, recovery/readiness targets, relevant activity targets, and a
+  limited set of body metrics (height, current/goal weight). It force-excludes
+  structured medications/supplements AND drops the free-text `promptSummary`/
+  `freeformContext` entirely — those could otherwise smuggle meds, TRT, or
+  unrelated medical detail past a structured-field exclusion. Nutrition and
+  non-whitelisted body metrics (waist, body-fat) are dropped for Gravl. A new
+  field is inert for Gravl until deliberately whitelisted. Non-Gravl fitness
+  behavior is unchanged (`gravlSafe` off ⇒ identical to before).
+- **Routing requires workout context.** `fitnessRouting` now gates Gravl on a
+  workout-context anchor (gravl, workout, exercise, training/workout plan or
+  program, program review). Generic verbs (review, optimize, progression,
+  improve) only add weight when an anchor is present — so "Review my meal
+  plan / macros / nutrition / recovery progress" route to the Fitness Handoff,
+  while "Review this workout", "Optimize this workout", "Is this workout safe
+  for my back?" route to Gravl. Cleaning/logging/organizing still routes to the
+  Handoff. A genuine non-zero tie (e.g. "log this workout") still offers both.
+- **No false history claim.** The Gravl builder does not consume prior
+  handoffs; history retrieval was NOT added. The Runner's history line is now
+  Gravl-specific ("Prior saved handoffs are not pulled into this prompt yet —
+  Gravl history integration is deferred"); `priorCount` stays 0 and
+  `includedHandoffIds` empty; the workflow's assumptions state the deferral.
+  Tracked as OL-026.
+- **Defense-in-depth action guards.** A pure `evaluateActability` helper
+  (built exists AND valid AND fresh AND config matches) backs both the
+  button-disable state and every action handler. Copy/Save-Prompt/
+  Save-to-History/Create-Follow-Up now re-check before any clipboard or local
+  write and surface an explanatory message on refusal — disabled buttons are
+  no longer the only guard.
+- **Full-hash staleness.** The Runner's staleness config key uses the full
+  `healthProfilePromptMetadata.promptContextHash`, not the shortened display
+  fingerprint, so a truncated-fingerprint collision cannot mask a real change
+  to the included profile context.
+- **URL input hydration split from workflow/style sync.** Two effects: one
+  owns workflow/style selection, a second is keyed on the exact `input` search
+  param. Same-workflow input A→B, browser back/forward, and removing the input
+  param now all update the textarea correctly; ordinary typing (which does not
+  change the URL) is never overwritten; a URL-provided input change invalidates
+  any built result. `pick()` carries the current request into the URL so
+  switching workflows does not clear a typed request.

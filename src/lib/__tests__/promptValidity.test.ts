@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { evaluatePromptValidity, buildPromptConfigKey } from '../workflows/promptValidity';
+import { evaluatePromptValidity, buildPromptConfigKey, evaluateActability } from '../workflows/promptValidity';
 
 describe('evaluatePromptValidity', () => {
   it('accepts a well-formed prompt built from real input', () => {
@@ -63,5 +63,42 @@ describe('buildPromptConfigKey', () => {
   it('changes when Gravl workout text or screenshots change', () => {
     expect(buildPromptConfigKey(base)).not.toBe(buildPromptConfigKey({ ...base, workoutText: 'Squat 3x5' }));
     expect(buildPromptConfigKey(base)).not.toBe(buildPromptConfigKey({ ...base, hasScreenshots: true }));
+  });
+});
+
+describe('evaluateActability (defense-in-depth guard)', () => {
+  const valid = { valid: true, reasons: [] };
+
+  it('refuses when nothing is built (no local write / clipboard)', () => {
+    const r = evaluateActability({ hasBuilt: false, validity: null, builtConfigKey: 'k', currentConfigKey: 'k' });
+    expect(r.ok).toBe(false);
+    expect(r.message).toMatch(/build a prompt first/i);
+  });
+
+  it('refuses an invalid prompt and surfaces the reason', () => {
+    const r = evaluateActability({
+      hasBuilt: true,
+      validity: { valid: false, reasons: ['The request is empty.'] },
+      builtConfigKey: 'k',
+      currentConfigKey: 'k',
+    });
+    expect(r.ok).toBe(false);
+    expect(r.message).toContain('The request is empty.');
+  });
+
+  it('refuses a stale prompt (built config differs from current)', () => {
+    const r = evaluateActability({ hasBuilt: true, validity: valid, builtConfigKey: 'built', currentConfigKey: 'now' });
+    expect(r.ok).toBe(false);
+    expect(r.message).toMatch(/out of date/i);
+  });
+
+  it('refuses when no build config was ever captured', () => {
+    expect(evaluateActability({ hasBuilt: true, validity: valid, builtConfigKey: null, currentConfigKey: 'k' }).ok).toBe(false);
+  });
+
+  it('allows a valid, fresh prompt whose config matches', () => {
+    const r = evaluateActability({ hasBuilt: true, validity: valid, builtConfigKey: 'same', currentConfigKey: 'same' });
+    expect(r.ok).toBe(true);
+    expect(r.message).toBeUndefined();
   });
 });
