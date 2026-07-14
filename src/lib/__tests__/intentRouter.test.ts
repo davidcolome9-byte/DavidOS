@@ -9,6 +9,32 @@ describe('intentRouter', () => {
     expect(r.confidence).toBeGreaterThan(0);
   });
 
+  it('routes a workout-plan request to the Gravl workflow, not the handoff', () => {
+    const r = routeIntent('I need help with a workout plan');
+    expect(r.target).toBe('fitness');
+    expect(r.suggestedWorkflowId).toBe('gravl-review');
+  });
+
+  it('routes a Gravl review/optimize request to the Gravl workflow', () => {
+    expect(routeIntent('Review the workout Gravl gave me').suggestedWorkflowId).toBe('gravl-review');
+    expect(routeIntent('Optimize this workout').suggestedWorkflowId).toBe('gravl-review');
+  });
+
+  it('still routes cleaning/logging requests to the Fitness Handoff', () => {
+    expect(routeIntent('Clean up today’s workout notes').suggestedWorkflowId).toBe('fitness-handoff');
+    expect(routeIntent('Log today’s workout').suggestedWorkflowId).toBe('fitness-handoff');
+  });
+
+  it('does not route generic nutrition/recovery "review" requests to Gravl', () => {
+    // Fitness domain still, but the specific workflow must not be Gravl.
+    expect(routeIntent('Review my meal plan').suggestedWorkflowId).not.toBe('gravl-review');
+    expect(routeIntent('Review my macros').suggestedWorkflowId).not.toBe('gravl-review');
+  });
+
+  it('routes a workout review to Gravl', () => {
+    expect(routeIntent('Review this workout').suggestedWorkflowId).toBe('gravl-review');
+  });
+
   it('routes teachback requests to the work agent', () => {
     const r = routeIntent('Make this into a teachback for my coworkers.');
     expect(r.target).toBe('work_project');

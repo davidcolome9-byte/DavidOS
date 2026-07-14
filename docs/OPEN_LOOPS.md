@@ -173,19 +173,27 @@ git history (`fb76122`) and docs/DECISIONS.md.
 - **Complexity:** S · **Approval:** no (scope widening would need YES)
 
 ### OL-011 · Generated prompt goes stale with no indicator after input edits
-- **Domain:** workflow runner · **Status:** Verified + Ready
+- **Domain:** workflow runner · **Status:** RESOLVED (DOS-WF-001, 2026-07-14)
 - **Evidence:** `src/components/WorkflowRunner.tsx:253-258` vs `352-353`
   (audit 2026-07-12): editing the input after Generate leaves Copy
   buttons serving the old prompt while Save handoff uses the new text.
-- **Approach:** track `builtFromInput`; when it differs from `input`,
-  show a "Prompt is stale — regenerate" notice and label Copy buttons.
+- **Resolution:** the Runner now captures a config key at build time
+  (`buildPromptConfigKey` over input, workflow, output config, and the
+  included Health Profile fingerprint) and compares it to the live values.
+  A stale result shows "Prompt out of date. Rebuild to update." and
+  disables Copy/Save/follow-up actions. Also covers OL-012's Runner cases.
 - **Complexity:** S · **Approval:** no
 
 ### OL-012 · Silent no-op primary buttons
-- **Domain:** UX · **Status:** Verified + Ready
+- **Domain:** UX · **Status:** Partially resolved (DOS-WF-001, 2026-07-14)
 - **Evidence:** empty-name saves in `WorkflowRunner.tsx:125`,
   `ProjectVault.tsx:91`, `PromptVault.tsx:130` do nothing silently.
-- **Approach:** disable the button or flash the missing-field message.
+- **Resolution (Runner only):** Build Prompt is disabled with a visible
+  "Enter a request…" hint when the request is empty, and every Copy/Save/
+  follow-up action is disabled while a built result is invalid or stale.
+  `ProjectVault` and `PromptVault` empty-name saves are still open.
+- **Approach (remaining):** disable the button or flash the missing-field
+  message in the vault editors.
 - **Complexity:** S · **Approval:** no
 
 ### OL-013 · Router duplicates agent names/default workflows from seed
@@ -205,6 +213,23 @@ git history (`fb76122`) and docs/DECISIONS.md.
   `buildDefaultState` via a small vite-node/tsx invocation, or generate
   from a shared JSON manifest. Keep output in `personal/` only.
 - **Complexity:** M · **Approval:** no
+
+### OL-026 · Gravl workflow does not use prior handoff history yet
+- **Domain:** workflow runner / continuity · **Status:** Deferred
+  (DOS-WF-001 correction, 2026-07-14)
+- **Problem:** the Gravl Workout Review builder (`gravlPrompt.ts`) assembles
+  its prompt from the current request + workout only; unlike the continuity
+  engine it does NOT retrieve prior saved handoffs. Earlier UI copy implied
+  "expanded history"; that claim was removed (the Runner now says history is
+  deferred, `priorCount` stays 0, and the workflow assumptions state it).
+- **Approach (when picked up):** feed Gravl through the same prior-handoff
+  retrieval the continuity engine uses (fitness window), or a Gravl-specific
+  retrieval, and only then restore any "uses prior history" language. Keep the
+  Gravl-safe profile whitelist and privacy posture intact.
+- **Acceptance:** Gravl prompts include prior fitness handoffs with truthful
+  `priorCount`/`includedHandoffIds`; UI history claims match reality.
+- **Complexity:** M · **Approval:** no (truthful deferral; enabling history is
+  a bounded enhancement)
 
 ## P3 — polish, a11y, hardening
 

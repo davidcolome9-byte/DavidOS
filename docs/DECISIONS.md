@@ -194,3 +194,112 @@ Initial-build decisions, made without blocking questions per the build brief:
   agent seed file (the TypeScript-union check remains as a separate
   compatibility check), so a dangling union entry can no longer hide a
   workflow pointing at a removed agent.
+
+## DOS-WF-001 — Workflow reliability & Gravl review (2026-07-14)
+
+- **Fitness routing is disambiguated at the WORKFLOW level, deterministically.**
+  The agent-level keyword router still picks the fitness domain; a new
+  `src/lib/router/fitnessRouting.ts` then resolves the specific workflow —
+  `gravl-review` (review/optimize a Gravl workout) vs. `fitness-handoff`
+  (clean/log/organize existing notes). No AI router. A genuine non-zero tie
+  returns both options via `RouteResult.alternatives`; the palette renders
+  two plain-language choices instead of silently picking one.
+- **`workout` keyword weight raised 1→2** in `routeScoring.ts` so
+  workout-related requests reliably reach the fitness domain before the
+  fitness-workflow disambiguation runs (previously "today" could divert
+  "clean up today's workout notes" to Daily Command). Minimal, in-scope
+  tuning; existing router tests stay green.
+- **The Gravl prompt is a dedicated builder, not the shared continuity
+  engine.** `src/lib/workflows/gravlPrompt.ts` assembles one
+  provider-neutral "Universal AI Prompt" (fixed sections: Role, Objective,
+  David's Request, Available Gravl Workout Information, Relevant Health and
+  Fitness Context, Current Phase and Constraints, Analysis Requirements,
+  Required Output, Missing-Information Handling, Safety Boundaries). The
+  Workflow Runner special-cases `gravl-review`; all other workflows still
+  build through `buildPrompt` unchanged (compatibility preserved). The
+  workflow's JSON `template` is a validator-satisfying fallback only.
+- **Review vs. intake mode** is derived from whether workout text is pasted
+  or the "I have Gravl screenshots" box is checked. Intake mode is a valid
+  prompt, honestly labeled "No Gravl workout added. This prompt will ask
+  for it." DavidOS never claims to read screenshots; both prompt and UI
+  say to attach them in the AI app after copying.
+- **Health Profile inclusion for Gravl excludes medications/supplements by
+  default** via a new `excludeSupplementsMedications` option on
+  `buildProfilePromptBlock`; the L4/L5 movement-safety summary is still
+  included. Loaded at build time.
+- **Validity + staleness are pure helpers** (`src/lib/workflows/promptValidity.ts`).
+  A built result is invalid when the request is empty, the prompt contains
+  `(no input provided)`, an unresolved `{{input|style|date}}` token, or an
+  unresolved `[[placeholder]]`. Staleness compares a build-time config key
+  (input, workflow id, output config, included-profile fingerprint, plus
+  Gravl workout/screenshots) to the live values. Invalid or stale disables
+  Copy Prompt, Save Prompt, Save to Workflow History, and Create Follow-Up
+  Task. Build Prompt is blocked only when the request is empty.
+- **Labels:** Generate → **Build Prompt**; the primary copy/save are
+  **Copy Prompt** / **Save Prompt**; the handoff and open-loop actions are
+  relabeled **Save to Workflow History** / **Create Follow-Up Task**. The
+  provider-specific output-style dropdown is hidden for the Gravl workflow
+  (single neutral "Universal AI Prompt" style).
+- **Local-only save** reuses the existing `WorkflowArtifact` architecture,
+  extended with optional `title` + `sourceInput` (additive, no migration).
+  "Saved on this device only." Google Drive Prompt Vault remains deferred
+  (OL-024); embedded AI execution and screenshot OCR remain out of scope.
+
+## DOS-WF-001 — Correction pass after independent review (2026-07-14)
+
+Appended (not rewritten) per the append-only rule; the original DOS-WF-001
+entry above stands. These correct material findings from ChatGPT's review of
+the DOS-WF-001 bundle. Implementation stays local; not deployed/merged/accepted.
+
+- **Health Profile exclusion is honored (privacy).** The Gravl builder's
+  Safety Boundaries section no longer hardcodes David's L4/L5 history or the
+  axial-loading restriction. It now carries generic safety language only
+  (respect reported pain/injuries/restrictions, flag likely-provoking
+  exercises, escalate severe/neurological symptoms). The specific L4/L5 +
+  axial-loading movement-safety summary appears ONLY when the approved Health
+  Profile context is included and reports a back history/restriction — so a
+  prompt built with the profile excluded contains no private medical facts.
+  The existing UI privacy warning already fires exactly when profile text is
+  inserted (`profileBlock` non-empty).
+- **Gravl-safe profile whitelist.** `buildProfilePromptBlock` gains a
+  `gravlSafe` option (an explicit field whitelist, not keyword redaction):
+  goals, training plan + movement restrictions, generated movement-safety
+  summary, recovery/readiness targets, relevant activity targets, and a
+  limited set of body metrics (height, current/goal weight). It force-excludes
+  structured medications/supplements AND drops the free-text `promptSummary`/
+  `freeformContext` entirely — those could otherwise smuggle meds, TRT, or
+  unrelated medical detail past a structured-field exclusion. Nutrition and
+  non-whitelisted body metrics (waist, body-fat) are dropped for Gravl. A new
+  field is inert for Gravl until deliberately whitelisted. Non-Gravl fitness
+  behavior is unchanged (`gravlSafe` off ⇒ identical to before).
+- **Routing requires workout context.** `fitnessRouting` now gates Gravl on a
+  workout-context anchor (gravl, workout, exercise, training/workout plan or
+  program, program review). Generic verbs (review, optimize, progression,
+  improve) only add weight when an anchor is present — so "Review my meal
+  plan / macros / nutrition / recovery progress" route to the Fitness Handoff,
+  while "Review this workout", "Optimize this workout", "Is this workout safe
+  for my back?" route to Gravl. Cleaning/logging/organizing still routes to the
+  Handoff. A genuine non-zero tie (e.g. "log this workout") still offers both.
+- **No false history claim.** The Gravl builder does not consume prior
+  handoffs; history retrieval was NOT added. The Runner's history line is now
+  Gravl-specific ("Prior saved handoffs are not pulled into this prompt yet —
+  Gravl history integration is deferred"); `priorCount` stays 0 and
+  `includedHandoffIds` empty; the workflow's assumptions state the deferral.
+  Tracked as OL-026.
+- **Defense-in-depth action guards.** A pure `evaluateActability` helper
+  (built exists AND valid AND fresh AND config matches) backs both the
+  button-disable state and every action handler. Copy/Save-Prompt/
+  Save-to-History/Create-Follow-Up now re-check before any clipboard or local
+  write and surface an explanatory message on refusal — disabled buttons are
+  no longer the only guard.
+- **Full-hash staleness.** The Runner's staleness config key uses the full
+  `healthProfilePromptMetadata.promptContextHash`, not the shortened display
+  fingerprint, so a truncated-fingerprint collision cannot mask a real change
+  to the included profile context.
+- **URL input hydration split from workflow/style sync.** Two effects: one
+  owns workflow/style selection, a second is keyed on the exact `input` search
+  param. Same-workflow input A→B, browser back/forward, and removing the input
+  param now all update the textarea correctly; ordinary typing (which does not
+  change the URL) is never overwritten; a URL-provided input change invalidates
+  any built result. `pick()` carries the current request into the URL so
+  switching workflows does not clear a typed request.

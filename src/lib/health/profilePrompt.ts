@@ -51,17 +51,44 @@ const listLine = (label: string, values?: string[]): string | null => {
 };
 
 /**
+ * Gravl-safe field whitelist (DOS-WF-001). When `gravlSafe` is set, ONLY
+ * these training-relevant, non-private paths may enter the prompt, and the
+ * free-text promptSummary / freeformContext are dropped entirely (they can
+ * reintroduce medications, supplements, or unrelated medical detail that a
+ * structured-field exclusion alone would not catch). An explicit whitelist
+ * is preferred over keyword redaction: adding a new field is inert for Gravl
+ * until it is deliberately listed here.
+ */
+const GRAVL_ALLOWED_PATHS = new Set<string>([
+  'goals.primaryGoal', 'goals.goalNotes', 'goals.priorityNotes', 'goals.visualGoal',
+  'trainingPlan.weeklyFrequency', 'trainingPlan.split', 'trainingPlan.preferredStyle',
+  'trainingPlan.movementRestrictions', 'trainingPlan.currentTrainingNotes',
+  'recoveryTargets.sleepHours', 'recoveryTargets.hrvBaseline', 'recoveryTargets.restingHeartRateBaseline',
+  'activityTargets.stepsPerDay', 'activityTargets.cardioTarget',
+  'bodyMetrics.height', 'bodyMetrics.currentWeight', 'bodyMetrics.goalWeight',
+  'medicalContext.safetySummary',
+]);
+
+/**
  * Build the "## Personal Targets / Regimen Context" block (Phase 10).
  * Structured fields first, then Prompt Summary (or a keyword-prioritized
  * freeform excerpt). Returns hash/fingerprint metadata for logs — routine logs
  * never store the actual text.
+ *
+ * `gravlSafe` restricts output to GRAVL_ALLOWED_PATHS, force-excludes
+ * medications/supplements, and drops the free-text summary. Non-Gravl callers
+ * omit it and keep the full existing behavior unchanged.
  */
 export function buildProfilePromptBlock(
   profile: HealthFitnessProfile,
-  opts: { deepAnalysis?: boolean } = {},
+  opts: { deepAnalysis?: boolean; excludeSupplementsMedications?: boolean; gravlSafe?: boolean } = {},
 ): ProfilePromptBlock {
+  const gravlSafe = Boolean(opts.gravlSafe);
+  const excludeMeds = gravlSafe || Boolean(opts.excludeSupplementsMedications);
   const fields: { path: string; text: string }[] = [];
-  const add = (path: string, text: string | null) => { if (text) fields.push({ path, text }); };
+  const add = (path: string, text: string | null) => {
+    if (text && (!gravlSafe || GRAVL_ALLOWED_PATHS.has(path))) fields.push({ path, text });
+  };
 
   const g = profile.goals;
   add('goals.primaryGoal', line('Primary goal', g?.primaryGoal?.replace(/_/g, ' ')));
@@ -104,10 +131,14 @@ export function buildProfilePromptBlock(
   add('bodyMetrics.waist', line('Waist', b?.waist));
   add('bodyMetrics.bodyFatEstimate', line('Body fat estimate', b?.bodyFatEstimate));
 
-  const s = profile.supplementsMedications;
-  // Compact baseline summary every time; deeper detail stays in the profile.
-  const meds = [...(s?.supplements ?? []), ...(s?.medications ?? [])].filter((x) => !x.startsWith('['));
-  add('supplementsMedications', meds.length > 0 ? `- Supplements/medications (context only — never recommend dosing changes): ${meds.join('; ')}` : null);
+  // Medications/supplements are excluded by default for some prompts (e.g. the
+  // Gravl workout review) — they are not relevant to a training-plan critique.
+  if (!excludeMeds) {
+    const s = profile.supplementsMedications;
+    // Compact baseline summary every time; deeper detail stays in the profile.
+    const meds = [...(s?.supplements ?? []), ...(s?.medications ?? [])].filter((x) => !x.startsWith('['));
+    add('supplementsMedications', meds.length > 0 ? `- Supplements/medications (context only — never recommend dosing changes): ${meds.join('; ')}` : null);
+  }
 
   const ap = profile.analysisPreferences;
   add('analysisPreferences.coachingStyle', line('Coaching style', ap?.coachingStyle?.replace(/_/g, ' ')));
@@ -119,21 +150,20 @@ export function buildProfilePromptBlock(
     (profile.medicalContext?.injuryHistory ?? []).some((i) => /l4|l5|laminectomy|herniat/i.test(i)) ||
     (t?.movementRestrictions ?? []).some((i) => /axial/i.test(i));
   if (hasBackHistory) {
-    fields.push({
-      path: 'medicalContext.safetySummary',
-      text:
-        '- Movement safety context: L4/L5 back history. Avoid axial loading. Use caution with back, ' +
-        'leg, nerve-like pain, weakness, or radiating symptoms.',
-    });
+    add('medicalContext.safetySummary',
+      '- Movement safety context: L4/L5 back history. Avoid axial loading. Use caution with back, ' +
+      'leg, nerve-like pain, weakness, or radiating symptoms.');
   }
 
+  // Free-text summary can reintroduce excluded/private detail, so it is dropped
+  // entirely under the Gravl-safe policy (structured whitelist only).
   let summaryText = '';
   let promptSummaryCharCount: number | undefined;
   let freeformExcerptCharCount: number | undefined;
-  if (profile.promptSummary?.trim()) {
+  if (!gravlSafe && profile.promptSummary?.trim()) {
     summaryText = profile.promptSummary.trim();
     promptSummaryCharCount = summaryText.length;
-  } else if (profile.freeformContext?.trim()) {
+  } else if (!gravlSafe && profile.freeformContext?.trim()) {
     const cap = opts.deepAnalysis ? 3000 : 1500;
     summaryText = keywordExcerpt(profile.freeformContext.trim(), cap);
     freeformExcerptCharCount = summaryText.length;

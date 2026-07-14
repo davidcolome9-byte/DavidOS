@@ -1,4 +1,4 @@
-# Current State — 2026-07-13
+# Current State — 2026-07-14
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.)
@@ -17,17 +17,39 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   exists but offline launch can fail right after a deploy or on a
   first-ever visit — OL-001 is the authoritative description; do not
   claim full offline reliability until it is fixed.
-- **8 agents / 8 workflows** as portable JSON specs in `seed/` (7 domain
+- **8 agents / 9 workflows** as portable JSON specs in `seed/` (7 domain
   agents + the Universal Operations coordination hub, merged from main
   during this sprint), rendered as cards, launched via palette, buttons,
-  or slash commands.
+  or slash commands. The Gravl Workout Review & Optimization workflow
+  (`gravl-review`, DOS-WF-001) is the newest.
 - **Rule-based intent router** with confidence (capped 0.9), reasoning,
-  and matched-term display; slash commands bypass routing.
+  and matched-term display; slash commands bypass routing. Fitness intent
+  is now resolved deterministically to a specific workflow — Gravl review/
+  optimize vs. the cleaning/logging Fitness Handoff — instead of
+  collapsing every workout request into the handoff; a genuine tie offers
+  two plain-language choices rather than silently picking one.
 - **Continuity-aware Workflow Runner**: prior-handoff retrieval (3
   default / 7 fitness), regex metric extraction with confidence labels,
   conservative date parsing, raw-excerpt fallback on weak extraction,
-  SHA-256 prompt fingerprints, Preview vs Full Prompt, Copy Full vs Copy
-  Current Only, Save handoff (canonical) vs Save Generated Artifact.
+  SHA-256 prompt fingerprints, Preview vs Full Prompt. Actions are now
+  labeled **Build Prompt / Copy Prompt / Save Prompt** (secondary: Save to
+  Workflow History, Create Follow-Up Task). A built prompt is tracked for
+  **validity** (empty request, `(no input provided)`, unresolved
+  `{{tokens}}`/`[[placeholders]]`) and **staleness** (input, workflow,
+  output config, or included Health Profile context changed); Copy/Save/
+  follow-up actions are disabled while a result is invalid or stale, and
+  switching workflows clears the old result immediately. Build Prompt is
+  blocked only when the request is empty.
+- **Gravl Workout Review & Optimization** (`gravl-review`): builds one
+  provider-neutral Universal AI Prompt (no AI call here). Review mode when
+  a workout is pasted or screenshots are flagged; intake mode otherwise
+  (honestly labeled "No Gravl workout added. This prompt will ask for
+  it."). Screenshots are never read by DavidOS — the prompt and UI tell
+  David to attach them in his AI app after copying. Includes only relevant
+  Health Profile context with the L4/L5 movement-safety summary preserved
+  and medications/supplements excluded by default. Saved prompts are
+  local-device-only artifacts (title, workflow id, original input, built
+  prompt, included-context metadata, creation time).
 - **Macro Target Snapshot** (newest): deterministic target-vs-current
   macro comparison appended to fitness prompts when the entry contains
   nutrition totals and the profile has targets.
@@ -52,13 +74,13 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-13, post-final-micro-correction-pass)
+## Verification status (2026-07-14, post-DOS-WF-001 correction pass)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 19 files, 182 tests, all passing (`npm test`).
-- Browser smoke tests: 8 passing (`npm run test:smoke`, Playwright
-  chromium, mobile viewport, production build).
+- Unit tests: 23 files, 227 tests, all passing (`npm test`).
+- Browser smoke tests: 25 passing (`npm run test:smoke`, Playwright
+  chromium, production build; phone + laptop viewports).
 - Lint, seed validation (ids + registry parity), privacy validation
   (generic rules, content-aware scan of all tracked text files),
   docs/metadata consistency, typecheck + production build: all passing
@@ -71,6 +93,28 @@ Exact counts live here ONLY (other docs reference this file):
   publishing.
 - Deployed and installed as PWA on David's Android phone (pre-sprint
   build; next push to main redeploys).
+
+### DOS-WF-001 (2026-07-14) — local implementation, not yet deployed
+
+- Implemented locally on branch `fix/dos-wf-001-workflow-reliability`; two
+  local commits, no push, no PR, no deploy. Phone/laptop deployment is still
+  pending review.
+- **Correction pass (2026-07-14)** applied ChatGPT-review findings, all
+  local: Gravl builder carries generic safety language only (no hardcoded
+  L4/L5 — private movement-safety detail appears solely via the included,
+  whitelisted Health Profile context); a Gravl-safe profile field whitelist
+  drops meds/supplements, `promptSummary`, `freeformContext`, and nutrition;
+  Gravl routing requires workout context (generic "review …" no longer
+  hijacks meal/macro/nutrition/recovery requests); the false "expanded
+  history" claim is removed (Gravl history deferred, OL-026); action handlers
+  re-check validity/staleness before any write (defense-in-depth); staleness
+  keys on the full profile-context hash; and URL input hydration is split from
+  workflow/style sync. See docs/DECISIONS.md correction entry.
+- **Local-only save**: saved prompts persist to this browser/device's
+  localStorage only. No Google Drive sync.
+- **Deferred / excluded on purpose**: Google Drive Prompt Vault deferred
+  (OL-024); embedded AI execution excluded (DavidOS is a prompt builder,
+  not an AI service); screenshot upload/OCR excluded.
 
 ## Stabilization sprint highlights (2026-07-12)
 

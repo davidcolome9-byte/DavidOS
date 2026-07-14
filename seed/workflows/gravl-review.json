@@ -1,0 +1,22 @@
+{
+  "id": "gravl-review",
+  "agentId": "fitness",
+  "name": "Gravl Workout Review & Optimization",
+  "category": "fitness_health",
+  "historyProfile": "fitness_health",
+  "outputMode": "custom",
+  "description": "Turn David's request plus a Gravl-provided workout into one provider-neutral Universal AI Prompt that reviews and optimizes the workout — Keep / Modify / Replace / Possibly unsafe, phase-fit, and exact Gravl-enterable changes.",
+  "inputHint": "Say what you want from this workout (review it, optimize it, check it's safe). Paste the Gravl workout below, or check the screenshots box.",
+  "outputStyles": ["Universal AI Prompt"],
+  "risk": "draft_only",
+  "assumptions": [
+    "David's request is required; the Gravl workout itself is optional (intake mode asks for it)",
+    "The output is one provider-neutral Universal AI Prompt — no AI is called here",
+    "DavidOS cannot read screenshots; they are attached in the AI app after copying the prompt",
+    "Health Profile context is opt-in; with it excluded, no private profile facts appear. When included, only a training-relevant field whitelist is used — medications, supplements, and free-text summaries are excluded",
+    "When the included Health Profile reports a movement restriction or back history, its generated movement-safety summary is carried in the context",
+    "Prior saved handoffs are not used by this workflow yet — history integration is deferred"
+  ],
+  "nextAction": "Copy the Universal AI Prompt, paste it into ChatGPT or Claude, and attach any Gravl screenshots there.",
+  "template": "Review and optimize this Gravl workout for style {{style}} on {{date}}. Request:\n\n{{input}}\n\n(This fallback template is not used by the Gravl builder; the Universal AI Prompt is assembled deterministically.)"
+}

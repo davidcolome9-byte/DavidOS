@@ -215,6 +215,10 @@ export interface WorkflowArtifact {
   artifactType: WorkflowArtifactType;
   createdAt: string;
   content: string;
+  /** Human-readable title for a locally saved prompt (DOS-WF-001). */
+  title?: string;
+  /** The original request the prompt was built from (traceability). */
+  sourceInput?: string;
   promptHash?: string;
   shortFingerprint?: string;
   characterCount?: number;
@@ -307,6 +311,11 @@ export interface RouteResult {
   matched: string[];
   suggestedWorkflowId?: string;
   nextAction: string;
+  /**
+   * Present when two registered workflows genuinely tie for the same intent.
+   * The UI shows these as plain-language choices instead of silently picking one.
+   */
+  alternatives?: { workflowId: string; label: string }[];
 }
 
 export interface IntegrationMethod {

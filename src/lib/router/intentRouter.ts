@@ -1,5 +1,6 @@
 import type { RouteResult } from '../types';
 import { scoreInput } from './routeScoring';
+import { resolveFitnessWorkflow } from './fitnessRouting';
 
 const AGENT_NAMES: Record<string, string> = {
   'universal-operations': 'Universal Operations',
@@ -56,12 +57,26 @@ export function routeIntent(input: string): RouteResult {
 
   const confidence = Math.min(0.9, top.score / (top.score + second.score + 0.5));
 
+  // Agent-level routing picks the domain; for fitness we then deterministically
+  // pick the specific workflow (Gravl review/optimize vs. cleaning/logging
+  // handoff) rather than collapsing every fitness request into the handoff.
+  let suggestedWorkflowId = DEFAULT_WORKFLOW[top.agentId];
+  let alternatives: RouteResult['alternatives'];
+  if (top.agentId === 'fitness') {
+    const fit = resolveFitnessWorkflow(trimmed);
+    suggestedWorkflowId = fit.workflowId;
+    if (fit.tie) alternatives = fit.options;
+  }
+
   return {
     target: top.agentId,
     confidence: Math.round(confidence * 100) / 100,
     reasoning: `Matched "${top.matched.join('", "')}" → ${AGENT_NAMES[top.agentId]}.`,
     matched: top.matched,
-    suggestedWorkflowId: DEFAULT_WORKFLOW[top.agentId],
-    nextAction: `Run the ${AGENT_NAMES[top.agentId]} agent's suggested workflow with this input.`,
+    suggestedWorkflowId,
+    alternatives,
+    nextAction: alternatives
+      ? `Two ${AGENT_NAMES[top.agentId]} workflows fit — pick one below.`
+      : `Run the ${AGENT_NAMES[top.agentId]} agent's suggested workflow with this input.`,
   };
 }
