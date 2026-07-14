@@ -51,9 +51,11 @@ Point-in-time status: [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).
 4. **Local-first.** No backend, no accounts, no API keys in the repo or
    bundle (see `.env.example`). Offline operation is a design
    requirement: the service worker precaches the built app-shell assets
-   from a build-stamped manifest and never deletes the previous working
-   cache until the new version's cache is verified complete (OL-001 fix,
-   2026-07-13 — see docs/OPEN_LOOPS.md for what remains pending). Manual
+   from a build-stamped manifest, uses a content-derived identity plus its
+   registration scope for cache isolation, and deletes only superseded
+   same-scope caches after the current cache is verified complete (OL-001
+   correction, 2026-07-13 — see docs/OPEN_LOOPS.md for what remains
+   pending). Manual
    verification on the installed Android PWA is still outstanding; do
    not claim offline reliability beyond the tested scope.
 5. **Canonical history stays clean.** Saved handoffs store the cleaned

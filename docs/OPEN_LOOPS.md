@@ -20,12 +20,14 @@ git history (`fb76122`) and docs/DECISIONS.md.
 ## P1 — data safety & core promises
 
 ### OL-001 · Offline launch breaks after first install and after every deploy
-- **Domain:** PWA/service worker · **Status:** Fixed locally 2026-07-13
-  on branch `fix/dos-fnd-001-reliable-offline-launch`; automated
-  verification passes there (`npm run verify` + `npm run verify:full`).
-  Independent review, merge, deployment, and the manual
-  installed-Android check below are still pending — NOT yet accepted
-  or shipped.
+- **Domain:** PWA/service worker · **Status:** Corrected locally 2026-07-13
+  on branch `fix/dos-fnd-001-reliable-offline-launch`. The initial local
+  implementation was BLOCKED by independent review because seconds-based
+  cache identities could collide, activation deleted unrelated origin
+  caches, and URL validation mishandled several forms. The correction pass
+  addresses those findings with expanded automated evidence. Repeat
+  independent review, merge, deployment, and the manual installed-Android
+  check below remain pending — NOT yet accepted or shipped.
 - **Problem (pre-fix, kept for history):** `public/sw.js` precached only
   `./` + manifest at install; its activate handler deleted ALL old
   caches. (a) On first visit the hashed JS/CSS were fetched before the
@@ -33,18 +35,24 @@ git history (`fb76122`) and docs/DECISIONS.md.
   until a second online visit. (b) After a deploy, the new SW's activate
   deleted the old cache that held the current assets → offline
   white-screen until the next online reload.
-- **Fix:** `scripts/stamp-sw-version.mjs` now parses the built
-  `dist/index.html` and stamps the hashed app-shell asset URLs into a
-  `__SW_PRECACHE_MANIFEST__` placeholder next to the version stamp;
-  install fetches shell + manifest into the new versioned cache and
-  verifies every entry landed before the install may succeed; activate
-  deletes superseded caches only after re-confirming the new cache is
-  complete; navigations no longer overwrite the pinned install-time
-  shell. A failed install therefore leaves the previous working offline
-  version fully in control. Decision record: docs/DECISIONS.md
-  "DOS-FND-001".
-- **Automated evidence:** sw lifecycle unit tests execute the real
-  stamped sw.js source (install/verify/activate failure paths); three
+- **Corrected fix:** `scripts/stamp-sw-version.mjs` parses the built
+  `dist/index.html`, validates its relative shell URLs, and stamps both the
+  manifest and a full SHA-256 identity derived from the sorted URLs, their
+  built contents, and the unstamped service-worker source. Cache names combine a DavidOS prefix, the encoded
+  registration origin/path, and that identity, so content-distinct builds
+  do not practically reuse a cache and activation can target only older
+  caches from the same DavidOS scope. Install verifies the complete new
+  cache before `skipWaiting`; activate re-verifies before same-scope
+  cleanup and claims clients only after cleanup succeeds. Fetches use the
+  current scope cache and parsed-origin equality. Relative query-bearing
+  URLs are exact cache keys; their query is excluded from filesystem
+  lookup. Root-relative/internal-absolute paths, fragments, traversal, and
+  unsafe encoding fail clearly; external absolute URLs are excluded.
+  Decision record: docs/DECISIONS.md "DOS-FND-001 correction pass".
+- **Automated evidence:** sw lifecycle/manifest unit tests execute the real
+  stamped sw.js source and cover collision resistance, failed-install
+  isolation, scope-limited cleanup, activate/claim failure paths, URL
+  policy, exact origins/queries, and `/DavidOS/` resolution. Three
   Playwright tests run production builds from a genuinely-stoppable
   static server: first-visit → offline launch, deploy + one online load
   → offline launch of the new version, failed new-version install →

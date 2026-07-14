@@ -46,9 +46,10 @@ Full command list: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 3. DavidOS opens standalone and keeps all data on the device. The app
    shell is precached for offline launch — including after a first visit
    and across app updates (one online load after each deploy picks up the
-   new version; until then the previous working version keeps serving
-   offline). Verified by automated tests; confirmation on the installed
-   Android PWA is still pending (OL-001 in `docs/OPEN_LOOPS.md`).
+   content-identified, scope-isolated cache). The initial implementation
+   was blocked by independent review and corrected locally with expanded
+   automated tests; repeat review and confirmation on the installed
+   Android PWA remain pending (OL-001 in `docs/OPEN_LOOPS.md`).
 
 ## Current features
 

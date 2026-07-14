@@ -91,6 +91,7 @@ export default tseslint.config(
         fetch: 'readonly',
         console: 'readonly',
         URL: 'readonly',
+        encodeURIComponent: 'readonly',
       },
     },
   },

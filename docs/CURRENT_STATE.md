@@ -13,14 +13,16 @@ count changes. (History: see git log and docs/DECISIONS.md.)
 
 - **Command center shell**: 5-tab bottom nav (Home, Workflows, Projects,
   Logs, More) + grouped More menu; dark/light theme; installable PWA with
-  a reliable update flow (stamped sw version). App-shell offline launch
-  is fixed locally (OL-001, 2026-07-13): the service worker precaches
-  the built shell assets from a build-stamped manifest, verifies the new
-  cache is complete before it may activate, and deletes the previous
-  working cache only after that verification — covered by unit + offline
-  Playwright tests against production builds. Awaiting independent
-  review, merge/deploy, and a manual check on the installed Android PWA;
-  do not claim offline reliability beyond this tested scope.
+  a content-stamped update flow. App-shell offline launch is corrected
+  locally (OL-001, 2026-07-13): the service worker precaches the built
+  shell assets, derives a SHA-256 cache identity from their URLs, contents,
+  and the service-worker source, verifies the new cache before activation cleanup, and removes
+  only older DavidOS caches from the same registration scope. The initial
+  local implementation was blocked by independent review; its collision,
+  origin-wide cleanup, and URL-validation defects are corrected locally
+  with expanded unit + offline Playwright evidence. Repeat independent
+  review, merge/deploy, and a manual installed-Android check remain
+  pending; do not claim offline reliability beyond this tested scope.
 - **8 agents / 8 workflows** as portable JSON specs in `seed/` (7 domain
   agents + the Universal Operations coordination hub, merged from main
   during this sprint), rendered as cards, launched via palette, buttons,
@@ -56,11 +58,11 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-13, post-DOS-FND-001 offline-launch fix)
+## Verification status (2026-07-13, post-DOS-FND-001 correction pass)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 21 files, 204 tests, all passing (`npm test`).
+- Unit tests: 21 files, 221 tests, all passing (`npm test`).
 - Browser smoke tests: 11 passing (`npm run test:smoke`, Playwright
   chromium, mobile viewport, production build) — includes 3 offline
   launch tests that serve production builds from a stoppable static
@@ -92,10 +94,11 @@ Exact counts live here ONLY (other docs reference this file):
 The authoritative list with priorities lives in
 [docs/OPEN_LOOPS.md](OPEN_LOOPS.md). Headlines:
 
-- OL-001 (offline launch after first visit / after deploys) is fixed
-  locally on `fix/dos-fnd-001-reliable-offline-launch` with automated
-  evidence; independent review, merge/deploy, and manual verification on
-  the installed Android PWA are still pending.
+- OL-001 (offline launch after first visit / after deploys) is corrected
+  locally on `fix/dos-fnd-001-reliable-offline-launch` after the initial
+  implementation was blocked by independent review. Repeat independent
+  review, merge/deploy, and manual installed-Android verification remain
+  pending.
 - Handoff correction/edit UI (OL-007; model fields exist, retrieval
   respects them, no UI yet).
 - v0.3 Drive sync beyond backup export (OL-024; plan:

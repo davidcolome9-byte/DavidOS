@@ -197,6 +197,10 @@ Initial-build decisions, made without blocking questions per the build brief:
 
 ## DOS-FND-001 — Reliable offline launch (2026-07-13)
 
+- **Historical status:** this entry records the initial local implementation,
+  which the independent review later BLOCKED. Its intended guarantees were
+  not accepted; the correction entry below records the reviewed defects and
+  replacement design.
 - **Root cause confirmed (OL-001):** the service worker precached only
   `./` + manifest, so the hashed JS/CSS needed to boot the app were never
   guaranteed to be cached (first visit), and its activate handler deleted
@@ -218,8 +222,9 @@ Initial-build decisions, made without blocking questions per the build brief:
   `skipWaiting`; a failed or partial install rejects, the browser
   discards the new worker, and the previous worker + cache stay in
   control. activate re-verifies completeness before deleting superseded
-  caches (guards eviction between install and activate). Failed
-  installation therefore always preserves the prior working cache.
+  caches (guards eviction between install and activate). This ordering was
+  intended to preserve the prior working cache, but the later review showed
+  that its seconds-based cache identity could collide and defeat that intent.
 - **Navigations no longer runtime-cache the shell:** the install-time
   shell is pinned so the cached HTML always references assets present in
   the same cache. Runtime-caching newer HTML (old behavior) could strand
@@ -231,9 +236,8 @@ Initial-build decisions, made without blocking questions per the build brief:
   deterministic manifest and a safe activation order — both fit in the
   existing file and stamp step with zero new dependencies, preserving the
   hard rule on minimal runtime deps and the established
-  version-stamped update flow. A Workbox migration would replace a now
-  fully-tested ~120-line worker with a dependency tree for no additional
-  safety.
+  version-stamped update flow. A Workbox migration was not part of this
+  bounded package.
 - **Limits of the automated evidence:** unit tests execute the real
   stamped sw.js source against mocked `self`/`caches`/`fetch` (covering
   the install-failure and eviction paths browsers can't be forced into
@@ -249,3 +253,43 @@ Initial-build decisions, made without blocking questions per the build brief:
   is still pending; OL-001 stays open until David confirms it.
 - **Lint:** added the `URL` global for `public/sw.js` (used to resolve
   precache paths against the sw scope).
+
+## DOS-FND-001 correction pass after independent review (2026-07-13)
+
+- **Initial implementation was blocked:** independent review reproduced a
+  failed same-second update overwriting the prior shell because the cache
+  identity used a seconds-truncated timestamp. It also found origin-wide
+  cache deletion, unsafe origin-prefix matching, and incomplete URL-form
+  handling. The package remained local and unshipped while corrected.
+- **Content-derived identity:** the stamp step hashes a length-delimited,
+  URL-sorted set containing `dist/index.html`, every precache URL, each
+  referenced file's bytes, and the unstamped service-worker source. The
+  full SHA-256 digest is the build identity, so worker-only releases are
+  isolated too.
+  Identical shell content intentionally reuses the identity; content-
+  distinct shells have negligible practical collision risk. No timestamp,
+  randomness, process ID, or new dependency participates.
+- **Scope-isolated cache namespace:** cache names contain a stable DavidOS
+  prefix, the encoded normalized registration origin+path, and the build
+  identity. Successful activation deletes only older caches with that exact
+  DavidOS scope namespace. Unrelated origin caches, legacy unscoped caches,
+  and other DavidOS registration scopes are not deletion candidates.
+- **Failure ordering:** install populates and verifies the content-unique
+  cache before `skipWaiting`. Activate re-verifies, performs same-scope
+  cleanup, and calls `clients.claim` only after cleanup succeeds. A failed
+  new install may leave its isolated partial cache, which a later successful
+  same-scope activation may remove; failure paths never clean destructively.
+- **Narrow URL policy:** local shell references must be relative. Queries
+  remain in request/cache keys but not filesystem paths; cache matching is
+  exact (no `ignoreSearch`). Percent-encoded path segments are decoded for
+  file validation. Root-relative/internal-absolute forms, fragments,
+  traversal, malformed encoding, encoded separators, and missing files fail
+  clearly; absolute external references are excluded. Runtime same-origin
+  checks compare parsed URL origins exactly, not string prefixes.
+- **Evidence boundary:** unit coverage proves deterministic identity,
+  failed-update isolation, scope-limited cleanup, activate/claim ordering,
+  URL policy, origin lookalikes, query behavior, and `/DavidOS/` resolution.
+  Production-build Playwright retains the first-visit, successful-update,
+  and failed-update offline scenarios. Real installed Android behavior,
+  GitHub Pages response headers, and on-device storage pressure remain for
+  post-deploy manual verification; OL-001 is not accepted or shipped.

@@ -91,9 +91,11 @@ the gitignored `personal/` folder — its output must never be committed.
 ## Deploying
 
 Push to `main` → GitHub Actions builds and deploys Pages. There is no
-manual deploy step. `scripts/stamp-sw-version.mjs` stamps a unique cache
-version AND the app-shell precache manifest (asset URLs parsed from the
-built `dist/index.html`) into `dist/sw.js` on every build; without the
-version installed PWAs never update, and without the manifest offline
+manual deploy step. `scripts/stamp-sw-version.mjs` stamps a deterministic
+SHA-256 app-shell/worker identity AND the precache manifest (asset URLs parsed
+from the built `dist/index.html`) into `dist/sw.js` on every build. Cache
+names also encode the service-worker registration scope, preventing
+cross-application cleanup on a shared origin. Without the identity
+installed PWAs may not update safely, and without the manifest offline
 launches break. Never remove the `__SW_VERSION__` or
 `__SW_PRECACHE_MANIFEST__` placeholders from `public/sw.js`.

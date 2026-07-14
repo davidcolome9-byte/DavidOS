@@ -43,10 +43,10 @@ both; users then need one full close/reopen of the app.
 most one load: the new service worker installs during the first online
 load after a deploy. If it persists, check that `dist/sw.js` has a
 stamped precache manifest (`__SW_PRECACHE_MANIFEST__` replaced with the
-built asset URLs) and that every listed asset deployed — a failed
-precache deliberately keeps the previous working version in control
-rather than white-screening (OL-001 fix; see docs/DECISIONS.md
-"DOS-FND-001").
+built asset URLs) plus a SHA-256 build identity, and that every listed
+asset deployed. A failed content-distinct precache writes only to its own
+scope-specific cache and cannot mutate the prior cache (OL-001 correction;
+see docs/DECISIONS.md "DOS-FND-001 correction pass").
 
 **Stale content while developing.** DevTools → Application → Service
 Workers → "Update on reload", or unregister the worker.

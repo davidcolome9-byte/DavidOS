@@ -141,8 +141,8 @@ function makeDeployment(
 
   const swPath = join(dir, 'sw.js');
   let sw = readFileSync(swPath, 'utf8');
-  const restamped = sw.replace(/davidos-[0-9]{14}/g, `davidos-${tag}`);
-  if (restamped === sw) throw new Error('stamped cache version not found in dist/sw.js');
+  const restamped = sw.replace(/const BUILD_ID = '[a-f0-9]{64}';/, `const BUILD_ID = '${tag}';`);
+  if (restamped === sw) throw new Error('stamped build identity not found in dist/sw.js');
   sw = restamped;
 
   if (options?.renameAssets) {
@@ -184,8 +184,12 @@ async function waitForServiceWorkerReady(page: Page) {
   });
 }
 
-function cacheKeys(page: Page): Promise<string[]> {
-  return page.evaluate(() => caches.keys());
+function cacheBuildIds(page: Page): Promise<string[]> {
+  return page.evaluate(async () =>
+    (await caches.keys())
+      .filter((key) => key.startsWith('davidos-app-shell::'))
+      .map((key) => key.slice(key.lastIndexOf('::') + 2)),
+  );
 }
 
 async function goOffline(page: Page) {
@@ -219,14 +223,14 @@ test('after a new deployment and one online load, the updated app launches offli
   await page.goto(site.url('/'));
   await expectAppRenders(page);
   await waitForServiceWorkerReady(page);
-  expect(await cacheKeys(page)).toEqual(['davidos-UPDA']);
+  expect(await cacheBuildIds(page)).toEqual(['UPDA']);
 
   site.deploy(deployB);
   await page.reload(); // ONE online load of the new deployment
 
   // The new service worker precaches deployB into its own cache and only
   // then removes the superseded one.
-  await expect.poll(() => cacheKeys(page), { timeout: 15_000 }).toEqual(['davidos-UPDB']);
+  await expect.poll(() => cacheBuildIds(page), { timeout: 15_000 }).toEqual(['UPDB']);
 
   await goOffline(page);
   await page.reload();
@@ -245,7 +249,7 @@ test('a failed new-version install never destroys the last working offline versi
   await page.goto(site.url('/'));
   await expectAppRenders(page);
   await waitForServiceWorkerReady(page);
-  expect(await cacheKeys(page)).toEqual(['davidos-FAILA']);
+  expect(await cacheBuildIds(page)).toEqual(['FAILA']);
 
   site.deploy(deployB);
   await page.reload(); // online load; the new SW's install 404s and must fail
@@ -265,7 +269,7 @@ test('a failed new-version install never destroys the last working offline versi
     .toBe(true);
 
   // The previous working cache survived the failed install.
-  expect(await cacheKeys(page)).toContain('davidos-FAILA');
+  expect(await cacheBuildIds(page)).toContain('FAILA');
 
   await goOffline(page);
   await page.reload();
