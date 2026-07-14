@@ -92,5 +92,8 @@ the gitignored `personal/` folder — its output must never be committed.
 
 Push to `main` → GitHub Actions builds and deploys Pages. There is no
 manual deploy step. `scripts/stamp-sw-version.mjs` stamps a unique cache
-version into `dist/sw.js` on every build; without it installed PWAs never
-update. Never remove the `__SW_VERSION__` placeholder from `public/sw.js`.
+version AND the app-shell precache manifest (asset URLs parsed from the
+built `dist/index.html`) into `dist/sw.js` on every build; without the
+version installed PWAs never update, and without the manifest offline
+launches break. Never remove the `__SW_VERSION__` or
+`__SW_PRECACHE_MANIFEST__` placeholders from `public/sw.js`.

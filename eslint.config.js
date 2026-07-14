@@ -90,6 +90,7 @@ export default tseslint.config(
         caches: 'readonly',
         fetch: 'readonly',
         console: 'readonly',
+        URL: 'readonly',
       },
     },
   },

@@ -39,6 +39,15 @@ keep `base: './'` — the app is served from a subpath
 the stamp step from `npm run build`, updates silently stop. Restore
 both; users then need one full close/reopen of the app.
 
+**Offline launch serves an old version after a deploy.** Expected for at
+most one load: the new service worker installs during the first online
+load after a deploy. If it persists, check that `dist/sw.js` has a
+stamped precache manifest (`__SW_PRECACHE_MANIFEST__` replaced with the
+built asset URLs) and that every listed asset deployed — a failed
+precache deliberately keeps the previous working version in control
+rather than white-screening (OL-001 fix; see docs/DECISIONS.md
+"DOS-FND-001").
+
 **Stale content while developing.** DevTools → Application → Service
 Workers → "Update on reload", or unregister the worker.
 

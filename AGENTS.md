@@ -50,10 +50,12 @@ Point-in-time status: [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).
    [docs/security-and-approval-model.md](docs/security-and-approval-model.md).
 4. **Local-first.** No backend, no accounts, no API keys in the repo or
    bundle (see `.env.example`). Offline operation is a design
-   requirement, but is only PARTIALLY delivered today: the service
-   worker caches the app shell, and a documented gap can white-screen
-   offline launches after a deploy (docs/OPEN_LOOPS.md OL-001). Do not
-   document offline reliability beyond that until OL-001 is fixed.
+   requirement: the service worker precaches the built app-shell assets
+   from a build-stamped manifest and never deletes the previous working
+   cache until the new version's cache is verified complete (OL-001 fix,
+   2026-07-13 — see docs/OPEN_LOOPS.md for what remains pending). Manual
+   verification on the installed Android PWA is still outstanding; do
+   not claim offline reliability beyond the tested scope.
 5. **Canonical history stays clean.** Saved handoffs store the cleaned
    current entry only — never full generated prompts (those are separate
    typed artifacts). No recursive history bloat.
@@ -109,7 +111,8 @@ davidos/
       integrations/  typed stubs + Google Drive client foundation
       audit/         audit log helpers
       utils/hash.ts  sync pure-JS SHA-256 (deliberate — do not swap)
-  public/            manifest, sw.js (keep __SW_VERSION__ placeholder)
+  public/            manifest, sw.js (keep the __SW_VERSION__ and
+                     __SW_PRECACHE_MANIFEST__ placeholders)
   scripts/           build/verify utilities (Node ESM .mjs)
   personal/          GITIGNORED — David's real data; never commit, never
                      read into code, never overwrite casually
@@ -202,8 +205,11 @@ A change is done when:
   `normalizeState` backfill — breaks every existing device and backup.
 - Putting real personal values in `seed/`, `src/data/healthProfileSeed.ts`,
   tests, or fixtures. Use bracket placeholders.
-- Removing the `__SW_VERSION__` placeholder from `public/sw.js` or the
-  stamp step from `npm run build` — installed PWAs stop updating forever.
+- Removing the `__SW_VERSION__` or `__SW_PRECACHE_MANIFEST__`
+  placeholders from `public/sw.js` or the stamp step from
+  `npm run build` — installed PWAs stop updating forever (version), or
+  the new service worker never installs and offline launches serve the
+  previous version indefinitely (manifest).
 - Saving full generated prompts into handoff history (bloat + recursion);
   prompts are `WorkflowArtifact`s, handoffs store the cleaned entry only.
 - Making a stub "pretend" to succeed, or auto-firing a network call

@@ -13,10 +13,14 @@ count changes. (History: see git log and docs/DECISIONS.md.)
 
 - **Command center shell**: 5-tab bottom nav (Home, Workflows, Projects,
   Logs, More) + grouped More menu; dark/light theme; installable PWA with
-  a reliable update flow (stamped sw version). App-shell offline caching
-  exists but offline launch can fail right after a deploy or on a
-  first-ever visit — OL-001 is the authoritative description; do not
-  claim full offline reliability until it is fixed.
+  a reliable update flow (stamped sw version). App-shell offline launch
+  is fixed locally (OL-001, 2026-07-13): the service worker precaches
+  the built shell assets from a build-stamped manifest, verifies the new
+  cache is complete before it may activate, and deletes the previous
+  working cache only after that verification — covered by unit + offline
+  Playwright tests against production builds. Awaiting independent
+  review, merge/deploy, and a manual check on the installed Android PWA;
+  do not claim offline reliability beyond this tested scope.
 - **8 agents / 8 workflows** as portable JSON specs in `seed/` (7 domain
   agents + the Universal Operations coordination hub, merged from main
   during this sprint), rendered as cards, launched via palette, buttons,
@@ -52,13 +56,15 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-13, post-final-micro-correction-pass)
+## Verification status (2026-07-13, post-DOS-FND-001 offline-launch fix)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 19 files, 182 tests, all passing (`npm test`).
-- Browser smoke tests: 8 passing (`npm run test:smoke`, Playwright
-  chromium, mobile viewport, production build).
+- Unit tests: 21 files, 204 tests, all passing (`npm test`).
+- Browser smoke tests: 11 passing (`npm run test:smoke`, Playwright
+  chromium, mobile viewport, production build) — includes 3 offline
+  launch tests that serve production builds from a stoppable static
+  server (`tests/smoke/offline.spec.ts`).
 - Lint, seed validation (ids + registry parity), privacy validation
   (generic rules, content-aware scan of all tracked text files),
   docs/metadata consistency, typecheck + production build: all passing
@@ -86,7 +92,10 @@ Exact counts live here ONLY (other docs reference this file):
 The authoritative list with priorities lives in
 [docs/OPEN_LOOPS.md](OPEN_LOOPS.md). Headlines:
 
-- Service-worker offline gaps after deploys (OL-001, highest priority).
+- OL-001 (offline launch after first visit / after deploys) is fixed
+  locally on `fix/dos-fnd-001-reliable-offline-launch` with automated
+  evidence; independent review, merge/deploy, and manual verification on
+  the installed Android PWA are still pending.
 - Handoff correction/edit UI (OL-007; model fields exist, retrieval
   respects them, no UI yet).
 - v0.3 Drive sync beyond backup export (OL-024; plan:

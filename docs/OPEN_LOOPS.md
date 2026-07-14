@@ -20,26 +20,38 @@ git history (`fb76122`) and docs/DECISIONS.md.
 ## P1 — data safety & core promises
 
 ### OL-001 · Offline launch breaks after first install and after every deploy
-- **Domain:** PWA/service worker · **Status:** Verified + Ready
-- **Problem:** `public/sw.js` precaches only `./` + manifest at install;
-  its activate handler deletes ALL old caches. (a) On first visit the
-  hashed JS/CSS were fetched before the SW controlled the page → never
-  cached → offline launch white-screens until a second online visit.
-  (b) After a deploy, the new SW's activate deletes the old cache that
-  held the current assets → offline white-screen until the next online
-  reload.
-- **Evidence:** `public/sw.js:14-28` (precache list + cache deletion),
-  `src/app/main.tsx:14-20` (registration on window load).
-- **Approach:** at install, fetch and cache the current page's asset
-  URLs (parse `dist/index.html` asset links, or inject an asset manifest
-  at build time next to the sw version stamp); only delete old caches
-  after the new cache is fully populated.
-- **Acceptance:** with the preview server stopped (offline), a
-  previously-visited app launches; after a redeploy + one online load,
-  offline launch still works. Playwright can simulate via
-  `context.setOffline(true)`.
-- **Validation:** `npm run verify:full` + a new offline smoke test +
-  manual check on the installed Android PWA.
+- **Domain:** PWA/service worker · **Status:** Fixed locally 2026-07-13
+  on branch `fix/dos-fnd-001-reliable-offline-launch`; automated
+  verification passes there (`npm run verify` + `npm run verify:full`).
+  Independent review, merge, deployment, and the manual
+  installed-Android check below are still pending — NOT yet accepted
+  or shipped.
+- **Problem (pre-fix, kept for history):** `public/sw.js` precached only
+  `./` + manifest at install; its activate handler deleted ALL old
+  caches. (a) On first visit the hashed JS/CSS were fetched before the
+  SW controlled the page → never cached → offline launch white-screened
+  until a second online visit. (b) After a deploy, the new SW's activate
+  deleted the old cache that held the current assets → offline
+  white-screen until the next online reload.
+- **Fix:** `scripts/stamp-sw-version.mjs` now parses the built
+  `dist/index.html` and stamps the hashed app-shell asset URLs into a
+  `__SW_PRECACHE_MANIFEST__` placeholder next to the version stamp;
+  install fetches shell + manifest into the new versioned cache and
+  verifies every entry landed before the install may succeed; activate
+  deletes superseded caches only after re-confirming the new cache is
+  complete; navigations no longer overwrite the pinned install-time
+  shell. A failed install therefore leaves the previous working offline
+  version fully in control. Decision record: docs/DECISIONS.md
+  "DOS-FND-001".
+- **Automated evidence:** sw lifecycle unit tests execute the real
+  stamped sw.js source (install/verify/activate failure paths); three
+  Playwright tests run production builds from a genuinely-stoppable
+  static server: first-visit → offline launch, deploy + one online load
+  → offline launch of the new version, failed new-version install →
+  old version still launches offline (`tests/smoke/offline.spec.ts`).
+- **Remaining:** after the next deploy, David must verify on the
+  installed Android PWA: open online once, fully close, disable
+  Wi-Fi + mobile data, reopen → normal app shell, no white screen.
 - **Complexity:** M · **Approval:** no (bug fix of an existing promise)
 
 ### OL-002 · Unsaved Health Profile edits are destroyed by in-app navigation

@@ -194,3 +194,58 @@ Initial-build decisions, made without blocking questions per the build brief:
   agent seed file (the TypeScript-union check remains as a separate
   compatibility check), so a dangling union entry can no longer hide a
   workflow pointing at a removed agent.
+
+## DOS-FND-001 — Reliable offline launch (2026-07-13)
+
+- **Root cause confirmed (OL-001):** the service worker precached only
+  `./` + manifest, so the hashed JS/CSS needed to boot the app were never
+  guaranteed to be cached (first visit), and its activate handler deleted
+  ALL old caches unconditionally, destroying the last working offline
+  version the moment a new deploy's service worker activated.
+- **Deterministic build-generated precache manifest:**
+  `scripts/stamp-sw-version.mjs` now parses `dist/index.html` after every
+  build and stamps the local script/link asset URLs into a second sw.js
+  placeholder (`__SW_PRECACHE_MANIFEST__`) alongside the version stamp.
+  The manifest IS what the built HTML references — hashed filenames are
+  never guessed or hardcoded. The CLI fails the build if either
+  placeholder is missing, the manifest is empty, a listed file is absent
+  from dist/, or no JS/CSS entry was found. URLs stay relative and are
+  resolved against the sw scope at runtime, so the GitHub Pages base path
+  (`/DavidOS/`) and any other static host keep working.
+- **New cache must be complete before old caches are removed:** install
+  fetches shell + manifest with `cache: 'no-cache'` into the new
+  versioned cache and then CONFIRMS every entry is present before
+  `skipWaiting`; a failed or partial install rejects, the browser
+  discards the new worker, and the previous worker + cache stay in
+  control. activate re-verifies completeness before deleting superseded
+  caches (guards eviction between install and activate). Failed
+  installation therefore always preserves the prior working cache.
+- **Navigations no longer runtime-cache the shell:** the install-time
+  shell is pinned so the cached HTML always references assets present in
+  the same cache. Runtime-caching newer HTML (old behavior) could strand
+  an offline launch with a shell whose hashed assets were never cached —
+  the OL-001 white screen. Hashed-asset runtime caching (cache-first +
+  background refresh) is unchanged.
+- **Small custom worker retained (no Workbox, no PWA rewrite):** the
+  existing hand-written sw architecture (decision #6) only lacked a
+  deterministic manifest and a safe activation order — both fit in the
+  existing file and stamp step with zero new dependencies, preserving the
+  hard rule on minimal runtime deps and the established
+  version-stamped update flow. A Workbox migration would replace a now
+  fully-tested ~120-line worker with a dependency tree for no additional
+  safety.
+- **Limits of the automated evidence:** unit tests execute the real
+  stamped sw.js source against mocked `self`/`caches`/`fetch` (covering
+  the install-failure and eviction paths browsers can't be forced into
+  deterministically); Playwright covers first-visit offline launch,
+  update-cycle offline launch, and failed-install preservation against
+  production builds served by a per-test static server that refuses
+  connections when "offline" (`context.setOffline` alone does not
+  reliably affect service-worker fetches; responses are sent
+  `Cache-Control: no-store` so the HTTP cache can't mask sw behavior).
+  Not covered: real Android/Chrome-mobile behavior on the installed PWA,
+  real GitHub Pages headers, and storage-pressure eviction on-device.
+  Manual verification on the installed Android PWA after the next deploy
+  is still pending; OL-001 stays open until David confirms it.
+- **Lint:** added the `URL` global for `public/sw.js` (used to resolve
+  precache paths against the sw scope).
