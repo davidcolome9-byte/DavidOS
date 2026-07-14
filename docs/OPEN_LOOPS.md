@@ -173,19 +173,27 @@ git history (`fb76122`) and docs/DECISIONS.md.
 - **Complexity:** S · **Approval:** no (scope widening would need YES)
 
 ### OL-011 · Generated prompt goes stale with no indicator after input edits
-- **Domain:** workflow runner · **Status:** Verified + Ready
+- **Domain:** workflow runner · **Status:** RESOLVED (DOS-WF-001, 2026-07-14)
 - **Evidence:** `src/components/WorkflowRunner.tsx:253-258` vs `352-353`
   (audit 2026-07-12): editing the input after Generate leaves Copy
   buttons serving the old prompt while Save handoff uses the new text.
-- **Approach:** track `builtFromInput`; when it differs from `input`,
-  show a "Prompt is stale — regenerate" notice and label Copy buttons.
+- **Resolution:** the Runner now captures a config key at build time
+  (`buildPromptConfigKey` over input, workflow, output config, and the
+  included Health Profile fingerprint) and compares it to the live values.
+  A stale result shows "Prompt out of date. Rebuild to update." and
+  disables Copy/Save/follow-up actions. Also covers OL-012's Runner cases.
 - **Complexity:** S · **Approval:** no
 
 ### OL-012 · Silent no-op primary buttons
-- **Domain:** UX · **Status:** Verified + Ready
+- **Domain:** UX · **Status:** Partially resolved (DOS-WF-001, 2026-07-14)
 - **Evidence:** empty-name saves in `WorkflowRunner.tsx:125`,
   `ProjectVault.tsx:91`, `PromptVault.tsx:130` do nothing silently.
-- **Approach:** disable the button or flash the missing-field message.
+- **Resolution (Runner only):** Build Prompt is disabled with a visible
+  "Enter a request…" hint when the request is empty, and every Copy/Save/
+  follow-up action is disabled while a built result is invalid or stale.
+  `ProjectVault` and `PromptVault` empty-name saves are still open.
+- **Approach (remaining):** disable the button or flash the missing-field
+  message in the vault editors.
 - **Complexity:** S · **Approval:** no
 
 ### OL-013 · Router duplicates agent names/default workflows from seed

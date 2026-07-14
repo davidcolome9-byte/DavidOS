@@ -22,7 +22,7 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('what should i do', 3), kw('plan my day', 3), kw('morning'), kw('bandwidth'),
   ],
   fitness: [
-    kw('workout'), kw('gym'), kw('macro'), kw('macros'), kw('protein'), kw('meal'),
+    kw('workout', 2), kw('gym'), kw('macro'), kw('macros'), kw('protein'), kw('meal'),
     kw('food'), kw('diary'), kw('garmin'), kw('weight'), kw('fat loss', 2),
     kw('muscle'), kw('training'), kw('recovery'), kw('calories'), kw('recomp', 2),
     kw('fitness', 2), kw('cardio'), kw('lift'), kw('screenshot'), kw('screenshots'),

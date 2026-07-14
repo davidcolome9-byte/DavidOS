@@ -61,7 +61,7 @@ test('slash command navigates to a workflow', async ({ page }) => {
 test('workflow runner generates a local draft prompt', async ({ page }) => {
   await page.goto('/#/workflows?wf=daily-brief');
   await page.getByLabel(/Input — messy notes are fine/).fill('Smoke test: plan the day.');
-  await page.getByRole('button', { name: 'Generate' }).click();
+  await page.getByRole('button', { name: 'Build Prompt' }).click();
   await expect(page.getByText('Draft only — nothing left this device')).toBeVisible();
   await expect(page.getByText(/Prompt fingerprint:/)).toBeVisible();
 });

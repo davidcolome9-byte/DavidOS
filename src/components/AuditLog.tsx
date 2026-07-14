@@ -101,7 +101,7 @@ export default function AuditLog() {
             </details>
           ))}
           {state.handoffs.length === 0 && (
-            <p className="muted small">No handoffs saved yet — run a workflow and hit “Save handoff”.</p>
+            <p className="muted small">No handoffs saved yet — build a prompt and hit “Save to Workflow History”.</p>
           )}
         </div>
       )}
@@ -145,7 +145,7 @@ export default function AuditLog() {
             </details>
           ))}
           {state.artifacts.length === 0 && (
-            <p className="muted small">No artifacts yet — generate a prompt and hit “Save Generated Artifact”.</p>
+            <p className="muted small">No saved prompts yet — build a prompt and hit “Save Prompt”.</p>
           )}
         </div>
       )}

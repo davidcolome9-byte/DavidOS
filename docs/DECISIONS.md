@@ -194,3 +194,53 @@ Initial-build decisions, made without blocking questions per the build brief:
   agent seed file (the TypeScript-union check remains as a separate
   compatibility check), so a dangling union entry can no longer hide a
   workflow pointing at a removed agent.
+
+## DOS-WF-001 — Workflow reliability & Gravl review (2026-07-14)
+
+- **Fitness routing is disambiguated at the WORKFLOW level, deterministically.**
+  The agent-level keyword router still picks the fitness domain; a new
+  `src/lib/router/fitnessRouting.ts` then resolves the specific workflow —
+  `gravl-review` (review/optimize a Gravl workout) vs. `fitness-handoff`
+  (clean/log/organize existing notes). No AI router. A genuine non-zero tie
+  returns both options via `RouteResult.alternatives`; the palette renders
+  two plain-language choices instead of silently picking one.
+- **`workout` keyword weight raised 1→2** in `routeScoring.ts` so
+  workout-related requests reliably reach the fitness domain before the
+  fitness-workflow disambiguation runs (previously "today" could divert
+  "clean up today's workout notes" to Daily Command). Minimal, in-scope
+  tuning; existing router tests stay green.
+- **The Gravl prompt is a dedicated builder, not the shared continuity
+  engine.** `src/lib/workflows/gravlPrompt.ts` assembles one
+  provider-neutral "Universal AI Prompt" (fixed sections: Role, Objective,
+  David's Request, Available Gravl Workout Information, Relevant Health and
+  Fitness Context, Current Phase and Constraints, Analysis Requirements,
+  Required Output, Missing-Information Handling, Safety Boundaries). The
+  Workflow Runner special-cases `gravl-review`; all other workflows still
+  build through `buildPrompt` unchanged (compatibility preserved). The
+  workflow's JSON `template` is a validator-satisfying fallback only.
+- **Review vs. intake mode** is derived from whether workout text is pasted
+  or the "I have Gravl screenshots" box is checked. Intake mode is a valid
+  prompt, honestly labeled "No Gravl workout added. This prompt will ask
+  for it." DavidOS never claims to read screenshots; both prompt and UI
+  say to attach them in the AI app after copying.
+- **Health Profile inclusion for Gravl excludes medications/supplements by
+  default** via a new `excludeSupplementsMedications` option on
+  `buildProfilePromptBlock`; the L4/L5 movement-safety summary is still
+  included. Loaded at build time.
+- **Validity + staleness are pure helpers** (`src/lib/workflows/promptValidity.ts`).
+  A built result is invalid when the request is empty, the prompt contains
+  `(no input provided)`, an unresolved `{{input|style|date}}` token, or an
+  unresolved `[[placeholder]]`. Staleness compares a build-time config key
+  (input, workflow id, output config, included-profile fingerprint, plus
+  Gravl workout/screenshots) to the live values. Invalid or stale disables
+  Copy Prompt, Save Prompt, Save to Workflow History, and Create Follow-Up
+  Task. Build Prompt is blocked only when the request is empty.
+- **Labels:** Generate → **Build Prompt**; the primary copy/save are
+  **Copy Prompt** / **Save Prompt**; the handoff and open-loop actions are
+  relabeled **Save to Workflow History** / **Create Follow-Up Task**. The
+  provider-specific output-style dropdown is hidden for the Gravl workflow
+  (single neutral "Universal AI Prompt" style).
+- **Local-only save** reuses the existing `WorkflowArtifact` architecture,
+  extended with optional `title` + `sourceInput` (additive, no migration).
+  "Saved on this device only." Google Drive Prompt Vault remains deferred
+  (OL-024); embedded AI execution and screenshot OCR remain out of scope.

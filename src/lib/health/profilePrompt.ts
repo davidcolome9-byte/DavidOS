@@ -58,7 +58,7 @@ const listLine = (label: string, values?: string[]): string | null => {
  */
 export function buildProfilePromptBlock(
   profile: HealthFitnessProfile,
-  opts: { deepAnalysis?: boolean } = {},
+  opts: { deepAnalysis?: boolean; excludeSupplementsMedications?: boolean } = {},
 ): ProfilePromptBlock {
   const fields: { path: string; text: string }[] = [];
   const add = (path: string, text: string | null) => { if (text) fields.push({ path, text }); };
@@ -104,10 +104,14 @@ export function buildProfilePromptBlock(
   add('bodyMetrics.waist', line('Waist', b?.waist));
   add('bodyMetrics.bodyFatEstimate', line('Body fat estimate', b?.bodyFatEstimate));
 
-  const s = profile.supplementsMedications;
-  // Compact baseline summary every time; deeper detail stays in the profile.
-  const meds = [...(s?.supplements ?? []), ...(s?.medications ?? [])].filter((x) => !x.startsWith('['));
-  add('supplementsMedications', meds.length > 0 ? `- Supplements/medications (context only — never recommend dosing changes): ${meds.join('; ')}` : null);
+  // Medications/supplements are excluded by default for some prompts (e.g. the
+  // Gravl workout review) — they are not relevant to a training-plan critique.
+  if (!opts.excludeSupplementsMedications) {
+    const s = profile.supplementsMedications;
+    // Compact baseline summary every time; deeper detail stays in the profile.
+    const meds = [...(s?.supplements ?? []), ...(s?.medications ?? [])].filter((x) => !x.startsWith('['));
+    add('supplementsMedications', meds.length > 0 ? `- Supplements/medications (context only — never recommend dosing changes): ${meds.join('; ')}` : null);
+  }
 
   const ap = profile.analysisPreferences;
   add('analysisPreferences.coachingStyle', line('Coaching style', ap?.coachingStyle?.replace(/_/g, ' ')));

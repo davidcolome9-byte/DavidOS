@@ -5,6 +5,9 @@ import { WORKFLOWS, getWorkflow, resolveWorkflowOutputStyle } from '../lib/workf
 import { summarizeInput } from '../lib/workflows/templateRenderer';
 import { buildPrompt } from '../lib/workflows/continuity';
 import type { BuiltPrompt } from '../lib/workflows/continuity';
+import { buildGravlPrompt } from '../lib/workflows/gravlPrompt';
+import { evaluatePromptValidity, buildPromptConfigKey } from '../lib/workflows/promptValidity';
+import { GRAVL_WORKFLOW_ID } from '../lib/router/fitnessRouting';
 import { resolveCategory, resolveHistoryProfile, historyTargetCount } from '../lib/workflows/workflowMeta';
 import { buildProfilePromptBlock } from '../lib/health/profilePrompt';
 import { parseEntryDate } from '../lib/workflows/dateParsing';
@@ -30,8 +33,11 @@ export default function WorkflowRunner() {
   const [agentFilter, setAgentFilter] = useState<AgentId | 'all'>(preselected?.agentId ?? 'all');
   const [workflow, setWorkflow] = useState<Workflow | null>(preselected ?? null);
   const [input, setInput] = useState(params.get('input') ?? '');
+  const [workoutText, setWorkoutText] = useState('');
+  const [hasScreenshots, setHasScreenshots] = useState(false);
   const [style, setStyle] = useState(preselected ? resolveWorkflowOutputStyle(preselected, params.get('style')) : '');
   const [built, setBuilt] = useState<BuiltPrompt | null>(null);
+  const [builtConfigKey, setBuiltConfigKey] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [includeProfile, setIncludeProfile] = useState(true);
   const [profileRevealLevel, setProfileRevealLevel] = useState(0); // 0=summary 1=metadata 2=text
@@ -43,10 +49,17 @@ export default function WorkflowRunner() {
     const requestedStyle = params.get('style');
     const nextStyle = wf ? resolveWorkflowOutputStyle(wf, requestedStyle) : '';
     if (wf && (wf.id !== workflow?.id || (requestedStyle !== null && nextStyle !== style))) {
+      const workflowChanged = wf.id !== workflow?.id;
       setWorkflow(wf);
       setAgentFilter(wf.agentId);
       setStyle(nextStyle);
+      // Switching workflows must invalidate any old built result immediately.
       setBuilt(null);
+      setBuiltConfigKey(null);
+      if (workflowChanged) {
+        setWorkoutText('');
+        setHasScreenshots(false);
+      }
       const linkedInput = params.get('input');
       if (linkedInput) setInput(linkedInput);
     }
@@ -58,6 +71,7 @@ export default function WorkflowRunner() {
     [agentFilter],
   );
 
+  const isGravl = workflow?.id === GRAVL_WORKFLOW_ID;
   const isFitness = workflow ? resolveCategory(workflow) === 'fitness_health' : false;
   const historyProfile = workflow ? resolveHistoryProfile(workflow) : 'default';
   const hasProfileData = Boolean(state.healthProfile);
@@ -65,39 +79,72 @@ export default function WorkflowRunner() {
 
   const profileBlock = useMemo(() => {
     if (!isFitness || !includeProfile || !state.healthProfile) return null;
-    return buildProfilePromptBlock(state.healthProfile, { deepAnalysis });
-  }, [isFitness, includeProfile, state.healthProfile, deepAnalysis]);
+    // The Gravl review excludes medications/supplements by default — they are
+    // not relevant to critiquing a training plan.
+    return buildProfilePromptBlock(state.healthProfile, { deepAnalysis, excludeSupplementsMedications: isGravl });
+  }, [isFitness, includeProfile, state.healthProfile, deepAnalysis, isGravl]);
 
   function pick(wf: Workflow) {
     setWorkflow(wf);
     setStyle(wf.outputStyles[0]);
     setBuilt(null);
+    setBuiltConfigKey(null);
+    setWorkoutText('');
+    setHasScreenshots(false);
     setFlash('');
     setParams({ wf: wf.id }, { replace: true });
   }
 
-  function generate() {
-    if (!workflow) return;
-    const result = buildPrompt({
-      workflow,
+  const profileFingerprint = profileBlock && !profileBlock.empty
+    ? profileBlock.metadata.promptContextFingerprint
+    : undefined;
+
+  /** Identity of the values a prompt would be built from right now. */
+  function currentConfigKey(wf: Workflow): string {
+    return buildPromptConfigKey({
       input,
+      workflowId: wf.id,
       style,
-      allHandoffs: state.handoffs,
-      profileBlock: profileBlock && !profileBlock.empty ? profileBlock.text : undefined,
-      healthProfile: includeProfile ? state.healthProfile : null,
+      includeProfile,
+      profileFingerprint,
+      workoutText: isGravl ? workoutText : undefined,
+      hasScreenshots: isGravl ? hasScreenshots : undefined,
     });
+  }
+
+  /** Build Prompt: assemble the current prompt from the CURRENT input. */
+  function build() {
+    if (!workflow || !input.trim()) return;
+    const profileText = profileBlock && !profileBlock.empty ? profileBlock.text : undefined;
+    const result: BuiltPrompt = isGravl
+      ? buildGravlPrompt({
+          request: input,
+          workoutText,
+          hasScreenshots,
+          profileBlock: profileText,
+          healthProfile: includeProfile ? state.healthProfile : null,
+        })
+      : buildPrompt({
+          workflow,
+          input,
+          style,
+          allHandoffs: state.handoffs,
+          profileBlock: profileText,
+          healthProfile: includeProfile ? state.healthProfile : null,
+        });
     setBuilt(result);
+    setBuiltConfigKey(currentConfigKey(workflow));
     setProfileRevealLevel(0);
     audit({
-      command: `Run workflow: ${workflow.name}`,
+      command: `Build prompt: ${workflow.name}`,
       agentId: workflow.agentId,
       workflowId: workflow.id,
       actionType: workflow.risk,
       approvalStatus: 'not_required',
       actionTaken: true,
       resultSummary:
-        `Generated prompt ${result.fingerprint} · ${result.priorCount} prior handoffs · ` +
-        `profile ${profileBlock && !profileBlock.empty ? 'included' : 'excluded'} — draft only, nothing sent.`,
+        `Built prompt ${result.fingerprint} · ${result.priorCount} prior handoffs · ` +
+        `profile ${profileText ? 'included' : 'excluded'} — draft only, nothing sent.`,
     });
     setFlash('');
   }
@@ -155,7 +202,7 @@ export default function WorkflowRunner() {
     setFlash('Current entry saved to this workflow’s history — local only.');
   }
 
-  /** Explicit artifact save: full generated prompt with traceability metadata. */
+  /** Save Prompt: the built prompt saved locally, on this device only. */
   function saveArtifact() {
     if (!workflow || !built) return;
     const artifact: WorkflowArtifact = {
@@ -163,6 +210,8 @@ export default function WorkflowRunner() {
       workflowId: workflow.id,
       artifactType: 'full_prompt',
       createdAt: nowIso(),
+      title: `${workflow.name} — ${summarizeInput(input)}`,
+      sourceInput: input.trim(),
       content: built.fullPrompt,
       promptHash: built.promptHash,
       shortFingerprint: built.fingerprint,
@@ -183,9 +232,9 @@ export default function WorkflowRunner() {
       actionType: 'local_write',
       approvalStatus: 'not_required',
       actionTaken: true,
-      resultSummary: `Full prompt artifact saved · ${built.fingerprint}. Artifacts are separate from handoff history.`,
+      resultSummary: `Prompt saved locally · ${built.fingerprint}. Saved on this device only.`,
     });
-    setFlash('Generated artifact saved — view under Logs → Artifacts.');
+    setFlash('Prompt saved on this device only — view under Logs → Artifacts.');
   }
 
   function addOpenLoop() {
@@ -202,6 +251,14 @@ export default function WorkflowRunner() {
   const priorAvailable = workflow
     ? state.handoffs.filter((h) => h.workflowId === workflow.id).length
     : 0;
+
+  // Gravl intake vs review is knowable from the live inputs (before build too).
+  const gravlIntake = isGravl && !(workoutText.trim() || hasScreenshots);
+
+  // A built prompt is safe to copy/save only when it is valid AND fresh.
+  const validity = built ? evaluatePromptValidity(built.fullPrompt, input) : null;
+  const stale = Boolean(built && workflow && builtConfigKey !== null && builtConfigKey !== currentConfigKey(workflow));
+  const canAct = Boolean(built && validity?.valid && !stale);
 
   return (
     <>
@@ -251,7 +308,9 @@ export default function WorkflowRunner() {
             {' '}({priorAvailable} saved so far)
           </p>
 
-          <label className="field" htmlFor="wf-input">Input — messy notes are fine</label>
+          <label className="field" htmlFor="wf-input">
+            {isGravl ? 'Your request — what do you want from this workout? (required)' : 'Input — messy notes are fine'}
+          </label>
           <textarea
             id="wf-input"
             value={input}
@@ -259,10 +318,43 @@ export default function WorkflowRunner() {
             placeholder={workflow.inputHint}
           />
 
-          <label className="field" htmlFor="wf-style">Output style</label>
-          <select id="wf-style" value={style} onChange={(e) => setStyle(e.target.value)}>
-            {workflow.outputStyles.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
+          {isGravl && (
+            <>
+              <label className="field" htmlFor="wf-workout">Gravl workout (optional — paste what Gravl gave you)</label>
+              <textarea
+                id="wf-workout"
+                value={workoutText}
+                onChange={(e) => setWorkoutText(e.target.value)}
+                placeholder="Paste the workout text here, or leave blank and use the screenshots option below."
+              />
+              <label className="checkrow">
+                <input
+                  type="checkbox"
+                  checked={hasScreenshots}
+                  onChange={(e) => setHasScreenshots(e.target.checked)}
+                />
+                <span>I have Gravl screenshots</span>
+              </label>
+              {hasScreenshots && (
+                <p className="notice small">
+                  DavidOS can’t read screenshots. After you Copy Prompt, paste it into ChatGPT or
+                  Claude and attach your screenshots there.
+                </p>
+              )}
+              {gravlIntake && (
+                <p className="notice small">No Gravl workout added. This prompt will ask for it.</p>
+              )}
+            </>
+          )}
+
+          {!isGravl && (
+            <>
+              <label className="field" htmlFor="wf-style">Output style</label>
+              <select id="wf-style" value={style} onChange={(e) => setStyle(e.target.value)}>
+                {workflow.outputStyles.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </>
+          )}
 
           {isFitness && (
             <label className="checkrow">
@@ -284,8 +376,11 @@ export default function WorkflowRunner() {
           )}
 
           <div className="btn-row">
-            <button className="primary" onClick={generate}>Generate</button>
+            <button className="primary" onClick={build} disabled={!input.trim()}>Build Prompt</button>
           </div>
+          {!input.trim() && (
+            <p className="muted small">Enter a request above to build the prompt.</p>
+          )}
 
           {built && (
             <>
@@ -295,6 +390,15 @@ export default function WorkflowRunner() {
               </h3>
               <p className="muted small">{built.helperText}</p>
               <p className="muted small">Prompt fingerprint: <code>{built.fingerprint}</code></p>
+
+              {stale && (
+                <p className="notice risk-block" data-testid="stale-notice">Prompt out of date. Rebuild to update.</p>
+              )}
+              {!stale && validity && !validity.valid && (
+                <p className="notice risk-block" data-testid="invalid-notice">
+                  This prompt can’t be copied or saved: {validity.reasons.join(' ')}
+                </p>
+              )}
 
               <div className="btn-row">
                 <button className={`chip ${viewMode === 'preview' ? 'selected' : ''}`} onClick={() => setViewMode('preview')}>Preview</button>
@@ -351,14 +455,15 @@ export default function WorkflowRunner() {
 
               <p className="muted small">Next action: {workflow.nextAction}</p>
               <div className="btn-row">
-                <button className="primary" onClick={() => copyText(built.fullPrompt, 'Full prompt')}>Copy Full Prompt</button>
-                <button onClick={() => copyText(built.currentOnly, 'Current entry only')}>Copy Current Only</button>
+                <button className="primary" onClick={() => copyText(built.fullPrompt, 'Prompt')} disabled={!canAct}>Copy Prompt</button>
+                <button onClick={() => copyText(built.currentOnly, 'Request only')} disabled={!canAct}>Copy Current Only</button>
               </div>
               <div className="btn-row">
-                <button onClick={saveHandoff}>Save handoff (history)</button>
-                <button onClick={saveArtifact}>Save Generated Artifact</button>
-                <button onClick={addOpenLoop}>Add open loop</button>
+                <button onClick={saveArtifact} disabled={!canAct}>Save Prompt</button>
+                <button onClick={saveHandoff} disabled={!canAct}>Save to Workflow History</button>
+                <button onClick={addOpenLoop} disabled={!canAct}>Create Follow-Up Task</button>
               </div>
+              <p className="muted small">Saved prompts stay on this device only.</p>
               {flash && <p className="notice flash">{flash}</p>}
             </>
           )}

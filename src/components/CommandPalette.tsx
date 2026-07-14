@@ -173,13 +173,27 @@ export default function CommandPalette() {
                 </p>
               )}
               <p className="muted small">{result.nextAction}</p>
-              {workflow && (
-                <Link
-                  className="btn primary"
-                  to={`/workflows?wf=${workflow.id}&input=${encodeURIComponent(routedInput)}`}
-                >
-                  {isExternalRisk ? `Draft with ${workflow.name}` : `Run ${workflow.name}`}
-                </Link>
+              {result.alternatives && result.alternatives.length > 0 ? (
+                <div className="btn-row">
+                  {result.alternatives.map((alt) => (
+                    <Link
+                      key={alt.workflowId}
+                      className="btn"
+                      to={`/workflows?wf=${alt.workflowId}&input=${encodeURIComponent(routedInput)}`}
+                    >
+                      {alt.label}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                workflow && (
+                  <Link
+                    className="btn primary"
+                    to={`/workflows?wf=${workflow.id}&input=${encodeURIComponent(routedInput)}`}
+                  >
+                    {isExternalRisk ? `Draft with ${workflow.name}` : `Run ${workflow.name}`}
+                  </Link>
+                )
               )}
             </>
           )}
