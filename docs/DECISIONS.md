@@ -225,7 +225,7 @@ Initial-build decisions, made without blocking questions per the build brief:
   say to attach them in the AI app after copying.
 - **Health Profile inclusion for Gravl excludes medications/supplements by
   default** via a new `excludeSupplementsMedications` option on
-  `buildProfilePromptBlock`; the L4/L5 movement-safety summary is still
+  `buildProfilePromptBlock`; the generated movement-safety summary is still
   included. Loaded at build time.
 - **Validity + staleness are pure helpers** (`src/lib/workflows/promptValidity.ts`).
   A built result is invalid when the request is empty, the prompt contains
@@ -252,12 +252,12 @@ entry above stands. These correct material findings from ChatGPT's review of
 the DOS-WF-001 bundle. Implementation stays local; not deployed/merged/accepted.
 
 - **Health Profile exclusion is honored (privacy).** The Gravl builder's
-  Safety Boundaries section no longer hardcodes David's L4/L5 history or the
-  axial-loading restriction. It now carries generic safety language only
-  (respect reported pain/injuries/restrictions, flag likely-provoking
-  exercises, escalate severe/neurological symptoms). The specific L4/L5 +
-  axial-loading movement-safety summary appears ONLY when the approved Health
-  Profile context is included and reports a back history/restriction — so a
+  Safety Boundaries section no longer hardcodes the saved personal
+  back-history detail or the axial-loading restriction. It now carries generic
+  safety language only (respect reported pain/injuries/restrictions, flag
+  likely-provoking exercises, escalate severe/neurological symptoms). The
+  generated movement-safety summary appears ONLY when the approved Health
+  Profile context is included and reports a back-history/restriction — so a
   prompt built with the profile excluded contains no private medical facts.
   The existing UI privacy warning already fires exactly when profile text is
   inserted (`profileBlock` non-empty).
@@ -303,3 +303,54 @@ the DOS-WF-001 bundle. Implementation stays local; not deployed/merged/accepted.
   change the URL) is never overwritten; a URL-provided input change invalidates
   any built result. `pick()` carries the current request into the URL so
   switching workflows does not clear a typed request.
+
+## DOS-GOV-001 — Public main state reconciliation (2026-07-15)
+
+Documentation, privacy-cleanup, and privacy-validator maintenance only. No
+workflow, routing, UI, schema, or offline behavior was changed; Git history was
+not rewritten; nothing was pushed, merged, or deployed by this package; the
+preserved offline branch `fix/dos-fnd-001-reliable-offline-launch` was not
+touched.
+
+- **Deployment reality reconciled.** DOS-WF-001 was merged to `main` (PR #3,
+  commit `35cc9655a11fbc78f27caca5297330a023679026`), deployed to GitHub Pages,
+  and accepted via phone + laptop QA; cleanup is complete. The earlier
+  `docs/CURRENT_STATE.md` "local implementation, not yet deployed / no push /
+  no PR / pending review" wording was stale and is corrected to record the
+  deployed state and the authoritative deployed commit. Historical DECISIONS
+  entries that described the earlier local-only point in time are left standing
+  (append-only) — only the *current-state* doc was reconciled.
+- **Current-tree personal-health wording generalized.** The hardcoded
+  movement-safety string in `src/lib/health/profilePrompt.ts` no longer embeds a
+  specific spinal level; it now reads "reported back-safety context" while
+  preserving the same functional guidance (avoid axial loading; caution on back/
+  leg/nerve-like/radiating symptoms). The `l4|l5|laminectomy|herniat` detection
+  keywords (which match the user's own imported profile text, not a hardcoded
+  fact) are unchanged, so runtime behavior is identical. Related code comments
+  and the current-state doc were generalized to match. The production bundle no
+  longer contains the specific spinal-level fact.
+- **DECISIONS.md privacy redaction (append-only exception, deliberate).** Two
+  earlier entries in THIS log contained a specific spinal-level notation and a
+  possessive personal-health phrase. Per an explicit maintainer decision for
+  DOS-GOV-001, the *specific personal medical wording* was redacted in place
+  (generalized to non-identifying wording) because personal medical facts must
+  not remain in the public tracked tree; every entry's date, decision,
+  rationale, and all non-sensitive content were preserved. Privacy takes
+  precedence over byte-for-byte append-only preservation here, while the log's
+  historical meaning and audit trail remain intact. This is the only case in
+  which an existing entry's text was altered rather than appended.
+- **Privacy validator strengthened (narrowly).** `scripts/validate-privacy.mjs`
+  gains two generic rules: (1) spinal-level (vertebral-pair) notation flagged
+  ONLY when it sits beside a personal/profile-health context signal — a
+  possessive (David's/my), or a movement-safety/health-profile/injury/history/
+  surgery word within a short same-line window — so generic or technical spinal
+  references (general anatomy docs, example notation, the lowercase `l4|l5`
+  classifier tokens) keep passing and there is no global ban on the notation;
+  (2) named or first-person possessive medical wording, requiring both the
+  possessive and a concrete condition within two words. Generic health/
+  accessibility terminology ("movement-safety context", "saved training
+  restrictions", "respect the user's reported injuries") is deliberately left
+  passing. The rules are documented with regexes rather than example literals so
+  neither this log nor the validator source trips the strengthened scan;
+  concrete synthetic examples live only in the declared-skip test fixture. The
+  scan still covers all tracked text files.

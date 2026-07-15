@@ -5,7 +5,18 @@
 // public-repository hygiene:
 //   1. no concrete IANA home-timezone declarations;
 //   2. no private home-configuration fields carrying concrete values
-//      (placeholders like [PRIVATE_HOME_TIMEZONE] are required instead).
+//      (placeholders like [PRIVATE_HOME_TIMEZONE] are required instead);
+//   3. no specific personal medical facts (DOS-GOV-001): spinal-level
+//      (vertebral-pair) notation ONLY when framed as personal/profile health
+//      information (a possessive or a movement-safety/injury/history context
+//      signal beside it), and named or first-person possessive medical
+//      wording bound to a concrete condition. These are deliberately narrow
+//      so generic/technical spinal references in general documentation,
+//      ordinary health/accessibility terminology ("movement-safety context",
+//      "saved training restrictions", "respect the user's reported injuries"),
+//      and lowercase `l4|l5` classifier tokens all keep passing. (This file
+//      documents the rules with regexes rather than concrete example literals
+//      so it does not trip its own scan.)
 //
 // An OPTIONAL private denylist of concrete personal literals can be
 // supplied outside the repo via:
@@ -39,6 +50,30 @@ export const GENERIC_RULES = [
     // concrete value. Placeholder values (starting with "[") are the
     // required public form and do not match.
     regex: /\b(?:home|my|private)[_ -]?(?:city|town|location|address|timezone|tz)\s*[:=]\s*["'`]?(?!\[)[A-Za-z]/gi,
+  },
+  {
+    name: 'spinal-level notation asserted as a personal medical fact',
+    // Canonical vertebral-pair notation (spine letter + level, separator,
+    // second level) ONLY when it sits within a short same-line window of a
+    // personal- or profile-health context signal: a possessive (David's/my),
+    // a movement-safety / health-profile label, or an injury/history/surgery/
+    // laminectomy/herniation word. This is deliberately CONTEXTUAL, not a
+    // global ban — generic or technical notation ("the L4/L5 segment is
+    // discussed", "Example spinal notation: C5/C6", the lowercase `l4|l5`
+    // classifier regex) has no such signal and passes. `[^\n]` keeps the
+    // window on one line so unrelated lines never combine.
+    regex: /(?:David'?s|\bmy\b|movement[- ]safety[- ]context|health[- ]profile[- ]context|injur\w*|back[- ]history|surgery|laminectomy|herniat\w*)[^\n]{0,24}?\b[CTL][1-9][/-][CTLS][1-9]\b|\b[CTL][1-9][/-][CTLS][1-9]\b[^\n]{0,24}?(?:\bhistory\b|injur\w*|surgery|laminectomy|herniat\w*|restriction|back[- ]history)/gi,
+  },
+  {
+    name: 'possessive personal-health wording (named or first-person medical fact)',
+    // A named individual's or first-person possessive bound to a specific
+    // condition / procedure / history. Kept deliberately narrow: it requires
+    // BOTH the David's/my possessive AND a concrete medical term within two
+    // words, so generic instructional wording ("respect the user's reported
+    // injuries", "saved training restrictions", "movement-safety context")
+    // does not match. Third-person/other possessives are intentionally out of
+    // scope to avoid flagging generic docs.
+    regex: /\b(?:David'?s|my)\s+(?:[\w-]+\s+){0,2}(?:herniat\w*|laminectomy|disc\b|spinal\b|diagnos\w+|surgery|(?:back|medical|injury)\s+history|axial[- ]loading)/gi,
   },
 ];
 

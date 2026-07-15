@@ -67,12 +67,13 @@ describe('buildProfilePromptBlock', () => {
     const p: HealthFitnessProfile = {
       ...base(),
       nutritionTargets: { calories: 2000, proteinGrams: 190, waterMl: 3000 },
-      medicalContext: { injuryHistory: ['L4/L5 herniation'] },
+      medicalContext: { injuryHistory: ['disc herniation'] },
     };
     const block = buildProfilePromptBlock(p);
     expect(block.empty).toBe(false);
     expect(block.text).toContain('Nutrition targets');
-    expect(block.text).toContain('Movement safety context: L4/L5');
+    expect(block.text).toContain('Movement safety context:');
+    expect(block.text).not.toMatch(/[CTL][0-9][/-][CTLS][0-9]/);
     expect(block.metadata.includedFieldPaths).toContain('nutritionTargets');
     expect(block.metadata.promptContextFingerprint).toMatch(/^[0-9a-f]{8} · /);
   });
