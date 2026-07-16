@@ -30,8 +30,9 @@ describe('profileDraft (Phase 2A)', () => {
   let store: Storage;
   beforeEach(() => { store = mkStorage(); });
 
-  it('round-trips a saved draft', () => {
-    saveHealthDraft(profile, '2026-01-02T00:00:00.000Z', '2026-07-16T00:00:00.000Z', store);
+  it('round-trips a saved draft and reports ok', () => {
+    const res = saveHealthDraft(profile, '2026-01-02T00:00:00.000Z', '2026-07-16T00:00:00.000Z', store);
+    expect(res).toEqual({ ok: true });
     const env = loadHealthDraft(store);
     expect(env?.profile.nutritionTargets?.calories).toBe(2222);
     expect(env?.baseUpdatedAt).toBe('2026-01-02T00:00:00.000Z');
@@ -64,9 +65,52 @@ describe('profileDraft (Phase 2A)', () => {
     expect(store.getItem('davidos-state-v1')).toBeNull();
   });
 
-  it('degrades to a no-op when storage is unavailable', () => {
-    expect(() => saveHealthDraft(profile, null, 'now', null)).not.toThrow();
+  it('degrades to a no-op when storage is unavailable, reporting the reason', () => {
+    const res = saveHealthDraft(profile, null, 'now', null);
+    expect(res).toEqual({ ok: false, reason: 'unavailable' });
     expect(loadHealthDraft(null)).toBeNull();
     expect(hasHealthDraft(null)).toBe(false);
+  });
+
+  it('reports a quota failure without throwing (DOMException code 22)', () => {
+    const failing: Storage = {
+      ...mkStorage(),
+      setItem: () => { throw new DOMException('full', 'QuotaExceededError'); },
+    } as Storage;
+    const res = saveHealthDraft(profile, null, 'now', failing);
+    expect(res).toEqual({ ok: false, reason: 'quota' });
+  });
+
+  it('reports a generic write failure when setItem throws a non-quota error', () => {
+    const failing: Storage = {
+      ...mkStorage(),
+      setItem: () => { throw new Error('boom'); },
+    } as Storage;
+    const res = saveHealthDraft(profile, null, 'now', failing);
+    expect(res).toEqual({ ok: false, reason: 'write' });
+  });
+
+  it('reports a serialization failure and never reaches storage', () => {
+    let wrote = false;
+    const guard: Storage = {
+      ...mkStorage(),
+      setItem: () => { wrote = true; },
+    } as Storage;
+    // A circular structure cannot be JSON.stringify'd.
+    const circular = { ...profile } as HealthFitnessProfile & { self?: unknown };
+    circular.self = circular;
+    const res = saveHealthDraft(circular, null, 'now', guard);
+    expect(res).toEqual({ ok: false, reason: 'serialize' });
+    expect(wrote).toBe(false);
+  });
+
+  it('failure reason codes never contain profile values (privacy)', () => {
+    const failing: Storage = {
+      ...mkStorage(),
+      setItem: () => { throw new DOMException('full', 'QuotaExceededError'); },
+    } as Storage;
+    const secret = { ...profile, promptSummary: 'SENTINEL-SECRET-9f3a' };
+    const res = saveHealthDraft(secret, null, 'now', failing);
+    expect(JSON.stringify(res)).not.toContain('SENTINEL-SECRET');
   });
 });

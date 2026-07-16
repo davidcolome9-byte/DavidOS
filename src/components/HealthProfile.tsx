@@ -4,10 +4,24 @@ import { seedHealthProfile } from '../data/healthProfileSeed';
 import { validateProfile, profileHash, changedFieldPaths } from '../lib/health/profileValidation';
 import type { ValidationResult } from '../lib/health/profileValidation';
 import { loadHealthDraft, saveHealthDraft, clearHealthDraft } from '../lib/health/profileDraft';
+import type { DraftPersistReason } from '../lib/health/profileDraft';
 import type { HealthFitnessProfile } from '../lib/types';
 import { uid, nowIso } from '../lib/types';
 
 const clone = <T,>(v: T): T => JSON.parse(JSON.stringify(v)) as T;
+
+// Honest, value-free messages for a draft that could not be stored for
+// recovery. None imply a reload will bring the draft back — because it won't.
+const DRAFT_PERSIST_MESSAGES: Record<DraftPersistReason, string> = {
+  unavailable:
+    'Local storage is unavailable (for example, private-browsing mode). These edits are kept only in this tab and will be lost if you reload or close it — use “Save Health Profile” to store them.',
+  quota:
+    'Local storage is full, so these edits could not be saved for recovery. They are kept only in this tab and will be lost if you reload — free up space, then use “Save Health Profile”.',
+  serialize:
+    'These edits could not be prepared for storage, so they are kept only in this tab and will be lost if you reload — use “Save Health Profile” to store them.',
+  write:
+    'These edits could not be written to local storage, so they are kept only in this tab and will be lost if you reload — use “Save Health Profile” to store them.',
+};
 
 function blankProfile(): HealthFitnessProfile {
   const now = nowIso();
@@ -62,6 +76,9 @@ export default function HealthProfile() {
   const [recovered, setRecovered] = useState(init.recovered);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [flash, setFlash] = useState('');
+  // Non-null when the last draft write did NOT reach storage. Cleared honestly
+  // only after a subsequent successful persist (or save/discard).
+  const [persistError, setPersistError] = useState<DraftPersistReason | null>(null);
 
   const dirty = useMemo(
     () => JSON.stringify(draft) !== JSON.stringify(state.healthProfile),
@@ -73,9 +90,12 @@ export default function HealthProfile() {
   // state or the audit log — only this isolated key.
   useEffect(() => {
     if (draft && dirty) {
-      saveHealthDraft(draft, state.healthProfile?.updatedAt ?? null, nowIso());
+      const res = saveHealthDraft(draft, state.healthProfile?.updatedAt ?? null, nowIso());
+      // Report a failed persist honestly; clear the warning once a write lands.
+      setPersistError(res.ok ? null : res.reason);
     } else {
       clearHealthDraft();
+      setPersistError(null);
       if (recovered) setRecovered(false);
     }
   }, [draft, dirty, state.healthProfile, recovered]);
@@ -178,6 +198,11 @@ export default function HealthProfile() {
               This is an <strong>unsaved draft</strong> restored from a previous session — it is not yet
               saved to your Health Profile. Save it to keep the changes, or discard to return to your
               saved values.
+            </p>
+          )}
+          {persistError && (
+            <p className="notice risk-block small" role="alert" data-testid="draft-persist-warning">
+              <strong>Draft not stored for recovery.</strong> {DRAFT_PERSIST_MESSAGES[persistError]}
             </p>
           )}
         </div>

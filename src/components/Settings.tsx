@@ -51,6 +51,9 @@ export default function Settings() {
 
   // Import health-profile conflict modal
   const [importConflict, setImportConflict] = useState<{ state: AppState; fileName: string } | null>(null);
+  // Unsaved Health Profile draft vs import: a valid import must never silently
+  // wipe an in-progress draft, so we interrupt and make the user choose.
+  const [draftConflict, setDraftConflict] = useState<{ state: AppState; fileName: string } | null>(null);
   const driveConfigured = isGoogleDriveConfigured();
   const driveConnected = isDriveSessionFresh(driveSession);
 
@@ -96,8 +99,9 @@ export default function Settings() {
       healthChoice === 'keep-current'
         ? { ...imported, healthProfile: state.healthProfile }
         : imported;
-    // The imported profile is now authoritative; drop any stale unsaved draft.
-    clearHealthDraft();
+    // Any unsaved draft was resolved by the draft-conflict step before we got
+    // here (kept → import aborted; discarded → key already cleared), so we do
+    // NOT clear it implicitly on apply. Nothing about the draft is logged.
     update(() => next);
     audit({
       command: `Import backup: ${fileName}`,
@@ -112,22 +116,38 @@ export default function Settings() {
     setFlash('Import complete.');
   }
 
+  /** The rest of the import flow once any unsaved-draft conflict is resolved. */
+  function continueImport(imported: AppState, fileName: string) {
+    setDraftConflict(null);
+    // Health Profile is never silently overwritten. (Backups that predate
+    // profiles arrive with healthProfile === null — no false conflict.)
+    if (imported.healthProfile && state.healthProfile) {
+      setImportConflict({ state: imported, fileName });
+      return;
+    }
+    if (!window.confirm('Importing replaces your current DavidOS data on this device. Continue?')) return;
+    // If the imported backup has no profile but you have one, keep yours (don't wipe it).
+    const choice = imported.healthProfile ? 'imported' : 'keep-current';
+    applyImport(imported, choice, fileName);
+  }
+
   async function importData(file: File) {
+    let imported: AppState;
     try {
-      const imported = parseImport(await file.text());
-      // Health Profile is never silently overwritten. (Backups that predate
-      // profiles arrive with healthProfile === null — no false conflict.)
-      if (imported.healthProfile && state.healthProfile) {
-        setImportConflict({ state: imported, fileName: file.name });
-        return;
-      }
-      if (!window.confirm('Importing replaces your current DavidOS data on this device. Continue?')) return;
-      // If the imported backup has no profile but you have one, keep yours (don't wipe it).
-      const choice = imported.healthProfile ? 'imported' : 'keep-current';
-      applyImport(imported, choice, file.name);
+      // A malformed or future-schema backup throws HERE — before any draft or
+      // state is touched — so an invalid import can never disturb the draft.
+      imported = parseImport(await file.text());
     } catch (err) {
       setFlash(`Import failed: ${err instanceof Error ? err.message : 'unknown error'}`);
+      return;
     }
+    // Selecting a file must NOT discard unsaved Health Profile edits. If a draft
+    // exists, interrupt and let the user keep it (cancel) or discard it.
+    if (hasHealthDraft()) {
+      setDraftConflict({ state: imported, fileName: file.name });
+      return;
+    }
+    continueImport(imported, file.name);
   }
 
   async function connectDrive() {
@@ -485,6 +505,33 @@ export default function Settings() {
                 {alsoDeleteHealth ? 'Reset + delete Health Profile' : 'Reset (keep Health Profile)'}
               </button>
               <button onClick={cancelReset}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unsaved Health Profile draft vs import — never silently discard it. */}
+      {draftConflict && (
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="draft-conflict-title">
+          <div className="modal">
+            <h2 id="draft-conflict-title">Unsaved Health Profile edits</h2>
+            <p className="muted">
+              You have <strong>unsaved Health Profile edits</strong> in progress. Importing this backup
+              replaces your local data — if you continue without keeping them, those unsaved edits are gone.
+            </p>
+            <div className="btn-row">
+              <button
+                className="primary"
+                onClick={() => { setDraftConflict(null); setFlash('Import cancelled — your unsaved Health Profile edits were kept.'); }}
+              >
+                Cancel &amp; keep my edits
+              </button>
+              <button
+                className="danger"
+                onClick={() => { clearHealthDraft(); continueImport(draftConflict.state, draftConflict.fileName); }}
+              >
+                Discard edits &amp; import
+              </button>
             </div>
           </div>
         </div>

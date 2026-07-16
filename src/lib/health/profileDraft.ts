@@ -25,6 +25,15 @@ export interface HealthDraftEnvelope {
   profile: HealthFitnessProfile;
 }
 
+/**
+ * Why a draft failed to persist. Every reason is a safe, value-free code — it
+ * never carries any profile content, so the UI can render it and the audit log
+ * can record it without leaking health data.
+ */
+export type DraftPersistReason = 'unavailable' | 'quota' | 'serialize' | 'write';
+
+export type DraftSaveResult = { ok: true } | { ok: false; reason: DraftPersistReason };
+
 function defaultStorage(): Storage | null {
   try {
     return typeof localStorage !== 'undefined' ? localStorage : null;
@@ -55,19 +64,36 @@ export function loadHealthDraft(storage: Storage | null = defaultStorage()): Hea
   }
 }
 
-/** Persist a draft. Write errors are swallowed — a draft is best-effort. */
+/**
+ * Persist a draft, reporting whether it actually reached storage. Callers MUST
+ * surface a non-`ok` result: an unsaved draft that only lives in memory is not
+ * recoverable across a reload, and pretending otherwise loses data silently.
+ * The result never contains any profile value — only a safe reason code.
+ */
 export function saveHealthDraft(
   profile: HealthFitnessProfile,
   baseUpdatedAt: string | null,
   savedAt: string,
   storage: Storage | null = defaultStorage(),
-): void {
-  if (!storage) return;
+): DraftSaveResult {
+  if (!storage) return { ok: false, reason: 'unavailable' };
+  let serialized: string;
   try {
     const env: HealthDraftEnvelope = { version: DRAFT_VERSION, savedAt, baseUpdatedAt, profile };
-    storage.setItem(HEALTH_DRAFT_KEY, JSON.stringify(env));
+    serialized = JSON.stringify(env);
   } catch {
-    /* quota or serialization error — drop the draft silently */
+    return { ok: false, reason: 'serialize' };
+  }
+  try {
+    storage.setItem(HEALTH_DRAFT_KEY, serialized);
+    return { ok: true };
+  } catch (err) {
+    // Quota is the common, recoverable case (free space / save the profile);
+    // any other write failure is reported honestly too. No values are exposed.
+    const quota =
+      err instanceof DOMException &&
+      (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED' || err.code === 22);
+    return { ok: false, reason: quota ? 'quota' : 'write' };
   }
 }
 
