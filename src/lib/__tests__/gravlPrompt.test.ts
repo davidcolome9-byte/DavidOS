@@ -27,6 +27,16 @@ describe('buildGravlPrompt', () => {
     expect(b.fullPrompt.toLowerCase()).toContain('attached in the ai app');
   });
 
+  it('screenshot-only mode does NOT claim the workout appears "below"', () => {
+    const b = buildGravlPrompt({ request: 'Review it', hasScreenshots: true });
+    // No pasted text, so the objective must not say "workout below".
+    expect(b.fullPrompt).not.toContain('workout below');
+    expect(b.fullPrompt.toLowerCase()).toContain('screenshots');
+    // But a real pasted workout still refers to the text below.
+    const withText = buildGravlPrompt({ request: 'Review it', workoutText: 'Squat 5x5' });
+    expect(withText.fullPrompt).toContain('workout below');
+  });
+
   it('produces a provider-neutral prompt (no AI vendor names)', () => {
     const b = buildGravlPrompt({
       request: 'Review and optimize my workout',

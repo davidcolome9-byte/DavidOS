@@ -224,9 +224,25 @@ export interface BuildPromptArgs {
  *   ## Prior Context for Analysis
  *   ## Analysis Instructions
  */
+/**
+ * The request explicitly asks for analysis (DOS-WF-001R E). A clean-handoff
+ * workflow escalates to analysis ONLY when one of these appears.
+ */
+const ANALYSIS_REQUEST = /\b(analy[sz]e|analysis|insight|insights|recommend|recommendation|recommendations|evaluate|evaluation|assess|assessment|critique|how am i doing|trends?)\b/i;
+
+function resolveHandoffOutputMode(workflow: Workflow, input: string): WorkflowOutputMode {
+  const base = resolveOutputMode(workflow);
+  // A clean-handoff default stays clean unless the request explicitly asks for
+  // analysis / insights / recommendations / evaluation.
+  if (base === 'clean_handoff_only' && ANALYSIS_REQUEST.test(input)) {
+    return 'analysis_recommendations';
+  }
+  return base;
+}
+
 export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock, healthProfile }: BuildPromptArgs): BuiltPrompt {
   const historyProfile = resolveHistoryProfile(workflow);
-  const outputMode = resolveOutputMode(workflow);
+  const outputMode = resolveHandoffOutputMode(workflow, input);
   const fitnessMode = resolveCategory(workflow) === 'fitness_health';
   const target = historyTargetCount(historyProfile);
 

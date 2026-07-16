@@ -94,10 +94,17 @@ export function buildGravlPrompt(args: GravlPromptArgs): GravlBuiltPrompt {
   const mode: GravlMode = hasWorkoutContent ? 'review' : 'intake';
   const profileBlock = args.profileBlock && args.profileBlock.trim() ? args.profileBlock.trim() : '';
 
+  const hasPastedText = Boolean(workoutText.trim());
+  const reviewObjective = hasPastedText
+    ? 'Review the Gravl-provided workout below and optimize it for David. Judge what to ' +
+      'keep, modify, or replace, and flag anything that looks unsafe.'
+    : // Screenshot-only: there is no workout text below — it is attached in the AI app.
+      'Review the Gravl workout from David\'s screenshots (they are attached in your AI ' +
+      'app after you paste this prompt in) and optimize it for David. Judge what to keep, ' +
+      'modify, or replace, and flag anything that looks unsafe.';
   const objective =
     mode === 'review'
-      ? 'Review the Gravl-provided workout below and optimize it for David. Judge what to ' +
-        'keep, modify, or replace, and flag anything that looks unsafe.'
+      ? reviewObjective
       : 'David has not provided a Gravl workout yet. Ask him for it, then review and optimize ' +
         'it. Do not build a workout from scratch unless he explicitly asks for one or says ' +
         'Gravl gave him nothing usable.';

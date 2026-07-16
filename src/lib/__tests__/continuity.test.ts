@@ -8,7 +8,7 @@ const mkHandoff = (over: Partial<Handoff>): Handoff => ({
   workflowId: 'fitness-handoff',
   workflowName: 'Fitness Handoff',
   inputSummary: 'x',
-  outputStyle: 'Claude handoff',
+  outputStyle: 'AI handoff',
   content: 'calories 2000 protein 185',
   risk: 'draft_only',
   createdAt: '2026-07-01T10:00:00.000Z',
@@ -17,7 +17,7 @@ const mkHandoff = (over: Partial<Handoff>): Handoff => ({
 
 const fitnessWf: Workflow = {
   id: 'fitness-handoff', agentId: 'fitness', name: 'Fitness Handoff',
-  description: 'fitness', inputHint: '', outputStyles: ['Claude handoff'],
+  description: 'fitness', inputHint: '', outputStyles: ['AI handoff'],
   risk: 'draft_only', assumptions: [], nextAction: 'copy it',
   template: 'Clean {{input}} in style {{style}} on {{date}}',
   category: 'fitness_health', historyProfile: 'fitness_health', outputMode: 'dashboard_full_analysis',
@@ -99,7 +99,7 @@ describe('buildPrompt', () => {
 
   it('orders sections: New Entry, Profile, Prior Context, Instructions', () => {
     const b = buildPrompt({
-      workflow: fitnessWf, input: 'today: calories 2100 protein 197', style: 'Claude handoff',
+      workflow: fitnessWf, input: 'today: calories 2100 protein 197', style: 'AI handoff',
       allHandoffs: history, profileBlock: 'PROFILE-BLOCK-CONTENT',
     });
     const iNew = b.fullPrompt.indexOf('## New Entry to Analyze');
@@ -114,7 +114,7 @@ describe('buildPrompt', () => {
 
   it('current-only output excludes history and profile', () => {
     const b = buildPrompt({
-      workflow: fitnessWf, input: 'today: calories 2100', style: 'Claude handoff',
+      workflow: fitnessWf, input: 'today: calories 2100', style: 'AI handoff',
       allHandoffs: history, profileBlock: 'PROFILE-BLOCK-CONTENT',
     });
     expect(b.currentOnly).toBe('today: calories 2100');
@@ -123,7 +123,7 @@ describe('buildPrompt', () => {
   });
 
   it('fitness workflows include dashboard instructions', () => {
-    const b = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'Claude handoff', allHandoffs: history });
+    const b = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'AI handoff', allHandoffs: history });
     expect(b.fullPrompt).toContain('## Fitness Dashboard Analysis');
     expect(b.fullPrompt).toContain('Never recommend medication');
   });
@@ -132,7 +132,7 @@ describe('buildPrompt', () => {
     const b = buildPrompt({
       workflow: fitnessWf,
       input: 'Midday screenshot: 1240 kcal, protein 112g, carbs 130g, fat 62g, fiber 12g',
-      style: 'Claude handoff',
+      style: 'AI handoff',
       allHandoffs: [],
       profileBlock: 'PROFILE-BLOCK-CONTENT',
       healthProfile,
@@ -143,7 +143,7 @@ describe('buildPrompt', () => {
   });
 
   it('says so when no profile targets are available on a fitness workflow', () => {
-    const b = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'Claude handoff', allHandoffs: [] });
+    const b = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'AI handoff', allHandoffs: [] });
     expect(b.fullPrompt).toContain('No saved Health Profile targets were available');
   });
 
@@ -153,10 +153,10 @@ describe('buildPrompt', () => {
   });
 
   it('reports helper text with counts', () => {
-    const b = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'Claude handoff', allHandoffs: history });
+    const b = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'AI handoff', allHandoffs: history });
     expect(b.helperText).toContain('2 prior handoffs included');
     expect(b.helperText).toContain('Health & Fitness history mode');
-    const empty = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'Claude handoff', allHandoffs: [] });
+    const empty = buildPrompt({ workflow: fitnessWf, input: 'x', style: 'AI handoff', allHandoffs: [] });
     expect(empty.helperText).toBe('No prior saved handoffs found · Current handoff only');
   });
 
@@ -165,5 +165,26 @@ describe('buildPrompt', () => {
     const b = buildPrompt({ workflow: generalWf, input: 'same', style: 'One-pager', allHandoffs: [] });
     expect(a.promptHash).toBe(b.promptHash);
     expect(a.fingerprint).toMatch(/^[0-9a-f]{8} · [\d,]+ chars$/);
+  });
+
+  // DOS-WF-001R E: a clean-handoff workflow defaults to a clean handoff and only
+  // escalates to analysis when the request explicitly asks for it.
+  describe('clean handoff default vs analysis-on-request', () => {
+    const cleanWf: Workflow = { ...fitnessWf, outputMode: 'clean_handoff_only' };
+
+    it('stays a clean handoff for a plain logging request', () => {
+      const b = buildPrompt({ workflow: cleanWf, input: 'today: calories 2100 protein 197', style: 'AI handoff', allHandoffs: [] });
+      expect(b.outputMode).toBe('clean_handoff_only');
+      expect(b.fullPrompt).not.toContain('give practical recommendations');
+      expect(b.fullPrompt).not.toContain('## Fitness Dashboard Analysis');
+    });
+
+    it('escalates to analysis only when the request explicitly asks', () => {
+      for (const input of ['analyze my recovery this week', 'give me recommendations on my macros', 'evaluate how I am doing']) {
+        const b = buildPrompt({ workflow: cleanWf, input, style: 'AI handoff', allHandoffs: [] });
+        expect(b.outputMode, input).toBe('analysis_recommendations');
+        expect(b.fullPrompt, input).toContain('give practical recommendations');
+      }
+    });
   });
 });

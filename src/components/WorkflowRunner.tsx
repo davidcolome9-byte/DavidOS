@@ -23,7 +23,7 @@ type ViewMode = 'preview' | 'full_prompt';
  * Workflow Runner (Phase 4+): continuity-aware prompt builder.
  * Pulls prior saved handoffs for the same workflow, extracts structured
  * context, optionally adds the Health Profile block, and generates a prompt
- * to copy into Claude/ChatGPT. No AI call happens here.
+ * to copy into your AI assistant. No AI call happens here.
  */
 export default function WorkflowRunner() {
   const [params, setParams] = useSearchParams();
@@ -512,8 +512,12 @@ export default function WorkflowRunner() {
               <p className="muted small">Next action: {workflow.nextAction}</p>
               <div className="btn-row">
                 <button className="primary" onClick={() => copyText(built.fullPrompt, 'Prompt')} disabled={!canAct}>Copy Prompt</button>
-                <button onClick={() => copyText(built.currentOnly, 'Request only')} disabled={!canAct}>Copy Current Only</button>
+                <button onClick={() => copyText(built.currentOnly, 'Request only')} disabled={!canAct}>Copy Request Only</button>
               </div>
+              <p className="muted small">
+                <strong>Copy Request Only</strong> copies just your current request — without prior
+                workflow context, Health Profile context, or workout details.
+              </p>
               <div className="btn-row">
                 <button onClick={saveArtifact} disabled={!canAct}>Save Prompt</button>
                 <button onClick={saveHandoff} disabled={!canAct}>Save to Workflow History</button>
