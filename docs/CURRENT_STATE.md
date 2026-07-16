@@ -1,4 +1,4 @@
-# Current State — 2026-07-14
+# Current State — 2026-07-15
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.)
@@ -46,8 +46,10 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   (honestly labeled "No Gravl workout added. This prompt will ask for
   it."). Screenshots are never read by DavidOS — the prompt and UI tell
   David to attach them in his AI app after copying. Includes only relevant
-  Health Profile context with the L4/L5 movement-safety summary preserved
-  and medications/supplements excluded by default. Saved prompts are
+  Health Profile context with the generated movement-safety summary preserved
+  (generic wording; no hardcoded personal spinal-level fact in tracked source
+  or the production bundle) and medications/supplements excluded by default.
+  Saved prompts are
   local-device-only artifacts (title, workflow id, original input, built
   prompt, included-context metadata, creation time).
 - **Macro Target Snapshot** (newest): deterministic target-vs-current
@@ -74,11 +76,11 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status).
 
-## Verification status (2026-07-14, post-DOS-WF-001 correction pass)
+## Verification status (2026-07-15, post-DOS-WF-001 deployment)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 23 files, 227 tests, all passing (`npm test`).
+- Unit tests: 23 files, 233 tests, all passing (`npm test`).
 - Browser smoke tests: 25 passing (`npm run test:smoke`, Playwright
   chromium, production build; phone + laptop viewports).
 - Lint, seed validation (ids + registry parity), privacy validation
@@ -91,18 +93,19 @@ Exact counts live here ONLY (other docs reference this file):
   request and on pushes to main; Pages deploys (`deploy.yml`) run the
   same full gate — including smoke tests — on the deployed SHA before
   publishing.
-- Deployed and installed as PWA on David's Android phone (pre-sprint
-  build; next push to main redeploys).
+- Deployed to GitHub Pages and accepted through phone + laptop QA on the
+  current `main` (DOS-WF-001 included), and installed as a PWA on David's
+  Android phone.
 
-### DOS-WF-001 (2026-07-14) — local implementation, not yet deployed
+### DOS-WF-001 (2026-07-14) — merged, deployed, and accepted
 
-- Implemented locally on branch `fix/dos-wf-001-workflow-reliability`; two
-  local commits, no push, no PR, no deploy. Phone/laptop deployment is still
-  pending review.
-- **Correction pass (2026-07-14)** applied ChatGPT-review findings, all
-  local: Gravl builder carries generic safety language only (no hardcoded
-  L4/L5 — private movement-safety detail appears solely via the included,
-  whitelisted Health Profile context); a Gravl-safe profile field whitelist
+- Merged to `main` via PR #3 and deployed to GitHub Pages. The authoritative
+  deployed commit is `35cc9655a11fbc78f27caca5297330a023679026`. Accepted
+  through phone + laptop QA; cleanup is complete.
+- **Correction pass (2026-07-14)** applied ChatGPT-review findings:
+  Gravl builder carries generic safety language only (no hardcoded
+  spinal-level fact — private movement-safety detail appears solely via the
+  included, whitelisted Health Profile context); a Gravl-safe profile field whitelist
   drops meds/supplements, `promptSummary`, `freeformContext`, and nutrition;
   Gravl routing requires workout context (generic "review …" no longer
   hijacks meal/macro/nutrition/recovery requests); the false "expanded

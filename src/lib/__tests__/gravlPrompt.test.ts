@@ -51,15 +51,15 @@ describe('buildGravlPrompt', () => {
     const b = buildGravlPrompt({
       request: 'Review',
       workoutText: 'x',
-      profileBlock: '- Movement safety context: L4/L5 back history. Avoid axial loading.',
+      profileBlock: '- Movement safety context: saved back-safety restrictions. Avoid axial loading.',
     });
-    expect(b.fullPrompt).toContain('L4/L5 back history');
+    expect(b.fullPrompt).toContain('saved back-safety restrictions');
     expect(b.fullPrompt).toContain('## Relevant Health and Fitness Context');
   });
 
   // DOS-WF-001 correction 1: no private profile facts when the profile is
   // excluded — including in the Safety Boundaries section.
-  it('contains NO L4/L5 / injury / axial / medication facts when the profile is excluded', () => {
+  it('contains no spinal-level / injury / axial / medication facts when the profile is excluded', () => {
     const b = buildGravlPrompt({ request: 'Optimize this workout', workoutText: 'Squat 5x5' });
     const p = b.fullPrompt.toLowerCase();
     expect(p).not.toContain('l4');
@@ -73,19 +73,20 @@ describe('buildGravlPrompt', () => {
     expect(b.fullPrompt).toContain('No Health Profile context was included for this prompt.');
   });
 
-  it('includes the L4/L5 movement-safety summary ONLY via the included profile context', () => {
+  it('includes the movement-safety summary ONLY via the included profile context', () => {
     const withProfile = buildGravlPrompt({
       request: 'Is this workout safe for my back?',
       workoutText: 'Deadlift 3x3',
       profileBlock:
-        'Health Profile last updated: 2026-01-02\n\n- Movement safety context: L4/L5 back history. Avoid axial loading.',
+        'Health Profile last updated: 2026-01-02\n\n- Movement safety context: saved back-safety restrictions. Avoid axial loading.',
     });
-    // The L4/L5 text appears, and only inside the context section.
-    expect(withProfile.fullPrompt).toContain('L4/L5 back history');
+    // The movement-safety text appears, and only inside the context section.
+    expect(withProfile.fullPrompt).toContain('saved back-safety restrictions');
     const contextIdx = withProfile.fullPrompt.indexOf('## Relevant Health and Fitness Context');
     const safetyIdx = withProfile.fullPrompt.indexOf('## Safety Boundaries');
-    expect(withProfile.fullPrompt.indexOf('L4/L5')).toBeGreaterThan(contextIdx);
-    expect(withProfile.fullPrompt.indexOf('L4/L5')).toBeLessThan(safetyIdx);
+    const summaryIdx = withProfile.fullPrompt.indexOf('saved back-safety restrictions');
+    expect(summaryIdx).toBeGreaterThan(contextIdx);
+    expect(summaryIdx).toBeLessThan(safetyIdx);
   });
 
   it('no longer claims prior handoff history is included (truthful metadata)', () => {

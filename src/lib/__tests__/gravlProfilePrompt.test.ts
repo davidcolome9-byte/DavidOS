@@ -12,16 +12,18 @@ function profile(): HealthFitnessProfile {
       weeklyFrequency: '4x/week',
       movementRestrictions: ['No axial loading'],
     },
-    medicalContext: { injuryHistory: ['L4/L5 laminectomy (2019)'] },
+    medicalContext: { injuryHistory: ['disc herniation (2019)'] },
     supplementsMedications: { supplements: ['creatine'], medications: ['ibuprofen'] },
   };
 }
 
 describe('buildProfilePromptBlock — Gravl exclusions', () => {
-  it('keeps the L4/L5 movement-safety summary', () => {
+  it('keeps the generated movement-safety summary', () => {
     const block = buildProfilePromptBlock(profile(), { excludeSupplementsMedications: true });
-    expect(block.text).toContain('L4/L5');
+    expect(block.text).toContain('Movement safety context');
     expect(block.text.toLowerCase()).toContain('axial loading');
+    // The summary must carry no specific spinal-level personal fact.
+    expect(block.text).not.toMatch(/[CTL][0-9][/-][CTLS][0-9]/);
   });
 
   it('excludes medications and supplements when asked (Gravl default)', () => {
@@ -48,7 +50,7 @@ describe('buildProfilePromptBlock — Gravl-safe field whitelist (gravlSafe)', (
       trainingPlan: { weeklyFrequency: '4x/week', movementRestrictions: ['No axial loading'] },
       nutritionTargets: { calories: 2400, proteinGrams: 190 },
       bodyMetrics: { height: '180cm', currentWeight: '86kg', waist: '34in', bodyFatEstimate: '18%' },
-      medicalContext: { injuryHistory: ['L4/L5 laminectomy (2019)'] },
+      medicalContext: { injuryHistory: ['disc herniation (2019)'] },
       supplementsMedications: { supplements: ['creatine'], medications: ['ibuprofen'] },
       // Free-text fields that can smuggle excluded detail back in:
       promptSummary: 'Takes ibuprofen 400mg and creatine; also on testosterone (TRT).',
@@ -81,7 +83,8 @@ describe('buildProfilePromptBlock — Gravl-safe field whitelist (gravlSafe)', (
     expect(paths).not.toContain('bodyMetrics.waist');
     expect(paths).not.toContain('bodyMetrics.bodyFatEstimate');
     expect(paths).not.toContain('supplementsMedications');
-    expect(block.text).toContain('L4/L5'); // the approved movement-safety summary
+    expect(block.text).toContain('Movement safety context'); // the approved movement-safety summary
+    expect(block.text).not.toMatch(/[CTL][0-9][/-][CTLS][0-9]/); // no specific spinal-level personal fact
     expect(block.text).not.toContain('2400'); // no calories
   });
 

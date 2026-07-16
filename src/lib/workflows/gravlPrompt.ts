@@ -146,8 +146,8 @@ export function buildGravlPrompt(args: GravlPromptArgs): GravlBuiltPrompt {
     'direct question. Only create a fresh workout when David explicitly requests one or says ' +
     'Gravl gave him nothing usable.');
 
-  // Generic safety language only. Any specific medical detail (e.g. an L4/L5
-  // history and axial-loading caution) appears ONLY when it was supplied
+  // Generic safety language only. Any specific medical detail (e.g. a saved
+  // back-history and axial-loading caution) appears ONLY when it was supplied
   // through the included, approved Health Profile context above — never
   // hardcoded here, so a prompt built with the profile excluded carries no
   // private medical facts.

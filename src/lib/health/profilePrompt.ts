@@ -144,15 +144,17 @@ export function buildProfilePromptBlock(
   add('analysisPreferences.coachingStyle', line('Coaching style', ap?.coachingStyle?.replace(/_/g, ' ')));
   add('analysisPreferences.outputDetail', line('Output detail', ap?.outputDetail));
 
-  // Movement safety context is always present when a profile with the L4/L5
-  // history is included — compact summary per Phase 11.
+  // Movement safety context is emitted whenever the included profile reports a
+  // back-history or movement-restriction signal — compact summary per Phase 11.
+  // The summary carries generic movement-safety guidance only; no specific
+  // spinal level or diagnosis is baked into this source.
   const hasBackHistory =
     (profile.medicalContext?.injuryHistory ?? []).some((i) => /l4|l5|laminectomy|herniat/i.test(i)) ||
     (t?.movementRestrictions ?? []).some((i) => /axial/i.test(i));
   if (hasBackHistory) {
     add('medicalContext.safetySummary',
-      '- Movement safety context: L4/L5 back history. Avoid axial loading. Use caution with back, ' +
-      'leg, nerve-like pain, weakness, or radiating symptoms.');
+      '- Movement safety context: reported back-safety context. Avoid axial loading. Use caution ' +
+      'with back, leg, nerve-like pain, weakness, or radiating symptoms.');
   }
 
   // Free-text summary can reintroduce excluded/private detail, so it is dropped
