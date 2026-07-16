@@ -12,9 +12,24 @@ const PRIMARY_NAV = [
 ];
 
 export default function Layout() {
-  const { persistFailed, recovery } = useStore();
+  const { persistFailed, recovery, externalChange } = useStore();
   return (
     <div className="app-shell">
+      {externalChange && (
+        <div className="modal-overlay" role="alertdialog" aria-modal="true" data-testid="crosstab-guard">
+          <div className="modal">
+            <h2>⚠️ Updated in another tab</h2>
+            <p className="muted">
+              DavidOS was changed in another tab or window. To avoid overwriting those newer changes,
+              this tab has stopped saving. Nothing here has been lost — it simply won't be written.
+            </p>
+            <p className="muted small">Reload to continue with the latest saved data.</p>
+            <div className="btn-row">
+              <button className="primary" onClick={() => window.location.reload()}>Reload with latest</button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="app-header">
         <h1>David<span>OS</span></h1>
         <span className="date">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
