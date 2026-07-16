@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../state/store';
 import { getAgent } from '../lib/agents/agentRegistry';
 import { resolveLogsTab, type LogsTab } from '../lib/workflows/logsTabs';
+import { deleteHandoff as deleteHandoffRelations, hasCorrections } from '../lib/workflows/continuity';
 import { uid, nowIso } from '../lib/types';
 import type { Handoff } from '../lib/types';
 import RiskBadge from './RiskBadge';
@@ -62,6 +63,43 @@ export default function AuditLog() {
     setCorrecting(null);
     setCorrectionText('');
     setFlash('Correction saved. The original entry is now superseded.');
+  }
+
+  // Relationship-aware deletion. Never cascades: deleting an original that has
+  // a correction keeps the correction (repaired into a standalone entry);
+  // deleting a correction restores its original to a valid non-superseded
+  // state. The confirmation names the relationship so nothing is silent.
+  function deleteHandoffEntry(h: Handoff) {
+    const corrected = hasCorrections(state.handoffs, h.id);
+    const isCorrection = h.status === 'correction' && !!h.correctsHandoffId;
+    const message = corrected
+      ? 'This entry has a correction that builds on it. Deleting it keeps the correction as a standalone entry (no longer marked a correction), and does NOT delete the correction. Delete this original?'
+      : isCorrection
+        ? 'This is a correction. Deleting it restores the original entry to active (no longer superseded). Delete this correction?'
+        : 'Delete this handoff?';
+    if (!window.confirm(message)) return;
+    update((s) => ({ ...s, handoffs: deleteHandoffRelations(s.handoffs, h.id) }));
+    audit({
+      command: 'handoff_deleted',
+      workflowId: h.workflowId,
+      actionType: 'local_write',
+      approvalStatus: 'not_required',
+      actionTaken: true,
+      resultSummary:
+        `Deleted handoff ${h.id.slice(0, 8)} (${h.workflowName})` +
+        (corrected
+          ? '; its correction was kept as a standalone entry.'
+          : isCorrection
+            ? '; the original was restored to active.'
+            : '.'),
+    });
+    setFlash(
+      corrected
+        ? 'Handoff deleted. Its correction was kept as a standalone entry.'
+        : isCorrection
+          ? 'Correction deleted. The original entry is active again.'
+          : 'Handoff deleted.',
+    );
   }
 
   async function copy(text: string) {
@@ -156,13 +194,7 @@ export default function AuditLog() {
                 {h.status !== 'superseded' && (
                   <button onClick={() => { setCorrecting(h); setCorrectionText(h.content ?? h.output ?? ''); }}>Correct this entry</button>
                 )}
-                <button
-                  className="danger"
-                  onClick={() =>
-                    window.confirm('Delete this handoff?') &&
-                    update((s) => ({ ...s, handoffs: s.handoffs.filter((x) => x.id !== h.id) }))
-                  }
-                >
+                <button className="danger" onClick={() => deleteHandoffEntry(h)}>
                   Delete
                 </button>
               </div>

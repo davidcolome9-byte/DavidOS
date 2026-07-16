@@ -1,5 +1,6 @@
-import type { AppState, Project, Prompt, PromptVersion } from '../types';
+import type { AppState, Handoff, Project, Prompt, PromptVersion } from '../types';
 import { seedHealthProfile } from '../../data/healthProfileSeed';
+import { normalizeHandoffRelationships } from '../workflows/continuity';
 
 export const STORAGE_KEY = 'davidos-state-v1';
 /** Unreadable or lossy-repaired blobs are preserved under unique keys with this prefix. */
@@ -102,7 +103,9 @@ export function normalizeState(state: AppState): AppState {
     projects,
     prompts,
     contextItems: objectArray(state.contextItems),
-    handoffs: objectArray(state.handoffs),
+    // Repair correction relationships so a stored/imported set never carries an
+    // orphaned correction or a stuck-superseded original.
+    handoffs: normalizeHandoffRelationships(objectArray<Handoff>(state.handoffs)),
     artifacts: objectArray(state.artifacts),
     // Seed-if-missing: `undefined` means the state predates Health Profiles →
     // seed one. `null` means the user explicitly deleted it → respect that.

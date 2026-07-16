@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPriorHandoffs, buildPrompt } from '../workflows/continuity';
+import { getPriorHandoffs, buildPrompt, deleteHandoff, normalizeHandoffRelationships, hasCorrections } from '../workflows/continuity';
 import type { Handoff, HealthFitnessProfile, Workflow } from '../types';
 
 const mkHandoff = (over: Partial<Handoff>): Handoff => ({
@@ -88,6 +88,83 @@ describe('getPriorHandoffs', () => {
     ];
     const got = getPriorHandoffs(list, 'fitness-handoff', 3);
     expect(got[0].id).toBe('late-entry');
+  });
+});
+
+describe('correction-relationship integrity (Priority 4)', () => {
+  const orig = () => mkHandoff({ id: 'orig', status: 'superseded', createdAt: '2026-06-01T10:00:00.000Z' });
+  const corr = (over: Partial<Handoff> = {}) => mkHandoff({ id: 'fix', status: 'correction', correctsHandoffId: 'orig', createdAt: '2026-06-02T10:00:00.000Z', ...over });
+  const unrelated = () => mkHandoff({ id: 'other', workflowId: 'daily-brief', createdAt: '2026-06-03T10:00:00.000Z' });
+
+  it('deletes an uncorrected handoff and leaves the rest untouched', () => {
+    const list = [mkHandoff({ id: 'a' }), unrelated()];
+    const after = deleteHandoff(list, 'a');
+    expect(after.map((h) => h.id)).toEqual(['other']);
+  });
+
+  it('deleting an original keeps its correction as a standalone active entry (no cascade)', () => {
+    const after = deleteHandoff([orig(), corr(), unrelated()], 'orig');
+    const fix = after.find((h) => h.id === 'fix')!;
+    expect(after.some((h) => h.id === 'orig')).toBe(false); // original gone
+    expect(fix).toBeDefined();                              // correction NOT cascaded
+    expect(fix.status).toBe('active');                      // demoted from correction
+    expect(fix.correctsHandoffId).toBeUndefined();          // dangling pointer cleared
+    expect(after.find((h) => h.id === 'other')!.status).toBeUndefined(); // unrelated untouched
+  });
+
+  it('deleting a correction restores the original to active (not superseded)', () => {
+    const after = deleteHandoff([orig(), corr()], 'fix');
+    expect(after.some((h) => h.id === 'fix')).toBe(false);
+    expect(after.find((h) => h.id === 'orig')!.status).toBe('active');
+  });
+
+  it('a correction chain (orig→c1→c2) preserves a valid newest correction on delete', () => {
+    const chain: Handoff[] = [
+      mkHandoff({ id: 'orig', status: 'superseded', createdAt: '2026-06-01T10:00:00.000Z' }),
+      mkHandoff({ id: 'c1', status: 'superseded', correctsHandoffId: 'orig', createdAt: '2026-06-02T10:00:00.000Z' }),
+      mkHandoff({ id: 'c2', status: 'correction', correctsHandoffId: 'c1', createdAt: '2026-06-03T10:00:00.000Z' }),
+    ];
+    // Delete newest correction c2 → c1 is no longer superseded but still corrects orig.
+    const afterC2 = deleteHandoff(chain, 'c2');
+    expect(afterC2.find((h) => h.id === 'c1')!.status).toBe('correction');
+    expect(afterC2.find((h) => h.id === 'orig')!.status).toBe('superseded');
+    // Delete the middle c1 → c2 orphaned (repaired to active), orig restored.
+    const afterC1 = deleteHandoff(chain, 'c1');
+    expect(afterC1.find((h) => h.id === 'c2')!.status).toBe('active');
+    expect(afterC1.find((h) => h.id === 'c2')!.correctsHandoffId).toBeUndefined();
+    expect(afterC1.find((h) => h.id === 'orig')!.status).toBe('active');
+  });
+
+  it('normalization repairs an orphaned correction at import/boot', () => {
+    // A correction whose original is absent (corrupt/partial backup).
+    const repaired = normalizeHandoffRelationships([corr()]);
+    expect(repaired[0].status).toBe('active');
+    expect(repaired[0].correctsHandoffId).toBeUndefined();
+  });
+
+  it('normalization is idempotent (reload preserves valid relationships)', () => {
+    const once = normalizeHandoffRelationships([orig(), corr()]);
+    const twice = normalizeHandoffRelationships(once);
+    expect(twice).toEqual(once);
+    expect(once.find((h) => h.id === 'orig')!.status).toBe('superseded');
+    expect(once.find((h) => h.id === 'fix')!.status).toBe('correction');
+  });
+
+  it('retrieval prefers the surviving entry after deletion', () => {
+    // Delete the correction → the restored original is retrieved (not a ghost).
+    const after = deleteHandoff([orig(), corr()], 'fix');
+    const got = getPriorHandoffs(after, 'fitness-handoff', 3);
+    expect(got.map((h) => h.id)).toEqual(['orig']);
+    // Delete the original → the correction survives and is retrieved.
+    const after2 = deleteHandoff([orig(), corr()], 'orig');
+    const got2 = getPriorHandoffs(after2, 'fitness-handoff', 3);
+    expect(got2.map((h) => h.id)).toEqual(['fix']);
+  });
+
+  it('hasCorrections detects an original that owns a correction', () => {
+    const list = [orig(), corr()];
+    expect(hasCorrections(list, 'orig')).toBe(true);
+    expect(hasCorrections(list, 'fix')).toBe(false);
   });
 });
 

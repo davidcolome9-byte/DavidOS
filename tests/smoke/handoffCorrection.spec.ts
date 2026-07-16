@@ -31,3 +31,40 @@ test('correct a saved handoff: appends a correction and supersedes the original'
   await expect(page.getByTestId('superseded-note')).toBeAttached();
   await expect(page.getByTestId('superseded-note')).toContainText('Superseded by a correction');
 });
+
+// Priority 4 — deleting a correction must not orphan the original: it is
+// restored to active (no longer superseded) and stays retrievable.
+test('deleting a correction restores the original to active (no orphaned history)', async ({ page }) => {
+  await page.goto('/#/workflows?wf=fitness-handoff&input=' + encodeURIComponent('calories 2000 protein 180'));
+  await page.getByRole('button', { name: 'Build Prompt' }).click();
+  await page.getByRole('button', { name: 'Save to Workflow History' }).click();
+
+  await page.goto('/#/logs?tab=handoffs');
+  await page.getByTestId('handoff-item').first().locator('summary').click();
+  await page.getByRole('button', { name: 'Correct this entry' }).click();
+  await page.getByLabel('Corrected content').fill('corrected: calories 1950 protein 190');
+  await page.getByRole('button', { name: 'Save correction' }).click();
+  await expect(page.getByTestId('handoff-item')).toHaveCount(2);
+  await expect(page.getByText('Superseded', { exact: true })).toBeVisible();
+
+  // Delete the correction. The confirmation names the relationship; accept it.
+  page.once('dialog', (d) => {
+    expect(d.message()).toContain('restores the original');
+    void d.accept();
+  });
+  // The correction is the entry carrying the "Correction" badge; expand & delete it.
+  const correctionItem = page.getByTestId('handoff-item').filter({ hasText: 'Correction' });
+  await correctionItem.locator('summary').click();
+  await correctionItem.getByRole('button', { name: 'Delete' }).click();
+
+  // One entry remains and it is NOT superseded (original restored to active).
+  await expect(page.getByTestId('handoff-item')).toHaveCount(1);
+  await expect(page.getByText('Superseded', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Correction', { exact: true })).toHaveCount(0);
+
+  // Survives a reload with a valid (non-superseded) relationship.
+  await page.reload();
+  await page.goto('/#/logs?tab=handoffs');
+  await expect(page.getByTestId('handoff-item')).toHaveCount(1);
+  await expect(page.getByText('Superseded', { exact: true })).toHaveCount(0);
+});
