@@ -1,4 +1,5 @@
 import type { AgentId } from '../types';
+import { matchesTerm } from './termMatch';
 
 interface Keyword {
   term: string;
@@ -72,7 +73,7 @@ export function scoreInput(input: string): AgentScore[] {
     let score = 0;
     const matched: string[] = [];
     for (const { term, weight } of AGENT_KEYWORDS[agentId]) {
-      if (text.includes(term)) {
+      if (matchesTerm(text, term)) {
         score += weight;
         matched.push(term);
       }
