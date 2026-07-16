@@ -4,6 +4,7 @@ import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { clearPersistedState } from '../lib/storage/localStore';
 import { buildResetState } from '../lib/storage/resetState';
 import { hasHealthDraft, clearHealthDraft } from '../lib/health/profileDraft';
+import { fingerprintInput } from '../lib/audit/redaction';
 import { INTEGRATIONS } from '../lib/integrations';
 import { requiresApproval } from '../lib/safety/approvalRules';
 import { stubResult } from '../lib/integrations/integrationTypes';
@@ -103,13 +104,14 @@ export default function Settings() {
     // here (kept → import aborted; discarded → key already cleared), so we do
     // NOT clear it implicitly on apply. Nothing about the draft is logged.
     update(() => next);
+    // The filename can carry personal text — record only a fingerprint (F-05).
     audit({
-      command: `Import backup: ${fileName}`,
+      command: 'Import backup',
       actionType: 'local_write',
       approvalStatus: 'approved',
       actionTaken: true,
       resultSummary:
-        `Backup imported — local state replaced. Health Profile: ` +
+        `Backup imported — local state replaced (source fp ${fingerprintInput(fileName)}). Health Profile: ` +
         (healthChoice === 'keep-current' ? 'kept current.' : 'used imported.'),
     });
     setImportConflict(null);

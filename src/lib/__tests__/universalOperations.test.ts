@@ -117,21 +117,26 @@ describe('universal operations commands', () => {
     expect(getWorkflow(resolveDomainWorkflowRoute('calendar')?.workflowId ?? '')).toBeDefined();
   });
 
-  it('plans successful route commands as one accurate audit event', () => {
+  it('plans successful route commands as one accurate, privacy-safe audit event', () => {
     const resolution = resolveDomainRouteCommand('fitness');
     expect(resolution.actionTaken).toBe(true);
     expect(resolution.route?.workflowId).toBe('fitness-handoff');
-    expect(resolution.auditCommand).toBe('/route fitness');
+    // The audit label carries an event type + fingerprint, never the raw text.
+    expect(resolution.auditCommand).toMatch(/^Slash \/route · fp [0-9a-f]+ · \d+ chars$/);
+    expect(resolution.auditCommand).not.toContain('fitness');
     expect(resolution.resultSummary).toContain('Fitness -> fitness-handoff');
     expect(resolution.usesClarificationUx).toBe(false);
   });
 
-  it('plans unknown route commands as one no-op audit event using clarification UX', () => {
+  it('plans unknown route commands as one no-op audit event without echoing the input', () => {
     const resolution = resolveDomainRouteCommand('unknown domain');
     expect(resolution.actionTaken).toBe(false);
     expect(resolution.route).toBeNull();
-    expect(resolution.auditCommand).toBe('/route unknown domain');
+    expect(resolution.auditCommand).toMatch(/^Slash \/route · fp [0-9a-f]+ · \d+ chars$/);
+    // The raw route text is preserved for the router but NOT in the diagnostics.
     expect(resolution.routeInput).toBe('unknown domain');
+    expect(resolution.auditCommand).not.toContain('unknown domain');
+    expect(resolution.resultSummary).not.toContain('unknown domain');
     expect(resolution.usesClarificationUx).toBe(true);
   });
 });

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { COMMANDS, matchCommand, resolveDomainRouteCommand, workflowTargetToParams } from '../lib/commands';
+import { redactedCommandLabel } from '../lib/audit/redaction';
 import { routeIntent } from '../lib/router/intentRouter';
 import { classifyCommand } from '../lib/safety/riskClassifier';
 import { requiresApproval, requiresLocalNotice, RISK_LABELS } from '../lib/safety/approvalRules';
@@ -76,8 +77,11 @@ export default function CommandPalette() {
     setResult(r);
     setRisk(commandRisk);
     setRoutedInput(text);
+    // Never persist the raw command. Store a safe event label with the route
+    // classification and a non-reversible fingerprint (F-05). The routed text
+    // stays in component state (routedInput) for the live UI only.
     audit({
-      command: (auditOptions?.command ?? text) || '(empty)',
+      command: auditOptions?.command ?? redactedCommandLabel(`Routed command (${r.classification})`, text),
       agentId: r.target === 'unknown' ? undefined : r.target,
       workflowId: r.suggestedWorkflowId,
       actionType: commandRisk,
@@ -93,8 +97,9 @@ export default function CommandPalette() {
     const cmd = matchCommand(text);
     if (cmd) {
       if (cmd.command.target !== 'domain-route') {
+        // Log the slash keyword only — the full typed line may carry free text.
         audit({
-          command: text,
+          command: `Slash command ${cmd.command.slash}`,
           actionType: 'read_only',
           approvalStatus: 'not_required',
           actionTaken: true,

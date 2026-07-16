@@ -50,6 +50,23 @@ test('risky free-text command shows the honest no-op, sends nothing', async ({ p
   await expect(page.locator('strong', { hasText: 'Nothing was sent or changed.' })).toBeVisible();
 });
 
+test('a routed free-text command is never stored or rendered verbatim (privacy)', async ({ page }) => {
+  const SECRET = 'SENTINEL-SECRET-audit-9f3a';
+  await gotoHome(page);
+  await page.getByLabel('Command input').fill(`remind me about ${SECRET} tomorrow`);
+  await page.getByRole('button', { name: 'Route This' }).click();
+
+  // The audit log renders a safe event label with a fingerprint — not the text.
+  await page.locator('.bottom-nav').getByText('Logs').click();
+  await expect(page.getByRole('heading', { name: /Audit log/ })).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('SENTINEL-SECRET');
+  await expect(page.getByText(/Routed command \(/).first()).toBeVisible();
+
+  // The serialized local state must not contain the secret anywhere either.
+  const serialized = await page.evaluate(([key]) => window.localStorage.getItem(key), [STORAGE_KEY]);
+  expect(serialized ?? '').not.toContain('SENTINEL-SECRET');
+});
+
 test('slash command navigates to a workflow', async ({ page }) => {
   await gotoHome(page);
   await page.getByLabel('Command input').fill('/brief');
