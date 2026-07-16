@@ -80,8 +80,9 @@ test('a failing draft write surfaces a visible non-persistence warning', async (
   const warning = page.getByTestId('draft-persist-warning');
   await expect(warning).toBeVisible();
   await expect(warning).toContainText('kept only in this tab');
-  // Must not promise recovery on reload.
-  await expect(warning).not.toContainText('recover');
+  // States the edits will be lost on reload — never promises they survive it.
+  await expect(warning).toContainText('will be lost if you reload');
+  await expect(warning).not.toContainText(/will be (restored|recovered)/);
 
   // Saving the profile still works even though the draft write failed.
   await page.getByRole('button', { name: 'Save Health Profile' }).click();

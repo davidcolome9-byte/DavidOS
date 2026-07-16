@@ -3,12 +3,14 @@ import { test, expect, type Page } from '@playwright/test';
 // DOS-WF-001R Phase 2B — a stale tab must not clobber newer state from another
 // tab. Two pages in one context share localStorage and receive `storage` events.
 
+// A routed command is persisted with a privacy-safe label (never the raw text).
 const hasRoutedCmd = (page: Page) =>
   page.evaluate(() => {
     const raw = localStorage.getItem('davidos-state-v1');
     if (!raw) return false;
+    if (raw.includes('Review this workout')) return false; // raw text must never be stored
     const log = (JSON.parse(raw).auditLog ?? []) as Array<{ command?: string }>;
-    return log.some((e) => e.command === 'Review this workout');
+    return log.some((e) => typeof e.command === 'string' && e.command.startsWith('Routed command'));
   });
 
 test('a stale tab cannot silently clobber newer state from another tab', async ({ context }) => {

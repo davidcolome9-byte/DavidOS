@@ -52,9 +52,10 @@ test('deleting a correction restores the original to active (no orphaned history
     expect(d.message()).toContain('restores the original');
     void d.accept();
   });
-  // The correction is the entry carrying the "Correction" badge; expand & delete it.
-  const correctionItem = page.getByTestId('handoff-item').filter({ hasText: 'Correction' });
+  // Corrections are prepended, so the correction is the FIRST handoff item.
+  const correctionItem = page.getByTestId('handoff-item').first();
   await correctionItem.locator('summary').click();
+  await expect(correctionItem.getByText('Correction', { exact: true })).toBeVisible();
   await correctionItem.getByRole('button', { name: 'Delete' }).click();
 
   // One entry remains and it is NOT superseded (original restored to active).
