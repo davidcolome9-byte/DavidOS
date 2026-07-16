@@ -100,9 +100,12 @@ export default function Settings() {
       healthChoice === 'keep-current'
         ? { ...imported, healthProfile: state.healthProfile }
         : imported;
-    // Any unsaved draft was resolved by the draft-conflict step before we got
-    // here (kept → import aborted; discarded → key already cleared), so we do
-    // NOT clear it implicitly on apply. Nothing about the draft is logged.
+    // Reaching applyImport means the user passed the draft-conflict gate by
+    // explicitly choosing to discard (a kept draft aborts the import earlier).
+    // Clearing HERE — at the actual apply — means a later cancel (e.g. the
+    // replace-data confirm) leaves the draft intact, so no path discards it
+    // without importing. A no-op when there was no draft. Never logged.
+    clearHealthDraft();
     update(() => next);
     // The filename can carry personal text — record only a fingerprint (F-05).
     audit({
@@ -530,7 +533,7 @@ export default function Settings() {
               </button>
               <button
                 className="danger"
-                onClick={() => { clearHealthDraft(); continueImport(draftConflict.state, draftConflict.fileName); }}
+                onClick={() => continueImport(draftConflict.state, draftConflict.fileName)}
               >
                 Discard edits &amp; import
               </button>
