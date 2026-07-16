@@ -2,16 +2,24 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useStore } from '../state/store';
 import { getAgent } from '../lib/agents/agentRegistry';
+import { resolveLogsTab, type LogsTab } from '../lib/workflows/logsTabs';
 import RiskBadge from './RiskBadge';
 
 /** Logs page: audit trail + saved handoffs. */
 export default function AuditLog() {
   const { state, update } = useStore();
-  const [params] = useSearchParams();
-  const initialTab = params.get('tab');
-  const [tab, setTab] = useState<'audit' | 'handoffs' | 'artifacts'>(
-    initialTab === 'handoffs' ? 'handoffs' : initialTab === 'artifacts' ? 'artifacts' : 'audit',
-  );
+  const [params, setParams] = useSearchParams();
+  // The active tab is a pure function of the URL `tab` param, so browser Back
+  // and Forward move between tabs, and an invalid/missing value falls back
+  // honestly to the audit log. Switching tabs pushes a history entry.
+  const tab: LogsTab = resolveLogsTab(params.get('tab'));
+  const setTab = (next: LogsTab) => {
+    setParams((prev) => {
+      const p = new URLSearchParams(prev);
+      p.set('tab', next);
+      return p;
+    });
+  };
   const [flash, setFlash] = useState('');
 
   async function copy(text: string) {

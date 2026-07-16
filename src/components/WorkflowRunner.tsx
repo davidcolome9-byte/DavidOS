@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AGENTS, getAgent } from '../lib/agents/agentRegistry';
 import { WORKFLOWS, getWorkflow, resolveWorkflowOutputStyle } from '../lib/workflows/workflowRegistry';
+import { computeStyleSync } from '../lib/workflows/styleSync';
 import { summarizeInput } from '../lib/workflows/templateRenderer';
 import { buildPrompt } from '../lib/workflows/continuity';
 import type { BuiltPrompt } from '../lib/workflows/continuity';
@@ -43,27 +44,40 @@ export default function WorkflowRunner() {
   const [profileRevealLevel, setProfileRevealLevel] = useState(0); // 0=summary 1=metadata 2=text
   const [flash, setFlash] = useState('');
 
+  // Tracks the `style` param from the previous navigation so Effect 1 can tell
+  // "style removed" (restore default) from "style never present".
+  const lastStyleParam = useRef<string | null>(params.get('style'));
+
   // Effect 1 — WORKFLOW / STYLE sync only. Arriving via a link like
-  // /workflows?wf=fitness-handoff (or a style change) selects the workflow and
-  // resets workout inputs; it deliberately does NOT touch the request input,
-  // which Effect 2 owns.
+  // /workflows?wf=fitness-handoff (or a style param change, including Back/
+  // Forward and removing the style param) selects the workflow and syncs the
+  // style; it deliberately does NOT touch the request input, which Effect 2
+  // owns. A purely in-page manual style pick changes local state without a URL
+  // change, so it is never overwritten here.
   useEffect(() => {
     const wf = getWorkflow(params.get('wf') ?? '');
     const requestedStyle = params.get('style');
-    const nextStyle = wf ? resolveWorkflowOutputStyle(wf, requestedStyle) : '';
-    if (wf && (wf.id !== workflow?.id || (requestedStyle !== null && nextStyle !== style))) {
-      const workflowChanged = wf.id !== workflow?.id;
+    if (!wf) { lastStyleParam.current = requestedStyle; return; }
+    const d = computeStyleSync({
+      wf,
+      requestedStyle,
+      currentWorkflowId: workflow?.id,
+      currentStyle: style,
+      lastStyleParam: lastStyleParam.current,
+    });
+    if (d.shouldInvalidate) {
       setWorkflow(wf);
       setAgentFilter(wf.agentId);
-      setStyle(nextStyle);
-      // Switching workflows must invalidate any old built result immediately.
+      if (d.shouldSetStyle) setStyle(d.nextStyle);
+      // Switching workflows or moving the style must invalidate the old result.
       setBuilt(null);
       setBuiltConfigKey(null);
-      if (workflowChanged) {
+      if (d.workflowChanged) {
         setWorkoutText('');
         setHasScreenshots(false);
       }
     }
+    lastStyleParam.current = requestedStyle;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params]);
 
