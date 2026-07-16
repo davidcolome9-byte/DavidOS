@@ -6,6 +6,14 @@ export const STORAGE_KEY = 'davidos-state-v1';
 export const RECOVERY_KEY_PREFIX = `${STORAGE_KEY}-recovery-`;
 
 /**
+ * The one authoritative schema version this build understands. Data stamped with
+ * a HIGHER version was produced by a newer DavidOS and must not be normalized or
+ * overwritten (we would silently drop fields we don't know about). It is
+ * preserved and surfaced instead. Bump this only alongside a real migration.
+ */
+export const CURRENT_SCHEMA_VERSION = 1;
+
+/**
  * localStorage-backed persistence for v1.
  * Isolated behind this module so it can be swapped for IndexedDB
  * or a Google Drive-synced store without touching the rest of the app.
@@ -247,6 +255,28 @@ export function loadPersistedState(): LoadResult {
         rawPreserved: false,
         canPersist: false,
         message: 'Saved data could not be read, and backing it up failed. Saving is paused so the stored copy is not overwritten — free up storage, then reload.',
+      },
+    };
+  }
+
+  // Forward-version guard: data from a NEWER DavidOS must not be normalized or
+  // overwritten (we would drop fields we don't understand). Preserve it exactly
+  // and run in memory with defaults so the newer data survives for that version.
+  if (parsed.schemaVersion > CURRENT_SCHEMA_VERSION) {
+    const key = preserveRawBlob(raw);
+    console.warn(`DavidOS: stored data is from a newer version (schema ${parsed.schemaVersion} > ${CURRENT_SCHEMA_VERSION}); not overwriting it.`);
+    return {
+      state: null,
+      recovery: {
+        kind: 'unreadable',
+        rawPreserved: Boolean(key),
+        recoveryKey: key ?? undefined,
+        canPersist: false,
+        message:
+          `This saved data was created by a newer version of DavidOS (schema ${parsed.schemaVersion}, ` +
+          `this app understands ${CURRENT_SCHEMA_VERSION}). To avoid corrupting it, the app started ` +
+          `with a blank workspace and will not save over your data. Open the newer version, or update ` +
+          `this one.` + (key ? ` A copy was preserved on this device.` : ''),
       },
     };
   }

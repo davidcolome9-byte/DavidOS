@@ -52,14 +52,17 @@ describe('export/import', () => {
     expect(parseImport(JSON.stringify(env)).healthProfile?.promptSummary).toBe('carried through');
   });
 
-  it('repairs junk-typed optional sections instead of crashing later', () => {
+  // DOS-WF-001R Phase 2C: import now deeply validates and REJECTS malformed data
+  // (boot-time recovery still repairs — that path stays fail-safe). Errors name
+  // the collection/field but never echo the rejected value.
+  it('rejects junk-typed sections on import with a clear, value-free error', () => {
     const env = JSON.parse(serializeState(buildDefaultState()));
     env.state.artifacts = 'junk';
     env.state.prompts = [{ id: 'p1', title: 'no versions key' }, null, 42];
-    const imported = parseImport(JSON.stringify(env));
-    expect(imported.artifacts).toEqual([]);
-    expect(imported.prompts).toHaveLength(1);
-    expect(imported.prompts[0].versions).toEqual([]);
-    expect(imported.prompts[0].tags).toEqual([]);
+    let msg = '';
+    try { parseImport(JSON.stringify(env)); } catch (e) { msg = (e as Error).message; }
+    expect(msg).toContain('artifacts');
+    expect(msg).toContain('prompts');
+    expect(msg).not.toContain('junk'); // never echoes the rejected value
   });
 });

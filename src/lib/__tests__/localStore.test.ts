@@ -402,3 +402,23 @@ describe('buildResetState (DAV-002)', () => {
     expect(buildResetState(afterDelete, false).healthProfile).toBeNull();
   });
 });
+
+// DOS-WF-001R Phase 2C — data from a NEWER DavidOS must not be loaded, repaired,
+// or overwritten at boot; it is preserved and the app runs blank + read-only.
+describe('forward-version guard at boot', () => {
+  it('rejects newer-schema data, preserves it, and refuses to persist over it', () => {
+    const future = { ...buildDefaultState(), schemaVersion: 999 };
+    storage.data.set(STORAGE_KEY, JSON.stringify(future));
+    const result = loadPersistedState();
+    expect(result.state).toBeNull();
+    expect(result.recovery.canPersist).toBe(false);
+    expect(result.recovery.message).toMatch(/newer version/i);
+    // The original newer-version blob is left exactly as-is.
+    expect(storage.data.get(STORAGE_KEY)).toBe(JSON.stringify(future));
+  });
+
+  it('still loads current-schema data normally', () => {
+    storage.data.set(STORAGE_KEY, JSON.stringify(buildDefaultState()));
+    expect(loadPersistedState().state).not.toBeNull();
+  });
+});
