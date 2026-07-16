@@ -28,27 +28,32 @@ interface Signal {
 const sig = (term: string, weight = 1): Signal => ({ term, weight });
 
 /**
- * Workout-context ANCHORS. Gravl is only eligible when at least one of these
- * is present — a generic verb like "review", "optimize", or "progression"
- * must never route to Gravl on its own (that would hijack "review my meal
- * plan", "review my macros", etc.).
+ * Workout-context ANCHORS make Gravl *eligible*. A generic verb like "review"
+ * or "optimize" must never route to Gravl on its own (that would hijack
+ * "review my meal plan", "review my macros"), so a context word is required.
+ * Bare context words are eligibility-only — they carry NO score (see
+ * GRAVL_SCORE) so a lone anchor can never outweigh a clear logging verb like
+ * "log my workout" (that is a Handoff, not a review — DOS C-work-1).
  */
-const GRAVL_ANCHORS: Signal[] = [
-  sig('gravl', 3),
-  sig('workout', 2), sig('exercise', 2),
-  sig('workout plan', 3), sig('workout program', 3),
-  sig('training plan', 2), sig('training program', 2),
-  sig('program review', 3),
+const GRAVL_CONTEXT: string[] = [
+  'gravl', 'workout', 'workouts', 'exercise', 'training',
+  'workout plan', 'workout program', 'training plan', 'training program',
+  'program review', 'routine',
 ];
 
 /**
- * Generic MODIFIERS. These sharpen the Gravl score but are counted ONLY when
- * a workout anchor above is also present. Alone they carry no Gravl weight.
+ * Gravl SCORE signals: Gravl-flavored phrases and review/optimize modifiers.
+ * Counted only when a GRAVL_CONTEXT word is also present. A bare context word
+ * ("workout", "training") scores 0 here on purpose.
  */
-const GRAVL_MODIFIERS: Signal[] = [
+const GRAVL_SCORE: Signal[] = [
+  sig('gravl', 3),
+  sig('workout plan', 3), sig('workout program', 3),
+  sig('training plan', 2), sig('training program', 2), sig('program review', 3),
   sig('review', 2), sig('improve', 2),
   sig('optimize', 2), sig('optimise', 2), sig('optimization', 2), sig('optimisation', 2),
-  sig('phase fit', 2), sig('phase-fit', 2), sig('progression', 1), sig('is this workout safe', 2),
+  sig('phase fit', 2), sig('phase-fit', 2), sig('progression', 1),
+  sig('is this workout safe', 2), sig('feedback', 2), sig('critique', 2),
 ];
 
 /** Clean / log / organize existing notes → fitness-handoff. */
@@ -77,14 +82,16 @@ function scoreSignals(text: string, signals: Signal[]): number {
 }
 
 /**
- * Gravl score, gated on workout context: no anchor → 0 (Gravl ineligible),
- * so generic "review/optimize" requests never route here. With an anchor,
- * anchors + generic modifiers both count.
+ * Gravl score, gated on workout context: no context word → 0 (Gravl
+ * ineligible), so generic "review/optimize" requests never route here. With
+ * context present, only the Gravl-flavored SCORE signals count — a bare
+ * context word contributes nothing, so "log my workout" resolves to the
+ * Handoff, not a review.
  */
 function scoreGravl(text: string): number {
-  const anchorPresent = GRAVL_ANCHORS.some(({ term }) => matchesTerm(text, term));
-  if (!anchorPresent) return 0;
-  return scoreSignals(text, GRAVL_ANCHORS) + scoreSignals(text, GRAVL_MODIFIERS);
+  const contextPresent = GRAVL_CONTEXT.some((term) => matchesTerm(text, term));
+  if (!contextPresent) return 0;
+  return scoreSignals(text, GRAVL_SCORE);
 }
 
 /**

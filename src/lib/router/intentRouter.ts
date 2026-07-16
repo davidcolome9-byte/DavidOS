@@ -66,7 +66,9 @@ function supportedResult(intent: DetectedIntent, matched: string[], confidence: 
  * genuine ambiguity, several independent goals, or nothing.
  */
 export function routeIntent(input: string): RouteResult {
-  const trimmed = input.trim();
+  // Collapse internal whitespace so extra spaces/newlines between words never
+  // break a multi-word keyword match ("weekly   review" ≡ "weekly review").
+  const trimmed = input.replace(/\s+/g, ' ').trim();
   if (!trimmed) return UNKNOWN('Empty input — nothing to route.', 'Type what you need help with, or pick an agent directly.');
 
   const intents = detectIntents(trimmed);

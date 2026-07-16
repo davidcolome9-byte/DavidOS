@@ -147,7 +147,7 @@ describe('intentRouter', () => {
     it('8. teach it back → Work Teachback', () => supported('Explain this work procedure so I can teach it back', 'work_project', 'work-teachback'));
     it('9. training presentation for coworkers → work, not fitness', () => supported('Training presentation for coworkers', 'work_project', 'work-teachback'));
     it('10. review priorities → ambiguous', () => expect(routeIntent('Review priorities').classification).toBe('ambiguous'));
-    it('11. training review → ambiguous', () => expect(routeIntent('Training review').classification).toBe('ambiguous'));
+    it('11. training review → Gravl review (DOS EX-11)', () => supported('Training review', 'fitness', 'gravl-review'));
     it('12. weekly workout review → fitness, not calendar', () => supported('Weekly workout review', 'fitness', 'gravl-review'));
     it('13. bare "Workout" → ambiguous fitness, never work', () => {
       const r = routeIntent('Workout');
@@ -177,6 +177,85 @@ describe('intentRouter', () => {
       for (const w of ['review', 'training', 'priorities']) {
         expect(['ambiguous', 'unknown'], w).toContain(routeIntent(w).classification);
       }
+    });
+  });
+
+  // DOS targeted correction pass: the five remaining High-severity routing
+  // cases plus the regressions corrected in this pass, locked so a future
+  // change cannot silently reopen them.
+  describe('targeted routing corrections', () => {
+    it('EX-11 · Training review → supported Gravl review', () => {
+      const r = routeIntent('Training review');
+      expect(r.classification).toBe('supported');
+      expect(r.suggestedWorkflowId).toBe('gravl-review');
+    });
+    it('C-work-1 · Log my workout → supported Fitness Handoff (logging ≠ review)', () => {
+      const r = routeIntent('Log my workout from this morning');
+      expect(r.classification).toBe('supported');
+      expect(r.suggestedWorkflowId).toBe('fitness-handoff');
+    });
+    it('C-clean-2 · juice cleanse → recognized nutrition, unsupported (never dogs/home)', () => {
+      const r = routeIntent('Start a juice cleanse tomorrow');
+      expect(r.classification).toBe('unsupported');
+      expect(r.recognizedDomain).toBe('fitness');
+      expect(r.target).toBe('unknown');
+    });
+    it('C-train-4 · Should I train today? → fitness readiness, unsupported (not daily)', () => {
+      const r = routeIntent('Should I train today?');
+      expect(r.classification).toBe('unsupported');
+      expect(r.recognizedDomain).toBe('fitness');
+    });
+    it('R-4 · Not feeling well today → honestly unknown (no fitness anchor, no daily route)', () => {
+      expect(routeIntent('Not feeling well today').classification).toBe('unknown');
+    });
+
+    it('PC-4 · whitespace-padded "weekly   review" → weekly-review', () => {
+      const r = routeIntent('  weekly   review  ');
+      expect(r.classification).toBe('supported');
+      expect(r.suggestedWorkflowId).toBe('weekly-review');
+    });
+    it('C-plan-3 · content planner → content-asset-planner', () => {
+      const r = routeIntent('I need a content planner for posts');
+      expect(r.classification).toBe('supported');
+      expect(r.suggestedWorkflowId).toBe('content-asset-planner');
+    });
+    it('C-gravl-4 · workout feedback → Gravl review', () => {
+      const r = routeIntent('Grabl workout feedback');
+      expect(r.classification).toBe('supported');
+      expect(r.suggestedWorkflowId).toBe('gravl-review');
+    });
+    it('C-train-1 · build a training plan → Gravl review', () => {
+      const r = routeIntent('Build me a training plan');
+      expect(r.classification).toBe('supported');
+      expect(r.suggestedWorkflowId).toBe('gravl-review');
+    });
+
+    // Work precedence preserved: "training" + a teachback context stays Work
+    // and never splinters into a spurious multi-domain result.
+    it('training + coworkers stays Work Teachback (no fitness collision)', () => {
+      for (const i of ['Training presentation for coworkers', 'Training material for coworkers']) {
+        const r = routeIntent(i);
+        expect(r.classification, i).toBe('supported');
+        expect(r.target, i).toBe('work_project');
+      }
+    });
+    it('a long fraud-training-program teachback stays Work, not multi-domain', () => {
+      const r = routeIntent(
+        'I need to prepare a presentation to teach my coworkers about phishing and scam red flags for our fraud training program next month',
+      );
+      expect(r.target).toBe('work_project');
+      expect(r.suggestedWorkflowId).toBe('work-teachback');
+    });
+
+    // Dispositioned regressions — honest classification is the intended result.
+    it('bare topic words stay ambiguous, never silently routed', () => {
+      for (const i of ['prompt', 'prompts', 'network security work']) {
+        expect(['ambiguous', 'unknown'], i).toContain(routeIntent(i).classification);
+      }
+    });
+    it('substring-only artifacts stay unknown (oatmeal≠meal, guidebook≠guide)', () => {
+      expect(routeIntent('I had oatmeal for breakfast').target).toBe('unknown');
+      expect(routeIntent('guidebook for travelers').target).toBe('unknown');
     });
   });
 });

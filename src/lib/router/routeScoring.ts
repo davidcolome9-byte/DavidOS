@@ -18,9 +18,12 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('one next action', 2), kw('approval boundary', 2),
   ],
   daily_command: [
-    kw('today'), kw('priorities'), kw('priority'), kw('focus'), kw('overwhelmed'),
+    // "today"/"morning" removed: a bare temporal word is not evidence of the
+    // Daily domain and produced false weak routes ("Not feeling well today" →
+    // daily). Strong daily phrases below still carry the domain.
+    kw('priorities'), kw('priority'), kw('focus'), kw('overwhelmed'),
     kw('daily brief', 2), kw('command brief', 2), kw('next move', 2),
-    kw('what should i do', 3), kw('plan my day', 3), kw('morning'), kw('bandwidth'),
+    kw('what should i do', 3), kw('plan my day', 3), kw('bandwidth'),
   ],
   fitness: [
     kw('workout', 2), kw('gym'), kw('macro'), kw('macros'), kw('protein'), kw('meal'),

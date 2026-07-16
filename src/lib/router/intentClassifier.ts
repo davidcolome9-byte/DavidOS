@@ -45,7 +45,15 @@ const has = (text: string, terms: string[]): boolean => terms.some((t) => matche
 // physical anchor (workout/gym/…) is required for a fitness route.
 const FITNESS_ANCHORS = ['workout', 'workouts', 'gym', 'exercise', 'lift', 'gravl', 'macro', 'macros', 'protein', 'cardio'];
 const STRONG_GRAVL_PHRASES = ['gravl', 'workout plan', 'workout program', 'program review', 'is this workout safe'];
-const GRAVL_ACTIONS = ['review', 'optimize', 'optimise', 'optimization', 'optimisation', 'improve', 'safe', 'progression', 'plan', 'planning', 'program'];
+const GRAVL_ACTIONS = ['review', 'optimize', 'optimise', 'optimization', 'optimisation', 'improve', 'safe', 'progression', 'plan', 'planning', 'program', 'feedback', 'critique'];
+
+// "training"/"routine" is a weak generic word that collides with WORK training
+// ("training material"/"fraud training program for coworkers"). It is a fitness
+// review/plan command ONLY when paired with a review/plan action AND no work
+// teachback signal is present — so "training review"/"build a training plan"
+// route to Gravl while "training presentation for coworkers" stays Work.
+const TRAINING_CONTEXT = ['training', 'routine'];
+const TRAINING_ACTIONS = ['review', 'optimize', 'optimise', 'optimization', 'optimisation', 'improve', 'progression', 'critique', 'feedback', 'plan', 'planning', 'program'];
 const HANDOFF_ACTIONS = ['clean', 'clean up', 'clean-up', 'tidy', 'tidy up', 'log', 'logging', 'logged', 'organize', 'organise', 'diary', 'handoff', 'hand off', 'notes', 'food log', 'workout notes', 'training notes'];
 
 // Food logging (a supported Handoff intent) vs meal planning (unsupported). The
@@ -61,6 +69,13 @@ const TRAIN_DECISION = ['train', 'training', 'workout', 'lift', 'gym', 'rest', '
 
 const NUTRITION_WORDS = ['meal', 'meals', 'nutrition', 'diet', 'eating', 'macros', 'calorie', 'calories'];
 const PLANNING_WORDS = ['plan', 'planning', 'prep', 'prepare', 'meal plan', 'meal prep', 'meal-plan'];
+// Cleanse / detox: a recognized nutrition intent with no workflow. Word-aware,
+// so "cleanse" never collides with the dogs/home "clean" keyword.
+const CLEANSE_WORDS = ['cleanse', 'detox', 'juice cleanse', 'juice fast'];
+
+// A training-decision question ("should I train today?", "train or rest?") is a
+// readiness call even without an explicit illness/recovery word.
+const READINESS_DECISION = ['should i', 'do i', 'or rest', 'or train', 'or skip', 'rest or', 'train or', 'worth training', 'ok to train', 'safe to train', 'skip the gym'];
 
 const PROGRESS_WORDS = ['progress', 'trend', 'trending', 'trends'];
 const ANALYSIS_WORDS = ['analyze', 'analyse', 'analysis', 'compare', 'evaluate', 'evaluation', 'insights', 'assessment'];
@@ -104,11 +119,25 @@ function foodLogging(text: string): DetectedIntent | null {
   return null;
 }
 
+/**
+ * A training review / plan command → Gravl (supported). Guarded so a WORK
+ * teachback context ("training material/presentation for coworkers") never
+ * flips to fitness. The specific fitness workflow is chosen at route time.
+ */
+function fitnessTrainingReview(text: string): DetectedIntent | null {
+  if (has(text, WORK_TEACHBACK_SIGNALS)) return null;
+  if (has(text, TRAINING_CONTEXT) && has(text, TRAINING_ACTIONS)) {
+    return { domain: 'fitness', kind: 'supported', goal: 'fitness', label: 'fitness', workflowId: undefined };
+  }
+  return null;
+}
+
 function fitnessReadiness(text: string): DetectedIntent | null {
   const illness = has(text, ILLNESS_WORDS);
   const recovery = has(text, RECOVERY_DOUBT);
+  const decision = has(text, READINESS_DECISION);
   const trainCtx = has(text, TRAIN_DECISION);
-  if ((illness || recovery) && trainCtx) {
+  if ((illness || recovery || decision) && trainCtx) {
     return { domain: 'fitness', kind: 'unsupported', goal: 'fitness-readiness', label: 'fitness readiness / illness-training decision' };
   }
   return null;
@@ -116,6 +145,9 @@ function fitnessReadiness(text: string): DetectedIntent | null {
 
 function nutritionPlanning(text: string): DetectedIntent | null {
   if (has(text, NUTRITION_WORDS) && has(text, PLANNING_WORDS)) {
+    return { domain: 'fitness', kind: 'unsupported', goal: 'nutrition-planning', label: 'nutrition / meal planning' };
+  }
+  if (has(text, CLEANSE_WORDS)) {
     return { domain: 'fitness', kind: 'unsupported', goal: 'nutrition-planning', label: 'nutrition / meal planning' };
   }
   return null;
@@ -167,7 +199,7 @@ function promptSupported(text: string): DetectedIntent | null {
 }
 
 function contentSupported(text: string): DetectedIntent | null {
-  if (has(text, ['digital product', 'side income', 'side-income', 'prompt pack', 'repurpose'])) {
+  if (has(text, ['digital product', 'side income', 'side-income', 'prompt pack', 'repurpose', 'content planner', 'content plan', 'content calendar'])) {
     return { domain: 'content_asset', kind: 'supported', goal: 'content', label: 'Content / Side-Income Assets', workflowId: 'content-asset-planner' };
   }
   return null;
@@ -195,8 +227,8 @@ function dailySupported(text: string): DetectedIntent | null {
 export function detectIntents(input: string): DetectedIntent[] {
   const text = input.toLowerCase();
   const detectors = [
-    fitnessSupported, foodLogging, workSupported, calendarSupported, universalSupported,
-    promptSupported, contentSupported, lifeAdminSupported, dailySupported,
+    fitnessSupported, foodLogging, workSupported, fitnessTrainingReview, calendarSupported,
+    universalSupported, promptSupported, contentSupported, lifeAdminSupported, dailySupported,
     fitnessReadiness, nutritionPlanning, fitnessProgress, workProjectPlanning,
   ];
   const found: DetectedIntent[] = [];
