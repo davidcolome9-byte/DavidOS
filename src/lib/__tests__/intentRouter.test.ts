@@ -77,4 +77,44 @@ describe('intentRouter', () => {
     const r = routeIntent('Improve this prompt for Claude Code.');
     expect(r.reasoning).toContain('prompt');
   });
+
+  // DOS-WF-001R-A: keyword scoring is word-boundary anchored, so a keyword
+  // buried inside a larger, unrelated word must not score. Previously these
+  // routed confidently via substring collisions (post/week/model/work/food).
+  describe('word-boundary matching (no substring collisions)', () => {
+    it('does not route unrelated words whose substring matches a keyword', () => {
+      for (const text of [
+        'my homework is done',      // "work"
+        'weeknight dinner',         // "week"
+        'a modeling gig',           // "model"
+        'postpone the meeting',     // "post"
+        'the foodie blog',          // "food"
+        'workuot notes cleanup',    // "work" (misspelled workout)
+        'Start a juice cleanse tomorrow', // "clean"
+      ]) {
+        expect(routeIntent(text).target, text).toBe('unknown');
+      }
+    });
+
+    it('week/weekly no longer hijacks a workout review to the calendar', () => {
+      const r = routeIntent('Weekly workout review');
+      expect(r.target).toBe('fitness');
+      expect(r.suggestedWorkflowId).toBe('gravl-review');
+    });
+
+    it('routes "weekend groceries" to life admin, not calendar (week substring)', () => {
+      expect(routeIntent('This weekend I need groceries').target).toBe('dogs_home_life_admin');
+    });
+
+    it('still matches multi-word and hyphenated keywords', () => {
+      expect(routeIntent('Help me plan the week and surface open loops.').target).toBe('calendar_planning');
+      expect(routeIntent('Package this into a side-income asset.').target).toBe('content_asset');
+    });
+
+    it('still matches common plurals of singular keywords', () => {
+      expect(routeIntent('Review my workouts').target).toBe('fitness');
+      expect(routeIntent('Help me plan my meals').target).toBe('fitness');
+      expect(routeIntent('I logged two workouts').target).toBe('fitness');
+    });
+  });
 });

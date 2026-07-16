@@ -12,6 +12,8 @@
  * silently pick one — the caller is told to offer two plain-language choices.
  */
 
+import { matchesTerm } from './termMatch';
+
 export const GRAVL_WORKFLOW_ID = 'gravl-review';
 export const FITNESS_HANDOFF_WORKFLOW_ID = 'fitness-handoff';
 
@@ -69,7 +71,7 @@ export interface FitnessWorkflowResolution {
 function scoreSignals(text: string, signals: Signal[]): number {
   let score = 0;
   for (const { term, weight } of signals) {
-    if (text.includes(term)) score += weight;
+    if (matchesTerm(text, term)) score += weight;
   }
   return score;
 }
@@ -80,7 +82,7 @@ function scoreSignals(text: string, signals: Signal[]): number {
  * anchors + generic modifiers both count.
  */
 function scoreGravl(text: string): number {
-  const anchorPresent = GRAVL_ANCHORS.some(({ term }) => text.includes(term));
+  const anchorPresent = GRAVL_ANCHORS.some(({ term }) => matchesTerm(text, term));
   if (!anchorPresent) return 0;
   return scoreSignals(text, GRAVL_ANCHORS) + scoreSignals(text, GRAVL_MODIFIERS);
 }
