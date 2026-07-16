@@ -1,0 +1,14 @@
+# Enforce LF in the working tree so seed/doc validators (which hash raw bytes)
+# never fail on a CRLF-smudged checkout. The index is already LF, so this only
+# fixes checkout/normalization — it introduces no content change.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending normalized.
+*.png binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.woff binary
+*.woff2 binary

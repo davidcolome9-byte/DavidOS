@@ -113,8 +113,70 @@ describe('intentRouter', () => {
 
     it('still matches common plurals of singular keywords', () => {
       expect(routeIntent('Review my workouts').target).toBe('fitness');
-      expect(routeIntent('Help me plan my meals').target).toBe('fitness');
       expect(routeIntent('I logged two workouts').target).toBe('fitness');
+      // "meals" still recognized — as the (unsupported) nutrition-planning intent.
+      const meals = routeIntent('Help me plan my meals');
+      expect(meals.classification).toBe('unsupported');
+      expect(meals.recognizedDomain).toBe('fitness');
+    });
+  });
+
+  // DOS-WF-001R Phase 1: honest routing result model. Every route names WHY it
+  // landed where it did instead of silently picking a workflow.
+  describe('honest classification (Phase 1 acceptance)', () => {
+    const supported = (input: string, target: string, wf: string) => {
+      const r = routeIntent(input);
+      expect(r.classification, input).toBe('supported');
+      expect(r.target, input).toBe(target);
+      expect(r.suggestedWorkflowId, input).toBe(wf);
+    };
+    const unsupported = (input: string, domain: string) => {
+      const r = routeIntent(input);
+      expect(r.classification, input).toBe('unsupported');
+      expect(r.recognizedDomain, input).toBe(domain);
+      expect(r.suggestedWorkflowId, input).toBeUndefined();
+    };
+
+    it('1. Gravl review → Gravl Workout Review', () => supported('Review the workout Gravl gave me', 'fitness', 'gravl-review'));
+    it('2. clean workout notes → Fitness Handoff', () => supported('Clean up today’s workout notes', 'fitness', 'fitness-handoff'));
+    it('3. log workout → Fitness Handoff', () => supported('Log today’s workout', 'fitness', 'fitness-handoff'));
+    it('4. sick/train → recognized fitness readiness, unsupported', () => unsupported('I feel sick and do not know whether to train', 'fitness'));
+    it('5. plan meals → recognized nutrition, unsupported', () => unsupported('Help me plan my meals', 'fitness'));
+    it('6. organize work project → recognized work planning, unsupported', () => unsupported('Help me organize a work project', 'work_project'));
+    it('7. analyze gym progress → recognized fitness progress, unsupported', () => unsupported('Analyze my gym progress', 'fitness'));
+    it('8. teach it back → Work Teachback', () => supported('Explain this work procedure so I can teach it back', 'work_project', 'work-teachback'));
+    it('9. training presentation for coworkers → work, not fitness', () => supported('Training presentation for coworkers', 'work_project', 'work-teachback'));
+    it('10. review priorities → ambiguous', () => expect(routeIntent('Review priorities').classification).toBe('ambiguous'));
+    it('11. training review → ambiguous', () => expect(routeIntent('Training review').classification).toBe('ambiguous'));
+    it('12. weekly workout review → fitness, not calendar', () => supported('Weekly workout review', 'fitness', 'gravl-review'));
+    it('13. bare "Workout" → ambiguous fitness, never work', () => {
+      const r = routeIntent('Workout');
+      expect(r.classification).toBe('ambiguous');
+      expect(r.target).toBe('fitness');
+    });
+    it('14. review meal plan → nutrition, not Gravl', () => {
+      const r = routeIntent('Review my meal plan');
+      expect(r.suggestedWorkflowId).not.toBe('gravl-review');
+      expect(r.classification).toBe('unsupported');
+    });
+    it('15. is this workout safe → Gravl Workout Review', () => supported('Is this workout safe?', 'fitness', 'gravl-review'));
+
+    it('Gravl by name is never unknown', () => {
+      expect(routeIntent('gravl').classification).not.toBe('unknown');
+      expect(routeIntent('Optimize my Gravl program').classification).not.toBe('unknown');
+      expect(routeIntent('gravl').target).toBe('fitness');
+    });
+
+    it('multi-domain requests do not silently lose a domain', () => {
+      const r = routeIntent('Log today’s workout and help plan tomorrow’s meals');
+      expect(r.classification).toBe('multi_domain');
+      expect(r.domains && r.domains.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('a single weak generic word does not silently route', () => {
+      for (const w of ['review', 'training', 'priorities']) {
+        expect(['ambiguous', 'unknown'], w).toContain(routeIntent(w).classification);
+      }
     });
   });
 });

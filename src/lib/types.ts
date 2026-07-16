@@ -304,18 +304,44 @@ export interface HealthFitnessProfile {
   seedMetadata?: HealthProfileSeedMetadata;
 }
 
+/**
+ * Honest routing classification (DOS-WF-001R). Every route names WHY it landed
+ * where it did instead of silently picking a workflow:
+ * - `supported`      — a registered workflow genuinely fits the request.
+ * - `unsupported`    — the domain is recognized but no workflow exists yet
+ *                      (readiness, meal planning, project planning, progress
+ *                      analysis). We say so; we do NOT route into an unrelated
+ *                      workflow.
+ * - `ambiguous`      — more than one intent fits; the user is offered a choice.
+ * - `unknown`        — no domain recognized.
+ * - `multi_domain`   — several independent goals detected; ask which first.
+ */
+export type RouteClassification =
+  | 'supported'
+  | 'unsupported'
+  | 'ambiguous'
+  | 'unknown'
+  | 'multi_domain';
+
 export interface RouteResult {
   target: RouteTarget;
+  classification: RouteClassification;
   confidence: number;
   reasoning: string;
   matched: string[];
   suggestedWorkflowId?: string;
   nextAction: string;
   /**
-   * Present when two registered workflows genuinely tie for the same intent.
-   * The UI shows these as plain-language choices instead of silently picking one.
+   * Present when two registered workflows genuinely tie for the same intent
+   * (`ambiguous`). The UI shows these as plain-language choices.
    */
   alternatives?: { workflowId: string; label: string }[];
+  /** Set on `unsupported`: the recognized domain that has no workflow yet. */
+  recognizedDomain?: AgentId;
+  /** Human label for the unsupported/ambiguous intent (e.g. "meal planning"). */
+  intentLabel?: string;
+  /** Set on `multi_domain`: the independent goals detected, in reading order. */
+  domains?: { agentId?: AgentId; label: string }[];
 }
 
 export interface IntegrationMethod {

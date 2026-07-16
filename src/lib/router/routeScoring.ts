@@ -28,6 +28,7 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('muscle'), kw('training'), kw('recovery'), kw('calories'), kw('recomp', 2),
     kw('fitness', 2), kw('cardio'), kw('lift'), kw('screenshot'), kw('screenshots'),
     kw('goals or remaining', 3), kw('remaining'), kw('operation david', 3), kw('grams'),
+    kw('gravl', 3),
   ],
   work_project: [
     kw('teachback', 3), kw('teach back', 3), kw('coworker', 2), kw('coworkers', 2),
