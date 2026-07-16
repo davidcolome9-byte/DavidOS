@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { seedHealthProfile } from '../data/healthProfileSeed';
 import { validateProfile, profileHash, changedFieldPaths } from '../lib/health/profileValidation';
 import type { ValidationResult } from '../lib/health/profileValidation';
+import { loadHealthDraft, saveHealthDraft, clearHealthDraft } from '../lib/health/profileDraft';
 import type { HealthFitnessProfile } from '../lib/types';
 import { uid, nowIso } from '../lib/types';
 
@@ -46,7 +47,19 @@ const strToList = (s: string): string[] | undefined => {
  */
 export default function HealthProfile() {
   const { state, update, audit } = useStore();
-  const [draft, setDraft] = useState<HealthFitnessProfile | null>(() => (state.healthProfile ? clone(state.healthProfile) : null));
+  // Recover an unsaved draft from its dedicated key (survives navigation and
+  // unmount/remount). A recovered draft that differs from the saved profile is
+  // surfaced distinctly so the user can tell it apart from saved values.
+  const [init] = useState(() => {
+    const env = loadHealthDraft();
+    const recovered = !!(env && JSON.stringify(env.profile) !== JSON.stringify(state.healthProfile));
+    return {
+      draft: env ? env.profile : state.healthProfile ? clone(state.healthProfile) : null,
+      recovered,
+    };
+  });
+  const [draft, setDraft] = useState<HealthFitnessProfile | null>(init.draft);
+  const [recovered, setRecovered] = useState(init.recovered);
   const [validation, setValidation] = useState<ValidationResult | null>(null);
   const [flash, setFlash] = useState('');
 
@@ -54,6 +67,18 @@ export default function HealthProfile() {
     () => JSON.stringify(draft) !== JSON.stringify(state.healthProfile),
     [draft, state.healthProfile],
   );
+
+  // Persist the draft to its dedicated key whenever it diverges from saved, and
+  // clear it once it matches (save/discard). Draft values never touch the app
+  // state or the audit log — only this isolated key.
+  useEffect(() => {
+    if (draft && dirty) {
+      saveHealthDraft(draft, state.healthProfile?.updatedAt ?? null, nowIso());
+    } else {
+      clearHealthDraft();
+      if (recovered) setRecovered(false);
+    }
+  }, [draft, dirty, state.healthProfile, recovered]);
 
   // Warn on tab close with unsaved changes. (In-app nav shows the sticky banner.)
   useEffect(() => {
@@ -140,14 +165,21 @@ export default function HealthProfile() {
   return (
     <>
       {dirty && (
-        <div className="card sticky-warn">
+        <div className="card sticky-warn" data-testid="health-draft-banner">
           <p className="row small">
-            <strong>Unsaved Health Profile changes</strong>
+            <strong>{recovered ? 'Recovered unsaved draft' : 'Unsaved Health Profile changes'}</strong>
             <span className="btn-row" style={{ margin: 0 }}>
               <button className="chip primary" onClick={save}>Save now</button>
-              <button className="chip" onClick={() => { setDraft(state.healthProfile ? clone(state.healthProfile) : null); setValidation(null); setFlash('Changes discarded.'); }}>Discard</button>
+              <button className="chip" onClick={() => { setDraft(state.healthProfile ? clone(state.healthProfile) : null); setRecovered(false); clearHealthDraft(); setValidation(null); setFlash('Changes discarded.'); }}>Discard</button>
             </span>
           </p>
+          {recovered && (
+            <p className="muted small">
+              This is an <strong>unsaved draft</strong> restored from a previous session — it is not yet
+              saved to your Health Profile. Save it to keep the changes, or discard to return to your
+              saved values.
+            </p>
+          )}
         </div>
       )}
 

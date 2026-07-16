@@ -3,6 +3,7 @@ import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { clearPersistedState } from '../lib/storage/localStore';
 import { buildResetState } from '../lib/storage/resetState';
+import { hasHealthDraft, clearHealthDraft } from '../lib/health/profileDraft';
 import { INTEGRATIONS } from '../lib/integrations';
 import { requiresApproval } from '../lib/safety/approvalRules';
 import { stubResult } from '../lib/integrations/integrationTypes';
@@ -95,6 +96,8 @@ export default function Settings() {
       healthChoice === 'keep-current'
         ? { ...imported, healthProfile: state.healthProfile }
         : imported;
+    // The imported profile is now authoritative; drop any stale unsaved draft.
+    clearHealthDraft();
     update(() => next);
     audit({
       command: `Import backup: ${fileName}`,
@@ -270,6 +273,10 @@ export default function Settings() {
   function confirmReset() {
     if (resetText !== 'RESET') return;
     clearPersistedState();
+    // An unsaved Health Profile draft would be stale against the reset state —
+    // discard it explicitly (the modal warned about it) rather than leaving it
+    // to silently reappear.
+    clearHealthDraft();
     // Health Profile preserved EXACTLY by default (null stays null);
     // only the explicit checkbox deletes it.
     const preserved = !alsoDeleteHealth;
@@ -450,6 +457,12 @@ export default function Settings() {
               This wipes your local DavidOS data (priorities, projects, prompts, handoffs, logs)
               and restores the starter seed. Export a backup first if unsure.
             </p>
+            {hasHealthDraft() && (
+              <p className="notice risk-block small">
+                You have an <strong>unsaved Health Profile draft</strong>. Resetting will discard it.
+                Cancel and save your draft first if you want to keep it.
+              </p>
+            )}
             <label className="field" htmlFor="reset-confirm">Type <code>RESET</code> to confirm</label>
             <input
               id="reset-confirm"
