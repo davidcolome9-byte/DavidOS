@@ -76,7 +76,7 @@ const COLLECTION_SPECS: Record<string, FieldSpec[]> = {
     strField('body'), isoField('updatedAt'),
   ],
   handoffs: [
-    strField('id'), strField('agentId'), strField('workflowId'), strField('workflowName'),
+    strField('id'), enumSpec('agentId', AGENT_IDS), strField('workflowId'), strField('workflowName'),
     strField('inputSummary'), strField('outputStyle'), strField('content'),
     enumSpec('risk', RISK_LEVELS), isoField('createdAt'),
   ],
@@ -201,6 +201,149 @@ function validateArtifactNested(push: Push, item: string, rec: Record<string, un
   ]);
 }
 
+// ---- handoff relationship validation (POST-H-IMPORT-01) -----------------------
+//
+// The correction model (see workflows/continuity.ts and AuditLog.tsx) supports
+// exactly these relationship states:
+//   - a standalone handoff: status active (or absent), no correctsHandoffId;
+//   - a live correction: status "correction" + correctsHandoffId → a handoff
+//     whose status is "superseded";
+//   - a superseded former correction inside a chain: status "superseded" +
+//     correctsHandoffId, itself corrected by a later entry;
+//   - every supersession chain ends at exactly one live correction (the UI
+//     never lets an already-superseded entry be corrected again).
+// An import must REJECT anything else rather than silently normalize it into a
+// different state: retrieval (getPriorHandoffs) hides superseded and corrected
+// entries, so a contradictory relationship can make a handoff disappear.
+// Errors reference items by numeric index only — never by imported id/value.
+
+const VALID_STATUS = new Set(HANDOFF_STATUS);
+
+interface HandoffNode {
+  index: number;
+  ref: string;
+  id?: string;
+  /** 'active' | 'superseded' | 'correction' | null when the enum is invalid (already reported). */
+  status: string | null;
+  corrects?: string;
+}
+
+function validateHandoffRelationships(push: Push, handoffs: unknown[]): void {
+  const nodes: HandoffNode[] = handoffs.map((h, index) => {
+    const ref = `[${index}]`;
+    if (!isObj(h)) return { index, ref, status: null };
+    const rec = h as Record<string, unknown>;
+    const rawStatus = rec.status;
+    const status =
+      rawStatus === undefined || rawStatus === null
+        ? 'active' // retrieval treats a missing status as active
+        : isStr(rawStatus) && VALID_STATUS.has(rawStatus)
+          ? rawStatus
+          : null; // invalid enum — already reported by the field check
+    return {
+      index,
+      ref,
+      id: isStr(rec.id) ? rec.id : undefined,
+      status,
+      corrects: isStr(rec.correctsHandoffId) ? rec.correctsHandoffId : undefined,
+    };
+  });
+
+  // Duplicate ids: every id must be unique or relationships become ambiguous.
+  const byId = new Map<string, HandoffNode>();
+  for (const n of nodes) {
+    if (n.id === undefined) continue;
+    const first = byId.get(n.id);
+    if (first) {
+      push({ collection: 'handoffs', item: n.ref, field: 'id', expected: 'unique handoff id', message: `handoffs${n.ref}: "id" duplicates the id of handoffs[${first.index}].` });
+    } else {
+      byId.set(n.id, n);
+    }
+  }
+
+  // Which handoffs correct which (only counting resolvable, non-self pointers).
+  const correctorsByTarget = new Map<string, HandoffNode[]>();
+
+  for (const n of nodes) {
+    // A correction must reference the handoff it corrects.
+    if (n.status === 'correction' && n.corrects === undefined) {
+      push({ collection: 'handoffs', item: n.ref, field: 'correctsHandoffId', expected: 'string (id of the corrected handoff)', message: `handoffs${n.ref}: a correction must set "correctsHandoffId".` });
+    }
+    if (n.corrects === undefined) continue;
+
+    // Only a correction — or a superseded former correction in a chain — may
+    // carry a correction pointer. An ACTIVE handoff with one is contradictory:
+    // its target would be hidden from retrieval with no visible correction.
+    if (n.status === 'active') {
+      push({ collection: 'handoffs', item: n.ref, field: 'correctsHandoffId', expected: 'set only when status is "correction" (or "superseded" within a correction chain)', message: `handoffs${n.ref}: an active handoff must not set "correctsHandoffId".` });
+      continue;
+    }
+
+    // A handoff can never correct itself.
+    if (n.id !== undefined && n.corrects === n.id) {
+      push({ collection: 'handoffs', item: n.ref, field: 'correctsHandoffId', expected: 'id of a DIFFERENT handoff', message: `handoffs${n.ref}: "correctsHandoffId" references the handoff itself.` });
+      continue;
+    }
+
+    // The pointer must resolve inside this backup.
+    const target = n.corrects !== undefined ? byId.get(n.corrects) : undefined;
+    if (!target) {
+      push({ collection: 'handoffs', item: n.ref, field: 'correctsHandoffId', expected: 'id of a handoff present in this backup', message: `handoffs${n.ref}: "correctsHandoffId" references a handoff that is not in this backup.` });
+      continue;
+    }
+
+    // A corrected handoff must be marked superseded — otherwise it silently
+    // vanishes from retrieval while still claiming to be active.
+    if (target.status !== null && target.status !== 'superseded') {
+      push({ collection: 'handoffs', item: n.ref, field: 'correctsHandoffId', expected: 'the corrected handoff must have status "superseded"', message: `handoffs${n.ref}: corrects handoffs[${target.index}], which is not marked superseded.` });
+    }
+
+    const list = correctorsByTarget.get(n.corrects) ?? [];
+    list.push(n);
+    correctorsByTarget.set(n.corrects, list);
+  }
+
+  // One correction per original: the app corrects an already-corrected entry by
+  // correcting the CORRECTION (a chain), never by attaching a second correction
+  // to the same original.
+  for (const [, correctors] of correctorsByTarget) {
+    if (correctors.length <= 1) continue;
+    const first = correctors[0];
+    for (const dup of correctors.slice(1)) {
+      push({ collection: 'handoffs', item: dup.ref, field: 'correctsHandoffId', expected: 'at most one correction per corrected handoff', message: `handoffs${dup.ref}: targets the same handoff as handoffs[${first.index}]; only one correction may reference an original.` });
+    }
+  }
+
+  // Every superseded handoff must be corrected, and its supersession chain must
+  // end at a live correction (status "correction"). A missing corrector or a
+  // cycle would hide the entry from retrieval with no surviving correction.
+  for (const n of nodes) {
+    if (n.status !== 'superseded') continue;
+    if (n.id === undefined) continue; // unusable id — already reported
+    const correctors = correctorsByTarget.get(n.id) ?? [];
+    if (correctors.length === 0) {
+      push({ collection: 'handoffs', item: n.ref, field: 'status', expected: 'a superseded handoff must be referenced by a correction', message: `handoffs${n.ref}: marked superseded, but no handoff in this backup corrects it.` });
+      continue;
+    }
+    // Walk the chain: superseded → its corrector → … → a live correction.
+    const visited = new Set<number>([n.index]);
+    let cur = correctors[0];
+    let terminated = false;
+    for (;;) {
+      if (visited.has(cur.index)) break; // cycle
+      visited.add(cur.index);
+      if (cur.status === 'correction') { terminated = true; break; }
+      if (cur.status !== 'superseded' || cur.id === undefined) break; // contradiction reported elsewhere
+      const next = (correctorsByTarget.get(cur.id) ?? [])[0];
+      if (!next) break; // superseded-without-corrector reported on that node
+      cur = next;
+    }
+    if (!terminated && visited.size > 1 && [...visited].every((i) => nodes[i]?.status === 'superseded')) {
+      push({ collection: 'handoffs', item: n.ref, field: 'correctsHandoffId', expected: 'a supersession chain must end at a live correction', message: `handoffs${n.ref}: its correction chain never reaches an entry with status "correction" (dangling or cyclic supersession).` });
+    }
+  }
+}
+
 function validateHealthProfile(push: Push, hp: unknown): void {
   const item = ''; // healthProfile is a singleton, not a list item
   if (!isObj(hp)) {
@@ -243,7 +386,6 @@ export function validateImportedState(state: AppState): ImportError[] {
   // artifacts/healthProfile predate some backups and are backfilled at
   // normalize time — absent is fine; present-but-malformed is not.
   const OPTIONAL_COLLECTIONS = new Set(['artifacts']);
-  const handoffIds = Array.isArray(state.handoffs) ? new Set(state.handoffs.filter((h) => isObj(h) && isStr((h as { id?: unknown }).id)).map((h) => (h as { id: string }).id)) : new Set<string>();
 
   for (const [collection, specs] of Object.entries(COLLECTION_SPECS)) {
     const list = (state as unknown as Record<string, unknown>)[collection];
@@ -277,17 +419,13 @@ export function validateImportedState(state: AppState): ImportError[] {
       // Collection-specific nested structures.
       if (collection === 'prompts') validatePromptNested(push, ref, rec);
       if (collection === 'artifacts') validateArtifactNested(push, ref, rec);
-      if (collection === 'handoffs') {
-        // Correction invariant: a "correction" must reference an original, and
-        // any correctsHandoffId must resolve to a handoff in this backup.
-        if (rec.status === 'correction' && !isStr(rec.correctsHandoffId)) {
-          push({ collection, item: ref, field: 'correctsHandoffId', expected: 'string (id of the corrected handoff)', message: `handoffs${ref}: a correction must set "correctsHandoffId".` });
-        }
-        if (isStr(rec.correctsHandoffId) && !handoffIds.has(rec.correctsHandoffId)) {
-          push({ collection, item: ref, field: 'correctsHandoffId', expected: 'id of a handoff present in this backup', message: `handoffs${ref}: "correctsHandoffId" references a handoff that is not in this backup.` });
-        }
-      }
     });
+  }
+
+  // Handoff correction/supersession relationships are validated across the whole
+  // collection (duplicates, self-correction, dangling or contradictory states).
+  if (Array.isArray(state.handoffs)) {
+    validateHandoffRelationships(push, state.handoffs as unknown[]);
   }
 
   // settings (object, not a list).
