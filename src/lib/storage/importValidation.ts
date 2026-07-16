@@ -1,11 +1,14 @@
 /**
- * Deep per-entity validation for IMPORTED backups (DOS-WF-001R Phase 2C).
+ * Deep per-entity validation for IMPORTED backups (DOS-WF-001R Phase 2C + the
+ * targeted correction pass).
  *
  * Boot-time loading stays fail-safe (normalizeState repairs item-level damage so
  * the app always starts). An explicit import is different: the user is replacing
  * their data with a file, so we validate it deeply and REJECT malformed data
- * with errors that name the collection, the item (index + id when safe), the
- * field, and the expected type/values — WITHOUT echoing the rejected value.
+ * BEFORE normalize/persist. Every error names the collection, the item (numeric
+ * index only), the full nested field path, and the expected type/values — and
+ * NEVER echoes the rejected value or the item's raw id (F-09), so a malformed
+ * backup cannot leak a sensitive token through a diagnostic.
  */
 import type { AppState } from '../types';
 
@@ -23,6 +26,23 @@ const isBool = (v: unknown) => typeof v === 'boolean';
 const isObj = (v: unknown) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const isStrArr = (v: unknown) => Array.isArray(v) && v.every((x) => typeof x === 'string');
 const isIsoDate = (v: unknown) => isStr(v) && v.trim() !== '' && !Number.isNaN(Date.parse(v));
+const isEnum = (values: readonly string[]) => (v: unknown) => isStr(v) && values.includes(v);
+
+// ---- shared enums ------------------------------------------------------------
+
+const RISK_LEVELS = ['read_only', 'draft_only', 'local_write', 'external_write', 'sensitive_external_write', 'high_risk'];
+const APPROVAL_STATUSES = ['not_required', 'approved', 'denied', 'blocked'];
+const AGENT_IDS = ['universal-operations', 'daily_command', 'fitness', 'work_project', 'prompt_vault', 'calendar_planning', 'dogs_home_life_admin', 'content_asset'];
+const DATE_CONFIDENCE = ['explicit', 'relative_resolved', 'unknown'];
+const HANDOFF_STATUS = ['active', 'superseded', 'correction'];
+const ARTIFACT_TYPES = ['full_prompt', 'current_handoff', 'ai_response', 'manual_note'];
+const SOURCE_MODES = ['preview', 'full_prompt', 'current_only'];
+const PRIMARY_GOALS = ['fat_loss', 'recomposition', 'muscle_gain', 'maintenance', 'performance', 'general_health'];
+const COACHING_STYLES = ['conservative', 'moderate', 'aggressive', 'context_sensitive'];
+const OUTPUT_DETAILS = ['short', 'standard', 'deep'];
+const SOURCE_PRIORITIES = ['claude_gdrive', 'fallback_handoff', 'manual'];
+
+// ---- flat field specs (top-level scalar fields of each list item) -----------
 
 interface FieldSpec {
   name: string;
@@ -30,11 +50,7 @@ interface FieldSpec {
   expected: string;
 }
 
-const enumSpec = (name: string, values: readonly string[]): FieldSpec => ({
-  name,
-  ok: (v) => isStr(v) && values.includes(v),
-  expected: `one of ${values.join(' | ')}`,
-});
+const enumSpec = (name: string, values: readonly string[]): FieldSpec => ({ name, ok: isEnum(values), expected: `one of ${values.join(' | ')}` });
 const strField = (name: string): FieldSpec => ({ name, ok: isStr, expected: 'string' });
 const numField = (name: string): FieldSpec => ({ name, ok: isNum, expected: 'finite number' });
 const boolField = (name: string): FieldSpec => ({ name, ok: isBool, expected: 'boolean' });
@@ -62,31 +78,172 @@ const COLLECTION_SPECS: Record<string, FieldSpec[]> = {
   handoffs: [
     strField('id'), strField('agentId'), strField('workflowId'), strField('workflowName'),
     strField('inputSummary'), strField('outputStyle'), strField('content'),
-    enumSpec('risk', ['read_only', 'draft_only', 'local_write', 'external_write', 'sensitive_external_write', 'high_risk']),
-    isoField('createdAt'),
+    enumSpec('risk', RISK_LEVELS), isoField('createdAt'),
   ],
   artifacts: [
-    strField('id'), strField('workflowId'),
-    enumSpec('artifactType', ['full_prompt', 'current_handoff', 'ai_response', 'manual_note']),
+    strField('id'), strField('workflowId'), enumSpec('artifactType', ARTIFACT_TYPES),
     isoField('createdAt'), strField('content'),
+  ],
+  auditLog: [
+    strField('id'), isoField('timestamp'), strField('command'),
+    enumSpec('actionType', RISK_LEVELS), enumSpec('approvalStatus', APPROVAL_STATUSES),
+    strField('resultSummary'),
+  ],
+};
+
+// Optional scalar fields per collection: validated only when present.
+const OPTIONAL_FIELDS: Record<string, FieldSpec[]> = {
+  prompts: [enumSpec('agentId', AGENT_IDS)],
+  handoffs: [
+    strField('contentHash'), strField('entryDate'), enumSpec('dateConfidence', DATE_CONFIDENCE),
+    enumSpec('status', HANDOFF_STATUS), strField('correctsHandoffId'), strField('output'),
+  ],
+  auditLog: [enumSpec('agentId', AGENT_IDS), strField('workflowId'), boolField('actionTaken')],
+  artifacts: [
+    strField('title'), strField('sourceInput'), strField('promptHash'), strField('shortFingerprint'),
+    numField('characterCount'), numField('priorHandoffCount'), strField('historyStrategy'),
+    strArrField('includedHandoffIds'), boolField('rawFallbackUsed'), enumSpec('sourceMode', SOURCE_MODES),
   ],
 };
 
 const MAX_ERRORS = 25;
 
-function itemLabel(index: number, item: unknown): string {
-  const id = isObj(item) && isStr((item as { id?: unknown }).id) ? (item as { id: string }).id : undefined;
-  return id ? `[${index}] (id "${id}")` : `[${index}]`;
+// ---- nested object validation -----------------------------------------------
+
+interface ObjectField {
+  key: string;
+  ok: (v: unknown) => boolean;
+  expected: string;
+  required?: boolean;
 }
+
+const f = (key: string, ok: (v: unknown) => boolean, expected: string, required = false): ObjectField => ({ key, ok, expected, required });
+const strObj = (key: string, required = false) => f(key, isStr, 'string', required);
+const numObj = (key: string) => f(key, isNum, 'finite number');
+const boolObj = (key: string, required = false) => f(key, isBool, 'boolean', required);
+const strArrObj = (key: string) => f(key, isStrArr, 'string[]');
+const enumObj = (key: string, values: readonly string[], required = false) => f(key, isEnum(values), `one of ${values.join(' | ')}`, required);
+
+type Push = (e: ImportError) => void;
+
+/** Join a nested field path without a leading dot when the prefix is empty. */
+const join = (a: string, b: string): string => (a ? `${a}.${b}` : b);
+
+/** Validate an object's fields at `path`. Present fields are type-checked; a
+ *  required field that is absent is reported. Never echoes values. */
+function checkObject(push: Push, collection: string, item: string, path: string, value: unknown, fields: ObjectField[]): void {
+  if (!isObj(value)) {
+    push({ collection, item, field: path, expected: 'object', message: `${collection}${item}: "${path}" must be an object.` });
+    return;
+  }
+  const rec = value as Record<string, unknown>;
+  for (const spec of fields) {
+    const fieldPath = join(path, spec.key);
+    const present = rec[spec.key] !== undefined && rec[spec.key] !== null;
+    if (!present) {
+      if (spec.required) {
+        push({ collection, item, field: fieldPath, expected: spec.expected, message: `${collection}${item}: "${fieldPath}" is required and must be ${spec.expected}.` });
+      }
+      continue;
+    }
+    if (!spec.ok(rec[spec.key])) {
+      push({ collection, item, field: fieldPath, expected: spec.expected, message: `${collection}${item}: field "${fieldPath}" must be ${spec.expected}.` });
+    }
+  }
+}
+
+/** Validate a nested sub-object only when present (absent optional object is ok). */
+function checkOptionalObject(push: Push, collection: string, item: string, parent: Record<string, unknown>, path: string, key: string, fields: ObjectField[]): void {
+  if (parent[key] === undefined || parent[key] === null) return;
+  checkObject(push, collection, item, join(path, key), parent[key], fields);
+}
+
+// ---- collection-specific nested validators ----------------------------------
+
+function validatePromptNested(push: Push, item: string, rec: Record<string, unknown>): void {
+  // versions[] — each entry must be { body: string, savedAt: ISO } (IMP-005).
+  const versions = rec.versions;
+  if (versions === undefined) return; // older prompts may lack version history
+  if (!Array.isArray(versions)) {
+    push({ collection: 'prompts', item, field: 'versions', expected: 'array', message: `prompts${item}: "versions" must be an array.` });
+    return;
+  }
+  versions.forEach((v, vi) => {
+    checkObject(push, 'prompts', item, `versions[${vi}]`, v, [strObj('body', true), f('savedAt', isIsoDate, 'ISO date string', true)]);
+  });
+}
+
+function validateArtifactNested(push: Push, item: string, rec: Record<string, unknown>): void {
+  const snaps = rec.includedHandoffSnapshots;
+  if (snaps !== undefined && snaps !== null) {
+    if (!Array.isArray(snaps)) {
+      push({ collection: 'artifacts', item, field: 'includedHandoffSnapshots', expected: 'array', message: `artifacts${item}: "includedHandoffSnapshots" must be an array.` });
+    } else {
+      snaps.forEach((s, si) => {
+        checkObject(push, 'artifacts', item, `includedHandoffSnapshots[${si}]`, s, [
+          strObj('handoffId', true), strObj('sourceHandoffHash', true), f('savedAt', isIsoDate, 'ISO date string', true),
+          enumObj('dateConfidence', DATE_CONFIDENCE, true), strObj('entryDate'),
+        ]);
+        if (isObj(s) && (s as Record<string, unknown>).extractionSummary !== undefined) {
+          checkObject(push, 'artifacts', item, `includedHandoffSnapshots[${si}].extractionSummary`, (s as Record<string, unknown>).extractionSummary, [
+            f('highConfidenceFieldCount', isNum, 'finite number', true), f('mediumConfidenceFieldCount', isNum, 'finite number', true),
+            f('lowConfidenceFieldCount', isNum, 'finite number', true), boolObj('rawFallbackUsed', true), boolObj('weakExtraction', true),
+          ]);
+        }
+      });
+    }
+  }
+  checkOptionalObject(push, 'artifacts', item, rec, '', 'healthProfilePromptMetadata', [
+    boolObj('healthProfileIncluded', true), strArrObj('includedFieldPaths'),
+    numObj('promptSummaryCharCount'), numObj('freeformContextExcerptCharCount'),
+    strObj('promptContextHash'), strObj('promptContextFingerprint'),
+    numObj('promptContextCharacterCount'), strObj('profileLastUpdatedAt'),
+  ]);
+}
+
+function validateHealthProfile(push: Push, hp: unknown): void {
+  const item = ''; // healthProfile is a singleton, not a list item
+  if (!isObj(hp)) {
+    push({ collection: 'healthProfile', expected: 'object or null', message: 'healthProfile must be an object or null.' });
+    return;
+  }
+  const rec = hp as Record<string, unknown>;
+  // Required identity/date scalars.
+  for (const spec of [strField('id'), isoField('createdAt'), isoField('updatedAt')]) {
+    if (!spec.ok(rec[spec.name])) {
+      push({ collection: 'healthProfile', field: spec.name, expected: spec.expected, message: `healthProfile field "${spec.name}" must be ${spec.expected}.` });
+    }
+  }
+  const C = (path: string, key: string, fields: ObjectField[]) => checkOptionalObject(push, 'healthProfile', item, rec, path, key, fields);
+  C('', 'goals', [enumObj('primaryGoal', PRIMARY_GOALS), strObj('goalNotes'), strObj('priorityNotes'), numObj('targetWeight'), numObj('targetBodyFatPercent'), numObj('targetWaist'), strObj('visualGoal')]);
+  C('', 'nutritionTargets', [numObj('calories'), numObj('proteinGrams'), numObj('carbGrams'), numObj('fatGrams'), numObj('fiberGrams'), numObj('waterMl'), strObj('notes')]);
+  C('', 'activityTargets', [numObj('stepsPerDay'), strObj('cardioTarget')]);
+  C('', 'recoveryTargets', [strObj('sleepHours'), strObj('hrvBaseline'), strObj('restingHeartRateBaseline')]);
+  C('', 'trainingPlan', [strObj('weeklyFrequency'), strObj('split'), strObj('preferredStyle'), strArrObj('movementRestrictions'), strArrObj('trainingRestrictions'), strObj('currentTrainingNotes'), strArrObj('cautionNotes')]);
+  C('', 'bodyMetrics', [strObj('height'), strObj('currentWeight'), strObj('goalWeight'), strObj('waist'), strObj('bodyFatEstimate')]);
+  C('', 'medicalContext', [strArrObj('injuryHistory'), strArrObj('movementRestrictions'), strArrObj('cautionNotes'), strArrObj('deviceContext')]);
+  C('', 'supplementsMedications', [strArrObj('supplements'), strArrObj('medications'), strObj('notes')]);
+  C('', 'analysisPreferences', [enumObj('coachingStyle', COACHING_STYLES), enumObj('outputDetail', OUTPUT_DETAILS), boolObj('compareAgainstTargets')]);
+  C('', 'seedMetadata', [boolObj('isSeededProfile', true), strObj('sourceNote', true), enumObj('sourcePriority', SOURCE_PRIORITIES, true), strObj('lastVerifiedAt'), boolObj('needsVerification', true), strObj('seededAt', true), strObj('userModifiedAt')]);
+  if (rec.promptSummary !== undefined && rec.promptSummary !== null && !isStr(rec.promptSummary)) {
+    push({ collection: 'healthProfile', field: 'promptSummary', expected: 'string', message: 'healthProfile field "promptSummary" must be string.' });
+  }
+  if (rec.freeformContext !== undefined && rec.freeformContext !== null && !isStr(rec.freeformContext)) {
+    push({ collection: 'healthProfile', field: 'freeformContext', expected: 'string', message: 'healthProfile field "freeformContext" must be string.' });
+  }
+}
+
+// ---- top-level validation ---------------------------------------------------
 
 /** Validate an imported AppState deeply. Returns [] when it is safe to accept. */
 export function validateImportedState(state: AppState): ImportError[] {
   const errors: ImportError[] = [];
   const push = (e: ImportError) => { if (errors.length < MAX_ERRORS) errors.push(e); };
 
-  // artifacts predate some backups and are backfilled at normalize time — absent
-  // is fine; present-but-malformed is not.
+  // artifacts/healthProfile predate some backups and are backfilled at
+  // normalize time — absent is fine; present-but-malformed is not.
   const OPTIONAL_COLLECTIONS = new Set(['artifacts']);
+  const handoffIds = Array.isArray(state.handoffs) ? new Set(state.handoffs.filter((h) => isObj(h) && isStr((h as { id?: unknown }).id)).map((h) => (h as { id: string }).id)) : new Set<string>();
 
   for (const [collection, specs] of Object.entries(COLLECTION_SPECS)) {
     const list = (state as unknown as Record<string, unknown>)[collection];
@@ -96,28 +253,44 @@ export function validateImportedState(state: AppState): ImportError[] {
       continue;
     }
     list.forEach((item, index) => {
+      const ref = `[${index}]`;
       if (!isObj(item)) {
-        push({ collection, item: `[${index}]`, expected: 'object', message: `${collection}${`[${index}]`} must be an object.` });
+        push({ collection, item: ref, expected: 'object', message: `${collection}${ref} must be an object.` });
         return;
       }
       const rec = item as Record<string, unknown>;
-      const label = itemLabel(index, item);
       if (!isStr(rec.id)) {
-        push({ collection, item: `[${index}]`, field: 'id', expected: 'string', message: `${collection}[${index}]: missing or non-string "id".` });
+        push({ collection, item: ref, field: 'id', expected: 'string', message: `${collection}${ref}: missing or non-string "id".` });
       }
       for (const spec of specs) {
         if (spec.name === 'id') continue; // already reported precisely above
         if (!spec.ok(rec[spec.name])) {
-          push({
-            collection, item: label, field: spec.name, expected: spec.expected,
-            message: `${collection}${label}: field "${spec.name}" must be ${spec.expected}.`,
-          });
+          push({ collection, item: ref, field: spec.name, expected: spec.expected, message: `${collection}${ref}: field "${spec.name}" must be ${spec.expected}.` });
+        }
+      }
+      for (const spec of OPTIONAL_FIELDS[collection] ?? []) {
+        if (rec[spec.name] === undefined || rec[spec.name] === null) continue;
+        if (!spec.ok(rec[spec.name])) {
+          push({ collection, item: ref, field: spec.name, expected: spec.expected, message: `${collection}${ref}: field "${spec.name}" must be ${spec.expected}.` });
+        }
+      }
+      // Collection-specific nested structures.
+      if (collection === 'prompts') validatePromptNested(push, ref, rec);
+      if (collection === 'artifacts') validateArtifactNested(push, ref, rec);
+      if (collection === 'handoffs') {
+        // Correction invariant: a "correction" must reference an original, and
+        // any correctsHandoffId must resolve to a handoff in this backup.
+        if (rec.status === 'correction' && !isStr(rec.correctsHandoffId)) {
+          push({ collection, item: ref, field: 'correctsHandoffId', expected: 'string (id of the corrected handoff)', message: `handoffs${ref}: a correction must set "correctsHandoffId".` });
+        }
+        if (isStr(rec.correctsHandoffId) && !handoffIds.has(rec.correctsHandoffId)) {
+          push({ collection, item: ref, field: 'correctsHandoffId', expected: 'id of a handoff present in this backup', message: `handoffs${ref}: "correctsHandoffId" references a handoff that is not in this backup.` });
         }
       }
     });
   }
 
-  // settings (object, not a list)
+  // settings (object, not a list).
   if (!isObj(state.settings)) {
     push({ collection: 'settings', expected: 'object', message: 'settings must be an object.' });
   } else if (state.settings.theme !== 'dark' && state.settings.theme !== 'light') {
@@ -126,18 +299,7 @@ export function validateImportedState(state: AppState): ImportError[] {
 
   // healthProfile only when present and not explicitly null (older backups omit it).
   const hp = state.healthProfile;
-  if (hp !== undefined && hp !== null) {
-    if (!isObj(hp)) {
-      push({ collection: 'healthProfile', expected: 'object or null', message: 'healthProfile must be an object or null.' });
-    } else {
-      const hpRec = hp as unknown as Record<string, unknown>;
-      for (const f of [strField('id'), isoField('createdAt'), isoField('updatedAt')]) {
-        if (!f.ok(hpRec[f.name])) {
-          push({ collection: 'healthProfile', field: f.name, expected: f.expected, message: `healthProfile field "${f.name}" must be ${f.expected}.` });
-        }
-      }
-    }
-  }
+  if (hp !== undefined && hp !== null) validateHealthProfile(push, hp);
 
   return errors;
 }

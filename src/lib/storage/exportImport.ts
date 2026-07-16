@@ -60,6 +60,28 @@ export function parseImport(json: string): AppState {
       `Your current data was not changed.`,
     );
   }
+  // The OUTER envelope version must be consistent with the inner state and must
+  // not itself claim a newer schema. A future envelope wrapped around a current
+  // state was previously accepted (its version metadata was ignored), which
+  // violates the reject-before-replace guarantee.
+  if (env.schemaVersion !== undefined) {
+    if (typeof env.schemaVersion !== 'number') {
+      throw new Error('Backup envelope schemaVersion must be a number.');
+    }
+    if (env.schemaVersion > CURRENT_SCHEMA_VERSION) {
+      throw new Error(
+        `This backup is from a newer version of DavidOS (envelope schema ${env.schemaVersion}; ` +
+        `this app understands ${CURRENT_SCHEMA_VERSION}). Update DavidOS to import it. ` +
+        `Your current data was not changed.`,
+      );
+    }
+    if (env.schemaVersion !== state.schemaVersion) {
+      throw new Error(
+        `This backup is inconsistent (envelope schema ${env.schemaVersion} does not match ` +
+        `its data schema ${state.schemaVersion}) and was not imported. Your current data was not changed.`,
+      );
+    }
+  }
   for (const key of REQUIRED_ARRAYS) {
     if (!Array.isArray(state[key])) {
       throw new Error(`Backup missing required section: ${key}.`);
