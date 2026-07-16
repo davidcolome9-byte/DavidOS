@@ -103,8 +103,18 @@ export default function PromptVault() {
       {editing && (
         <div className="card" style={{ borderColor: 'var(--accent)' }}>
           <h2>{state.prompts.some((p) => p.id === editing.id) ? 'Edit prompt' : 'New prompt'}</h2>
-          <label className="field">Title</label>
-          <input type="text" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+          <label className="field" htmlFor="prompt-title">Title <span aria-hidden="true">*</span><span className="visually-hidden"> (required)</span></label>
+          <input
+            id="prompt-title"
+            type="text"
+            value={editing.title}
+            onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+            aria-invalid={editing.title.trim() === ''}
+            aria-describedby="prompt-title-hint"
+          />
+          {editing.title.trim() === '' && (
+            <p id="prompt-title-hint" className="notice small" role="alert">A title is required to save this prompt.</p>
+          )}
           <label className="field">Category</label>
           <input type="text" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
           <label className="field">Tags (comma-separated)</label>
@@ -127,7 +137,7 @@ export default function PromptVault() {
             ⚠️ Keep sensitive personal/work details as [PLACEHOLDERS] — prompts get pasted into external AI tools.
           </p>
           <div className="btn-row">
-            <button className="primary" onClick={() => editing.title.trim() && save(editing)}>Save (local)</button>
+            <button className="primary" onClick={() => save(editing)} disabled={editing.title.trim() === ''}>Save (local)</button>
             <button onClick={() => setEditing(null)}>Cancel</button>
             {state.prompts.some((p) => p.id === editing.id) && (
               <button className="danger" onClick={() => remove(editing.id)}>Delete</button>

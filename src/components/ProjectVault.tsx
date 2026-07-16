@@ -73,8 +73,18 @@ export default function ProjectVault() {
       {editing && (
         <div className="card" style={{ borderColor: 'var(--accent)' }}>
           <h2>{state.projects.some((p) => p.id === editing.id) ? 'Edit project' : 'New project'}</h2>
-          <label className="field">Name</label>
-          <input type="text" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+          <label className="field" htmlFor="project-name">Name <span aria-hidden="true">*</span><span className="visually-hidden"> (required)</span></label>
+          <input
+            id="project-name"
+            type="text"
+            value={editing.name}
+            onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+            aria-invalid={editing.name.trim() === ''}
+            aria-describedby="project-name-hint"
+          />
+          {editing.name.trim() === '' && (
+            <p id="project-name-hint" className="notice small" role="alert">A name is required to save this project.</p>
+          )}
           <label className="field">Status</label>
           <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as ProjectStatus })}>
             <option value="active">active</option>
@@ -88,7 +98,7 @@ export default function ProjectVault() {
           <label className="field">Notes</label>
           <textarea value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} />
           <div className="btn-row">
-            <button className="primary" onClick={() => editing.name.trim() && save(editing)}>Save (local)</button>
+            <button className="primary" onClick={() => save(editing)} disabled={editing.name.trim() === ''}>Save (local)</button>
             <button onClick={() => setEditing(null)}>Cancel</button>
             {state.projects.some((p) => p.id === editing.id) && (
               <button className="danger" onClick={() => remove(editing.id)}>Delete</button>
