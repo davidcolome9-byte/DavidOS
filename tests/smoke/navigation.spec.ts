@@ -37,6 +37,60 @@ test('a manual in-page style pick is not immediately overwritten', async ({ page
   await expect(styleSelect(page)).toHaveValue('Diary entry');
 });
 
+// ---- F-07: manual style picks canonicalize the URL ----
+
+const urlHash = (page: Page) => page.evaluate(() => window.location.hash);
+
+test('a manual style pick writes the canonical style param to the URL', async ({ page }) => {
+  await page.goto(HANDOFF);
+  await styleSelect(page).selectOption('Diary entry');
+  await expect.poll(() => urlHash(page)).toContain('style=Diary+entry');
+  await expect.poll(() => urlHash(page)).toContain('wf=fitness-handoff');
+});
+
+test('manually picking the default style back removes the style param', async ({ page }) => {
+  await page.goto(styleUrl('Diary entry'));
+  await expect(styleSelect(page)).toHaveValue('Diary entry');
+  await styleSelect(page).selectOption('AI handoff'); // the workflow default
+  await expect(styleSelect(page)).toHaveValue('AI handoff');
+  await expect.poll(() => urlHash(page)).not.toContain('style=');
+  await expect.poll(() => urlHash(page)).toContain('wf=fitness-handoff');
+});
+
+test('reload after a manual style pick hydrates the same style', async ({ page }) => {
+  await page.goto(HANDOFF);
+  await styleSelect(page).selectOption('Diary entry');
+  await expect.poll(() => urlHash(page)).toContain('style=Diary+entry');
+  await page.reload();
+  await expect(styleSelect(page)).toHaveValue('Diary entry');
+});
+
+test('Back/Forward restore manual style picks without duplicate entries', async ({ page }) => {
+  await page.goto(HANDOFF);
+  await styleSelect(page).selectOption('Diary entry');
+  await expect(styleSelect(page)).toHaveValue('Diary entry');
+  await styleSelect(page).selectOption('Plain summary');
+  await expect(styleSelect(page)).toHaveValue('Plain summary');
+
+  // Exactly one history entry per pick: a single Back lands on the previous
+  // style, a second Back lands on the default (a duplicate would repeat one).
+  await page.goBack();
+  await expect(styleSelect(page)).toHaveValue('Diary entry');
+  await page.goBack();
+  await expect(styleSelect(page)).toHaveValue('AI handoff');
+  await page.goForward();
+  await expect(styleSelect(page)).toHaveValue('Diary entry');
+  await page.goForward();
+  await expect(styleSelect(page)).toHaveValue('Plain summary');
+});
+
+test('a manual style pick keeps typed input intact', async ({ page }) => {
+  await page.goto(HANDOFF);
+  await page.locator('#wf-input').fill('bench press felt heavy today');
+  await styleSelect(page).selectOption('Diary entry');
+  await expect(page.locator('#wf-input')).toHaveValue('bench press felt heavy today');
+});
+
 test('switching workflows cannot retain an invalid previous style', async ({ page }) => {
   await page.goto(styleUrl('Diary entry')); // valid for fitness-handoff
   await expect(styleSelect(page)).toHaveValue('Diary entry');
