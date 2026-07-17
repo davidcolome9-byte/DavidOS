@@ -119,9 +119,10 @@ davidos/
 ## Export / import
 
 Settings → **Export backup (JSON)** downloads everything (treat the file as
-sensitive — it contains all vaults). **Import backup** checks the envelope and
-top-level structure (deep per-item validation is still pending — see
-docs/OPEN_LOOPS.md OL-005/OL-006) and replaces local state after confirmation.
+sensitive — it contains all vaults). **Import backup** validates the envelope,
+rejects backups from a newer DavidOS (forward schema-version guard), and runs
+deep per-item field/enum validation with readable errors naming the bad item,
+then replaces local state after confirmation.
 **Reset to seed** restores the shipped defaults, preserving the Health Profile
 exactly unless you explicitly delete it.
 

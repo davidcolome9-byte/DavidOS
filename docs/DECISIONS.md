@@ -418,3 +418,35 @@ touched.
   operational acceptance (146) are unchanged. Exactly these six IDs changed; no
   unrelated case regressed. Two in-repo unit tests and one routing-metrics lock
   that pinned the pre-correction behavior were updated to the corrected routing.
+
+## 2026-07-17 — Documentation-only project-state reconciliation
+
+Docs-only pass (branch `docs/dos-project-state-reconciliation` from
+`main` @ `f01a822`); no product behavior, code, tests, schemas, or
+workflows changed.
+
+- **OPEN_LOOPS reconciled against the deployed repo.** OL-002, OL-004,
+  OL-005, OL-006, OL-007, OL-011, and OL-012 were independently
+  re-verified as implemented and deployed (PR #3 and PR #5 lineage) and
+  moved to a "Resolved & deployed" history section with commit/test
+  citations. All remaining entries were re-verified as still open at
+  `f01a822` and gained a **Kind** tag (defect / maintenance /
+  environmental / future capability). OL-001's wording now records that
+  `fix/dos-fnd-001-reliable-offline-launch` holds an unmerged,
+  unreviewed draft fix — the loop stays open.
+- **CURRENT_STATE updated to the PR #8 release.** Verification counts
+  corrected from the stale 2026-07-15 snapshot (233 unit / 25 smoke) to
+  the verified 2026-07-17 state: 464/464 unit tests (35 files), 72/72
+  Playwright tests (11 files), 17/17 visible routing suite, corpus
+  strict 127/153 vs tuple conformance 107/153 (kept explicitly
+  separate) vs operational acceptance 146/153, 10 workflows / 8 agents.
+  Added a release-history section (PRs #1–#8 with merge SHAs/dates) and
+  a repository-state section distinguishing merged evidence branches
+  (worktrees safe to remove, removal not performed) from stale
+  unmerged drafts.
+- **README import paragraph corrected** — deep per-item validation and
+  the forward-schema guard shipped in PR #5; the "still pending
+  OL-005/OL-006" claim was stale.
+- **Authority boundaries restated:** docs/OPEN_LOOPS.md is the single
+  backlog; docs/CURRENT_STATE.md is the single production-state
+  snapshot and the only place exact counts live.
