@@ -267,7 +267,9 @@ export function loadPersistedState(): LoadResult {
   // and run in memory with defaults so the newer data survives for that version.
   if (parsed.schemaVersion > CURRENT_SCHEMA_VERSION) {
     const key = preserveRawBlob(raw);
-    console.warn(`DavidOS: stored data is from a newer version (schema ${parsed.schemaVersion} > ${CURRENT_SCHEMA_VERSION}); not overwriting it.`);
+    // Neither the log line nor the UI message echoes the stored version value
+    // (POST-M-PRIV-01) — only this app's own supported version is named.
+    console.warn(`DavidOS: stored data has a "schemaVersion" newer than this app understands (supported: ${CURRENT_SCHEMA_VERSION}); not overwriting it.`);
     return {
       state: null,
       recovery: {
@@ -276,8 +278,8 @@ export function loadPersistedState(): LoadResult {
         recoveryKey: key ?? undefined,
         canPersist: false,
         message:
-          `This saved data was created by a newer version of DavidOS (schema ${parsed.schemaVersion}, ` +
-          `this app understands ${CURRENT_SCHEMA_VERSION}). To avoid corrupting it, the app started ` +
+          `This saved data was created by a newer version of DavidOS than this app understands ` +
+          `(supported schema: ${CURRENT_SCHEMA_VERSION}). To avoid corrupting it, the app started ` +
           `with a blank workspace and will not save over your data. Open the newer version, or update ` +
           `this one.` + (key ? ` A copy was preserved on this device.` : ''),
       },

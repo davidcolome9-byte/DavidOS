@@ -3,6 +3,7 @@ import { useStore, upsert, removeById } from '../state/store';
 import type { Prompt } from '../lib/types';
 import { uid, nowIso } from '../lib/types';
 import { AGENTS } from '../lib/agents/agentRegistry';
+import { redactedCommandLabel } from '../lib/audit/redaction';
 
 const EMPTY: Omit<Prompt, 'id' | 'updatedAt'> = {
   title: '', body: '', category: 'General', tags: [], favorite: false, versions: [],
@@ -31,11 +32,15 @@ export default function PromptVault() {
         ? [{ body: existing.body, savedAt: existing.updatedAt }, ...existing.versions].slice(0, 10)
         : prompt.versions;
     update((s) => ({ ...s, prompts: upsert(s.prompts, { ...prompt, versions, updatedAt: nowIso() }) }));
+    // Prompt titles and bodies are personal free text — the audit record stores
+    // only the event type, a title fingerprint, the title length, and the body
+    // length (POST-H-PRIV-01). The prompt text itself never enters the log.
     audit({
-      command: `Save prompt: ${prompt.title}`,
+      command: redactedCommandLabel(existing ? 'prompt_updated' : 'prompt_created', prompt.title),
       actionType: 'local_write',
       approvalStatus: 'not_required',
-      resultSummary: existing ? 'Prompt updated (previous version kept).' : 'Prompt created.',
+      actionTaken: true,
+      resultSummary: (existing ? 'Prompt updated (previous version kept)' : 'Prompt created') + ` · body ${prompt.body.length} chars.`,
     });
     setEditing(null);
   }

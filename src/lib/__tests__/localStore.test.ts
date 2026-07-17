@@ -421,4 +421,25 @@ describe('forward-version guard at boot', () => {
     storage.data.set(STORAGE_KEY, JSON.stringify(buildDefaultState()));
     expect(loadPersistedState().state).not.toBeNull();
   });
+
+  // POST-M-PRIV-01 — the boot-time diagnostic (UI banner AND console log) must
+  // not echo the stored schema-version value; 987654 is a synthetic marker.
+  it('newer-schema diagnostics never echo the stored version value', () => {
+    const SYNTH = 987654;
+    const future = { ...buildDefaultState(), schemaVersion: SYNTH };
+    storage.data.set(STORAGE_KEY, JSON.stringify(future));
+
+    const warnings: string[] = [];
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => { warnings.push(args.map(String).join(' ')); };
+    try {
+      const result = loadPersistedState();
+      expect(result.state).toBeNull();
+      expect(result.recovery.message).toMatch(/newer version/i);
+      expect(result.recovery.message).not.toContain(String(SYNTH));
+      expect(warnings.join('\n')).not.toContain(String(SYNTH));
+    } finally {
+      console.warn = originalWarn;
+    }
+  });
 });

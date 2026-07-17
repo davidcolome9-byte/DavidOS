@@ -65,4 +65,50 @@ describe('export/import', () => {
     expect(msg).toContain('prompts');
     expect(msg).not.toContain('junk'); // never echoes the rejected value
   });
+
+  // POST-M-PRIV-01 — future-schema / envelope-version diagnostics must describe
+  // the field and the compatibility problem WITHOUT echoing the supplied value.
+  // The versions below are distinctive synthetic markers: if a diagnostic ever
+  // contains them, it echoed imported data.
+  describe('schema diagnostics never echo the supplied version (POST-M-PRIV-01)', () => {
+    const SYNTH_STATE_VERSION = 424242;
+    const SYNTH_ENV_VERSION = 434343;
+
+    const thrownMessage = (mutate: (env: { schemaVersion: number; state: { schemaVersion: number } }) => void): string => {
+      const env = JSON.parse(serializeState(buildDefaultState()));
+      mutate(env);
+      try {
+        parseImport(JSON.stringify(env));
+      } catch (e) {
+        return (e as Error).message;
+      }
+      throw new Error('expected parseImport to reject this backup');
+    };
+
+    it('future data schemaVersion: names the field, not the value', () => {
+      const msg = thrownMessage((env) => {
+        env.state.schemaVersion = SYNTH_STATE_VERSION;
+        env.schemaVersion = SYNTH_STATE_VERSION;
+      });
+      expect(msg).toMatch(/schemaVersion.*newer/i);
+      expect(msg).not.toContain(String(SYNTH_STATE_VERSION));
+    });
+
+    it('future envelope schemaVersion: names the field, not the value', () => {
+      const msg = thrownMessage((env) => {
+        env.schemaVersion = SYNTH_ENV_VERSION; // inner state stays current
+      });
+      expect(msg).toMatch(/envelope.*schemaVersion.*newer/i);
+      expect(msg).not.toContain(String(SYNTH_ENV_VERSION));
+    });
+
+    it('envelope/data version mismatch: names the inconsistency, not the values', () => {
+      const msg = thrownMessage((env) => {
+        // A distinctive envelope version that is ≤ current but ≠ the data version.
+        env.schemaVersion = -424242;
+      });
+      expect(msg).toMatch(/inconsistent/i);
+      expect(msg).not.toContain('424242');
+    });
+  });
 });

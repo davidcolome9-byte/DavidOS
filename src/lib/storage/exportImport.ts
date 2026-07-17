@@ -53,10 +53,13 @@ export function parseImport(json: string): AppState {
   }
   // Forward-version guard: a backup from a NEWER DavidOS is not applied — we
   // would drop fields we don't understand. The current data is left untouched.
+  // Diagnostics describe the field and the compatibility problem WITHOUT echoing
+  // the supplied version value (POST-M-PRIV-01); only this app's own supported
+  // version is safe to name.
   if (state.schemaVersion > CURRENT_SCHEMA_VERSION) {
     throw new Error(
-      `This backup is from a newer version of DavidOS (schema ${state.schemaVersion}; ` +
-      `this app understands ${CURRENT_SCHEMA_VERSION}). Update DavidOS to import it. ` +
+      `This backup's "schemaVersion" is newer than this app understands ` +
+      `(supported: ${CURRENT_SCHEMA_VERSION}). Update DavidOS to import it. ` +
       `Your current data was not changed.`,
     );
   }
@@ -70,15 +73,15 @@ export function parseImport(json: string): AppState {
     }
     if (env.schemaVersion > CURRENT_SCHEMA_VERSION) {
       throw new Error(
-        `This backup is from a newer version of DavidOS (envelope schema ${env.schemaVersion}; ` +
-        `this app understands ${CURRENT_SCHEMA_VERSION}). Update DavidOS to import it. ` +
+        `This backup's envelope "schemaVersion" is newer than this app understands ` +
+        `(supported: ${CURRENT_SCHEMA_VERSION}). Update DavidOS to import it. ` +
         `Your current data was not changed.`,
       );
     }
     if (env.schemaVersion !== state.schemaVersion) {
       throw new Error(
-        `This backup is inconsistent (envelope schema ${env.schemaVersion} does not match ` +
-        `its data schema ${state.schemaVersion}) and was not imported. Your current data was not changed.`,
+        'This backup is inconsistent (its envelope "schemaVersion" does not match ' +
+        'its data "schemaVersion") and was not imported. Your current data was not changed.',
       );
     }
   }

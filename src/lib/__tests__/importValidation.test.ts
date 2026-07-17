@@ -170,7 +170,7 @@ describe('handoff relationship validation (POST-H-IMPORT-01)', () => {
     s.handoffs = handoffs as never;
     return validateImportedState(s);
   };
-  const onField = (errs: { collection: string; field?: string }[], field: string) =>
+  const onField = (errs: ReturnType<typeof validateImportedState>, field: string) =>
     errs.filter((e) => e.collection === 'handoffs' && e.field === field);
 
   // Distinctive synthetic markers: if any of these appear in a diagnostic, the

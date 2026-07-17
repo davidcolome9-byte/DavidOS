@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore, upsert, removeById } from '../state/store';
 import type { Project, ProjectStatus } from '../lib/types';
 import { uid, nowIso } from '../lib/types';
+import { redactedCommandLabel } from '../lib/audit/redaction';
 
 const STATUS_TONE: Record<ProjectStatus, string> = { active: 'ok', paused: 'warn', done: 'neutral' };
 
@@ -15,11 +16,15 @@ export default function ProjectVault() {
   const [editing, setEditing] = useState<Project | null>(null);
 
   function save(project: Project) {
+    const existing = state.projects.some((p) => p.id === project.id);
     update((s) => ({ ...s, projects: upsert(s.projects, { ...project, updatedAt: nowIso() }) }));
+    // The project name is personal free text — the audit record stores only the
+    // event type, a non-reversible fingerprint, and a length (POST-H-PRIV-01).
     audit({
-      command: `Save project: ${project.name}`,
+      command: redactedCommandLabel(existing ? 'project_updated' : 'project_created', project.name),
       actionType: 'local_write',
       approvalStatus: 'not_required',
+      actionTaken: true,
       resultSummary: 'Project saved locally.',
     });
     setEditing(null);
@@ -30,10 +35,12 @@ export default function ProjectVault() {
     if (!project) return;
     if (!window.confirm(`Delete project "${project.name}"? This only affects local data.`)) return;
     update((s) => ({ ...s, projects: removeById(s.projects, id) }));
+    // Same privacy rule as save: never store the project name verbatim.
     audit({
-      command: `Delete project: ${project.name}`,
+      command: redactedCommandLabel('project_deleted', project.name),
       actionType: 'local_write',
       approvalStatus: 'approved',
+      actionTaken: true,
       resultSummary: 'Project deleted from local vault.',
     });
     setEditing(null);
