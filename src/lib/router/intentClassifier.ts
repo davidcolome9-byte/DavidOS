@@ -94,6 +94,15 @@ const PROMPT_STRONG = ['prompt', 'prompts', 'claude code', 'system instruction',
 const LIFEADMIN_STRONG = ['dog', 'dogs', 'vet', 'chore', 'chores', 'grocery', 'groceries', 'errand', 'errands', 'laundry', 'household', 'yard'];
 const DAILY_STRONG = ['plan my day', 'what should i do', 'daily brief', 'command brief', 'next move', 'overwhelmed'];
 
+// "Review priorities" (UI-ROUTE-LOCAL-10 / EX-10) is a supported Daily Command
+// request — but ONLY as the combination of a priorities word plus an explicit
+// review-style action. Requiring both keeps the honest states intact: a bare
+// "priorities" (or "review") stays ambiguous, and unrelated uses of either
+// word ("review my meal plan", "workout priorities") are claimed by their own
+// domains before this detector runs.
+const PRIORITY_WORDS = ['priorities', 'priority'];
+const PRIORITY_REVIEW_ACTIONS = ['review', 'reviewing', 'go over', 'reassess', 're-assess'];
+
 /** Calendar signals that are merely a framing verb around another domain's goal. */
 const CALENDAR_SUBORDINATE_ONLY = ['remind', 'reminder', 'reminders', 'schedule'];
 
@@ -213,7 +222,8 @@ function lifeAdminSupported(text: string): DetectedIntent | null {
 }
 
 function dailySupported(text: string): DetectedIntent | null {
-  if (has(text, DAILY_STRONG)) {
+  const priorityReview = has(text, PRIORITY_WORDS) && has(text, PRIORITY_REVIEW_ACTIONS);
+  if (has(text, DAILY_STRONG) || priorityReview) {
     return { domain: 'daily_command', kind: 'supported', goal: 'daily', label: 'Daily Command', workflowId: 'daily-brief' };
   }
   return null;

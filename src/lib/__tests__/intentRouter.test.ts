@@ -146,7 +146,7 @@ describe('intentRouter', () => {
     it('7. analyze gym progress → recognized fitness progress, unsupported', () => unsupported('Analyze my gym progress', 'fitness'));
     it('8. teach it back → Work Teachback', () => supported('Explain this work procedure so I can teach it back', 'work_project', 'work-teachback'));
     it('9. training presentation for coworkers → work, not fitness', () => supported('Training presentation for coworkers', 'work_project', 'work-teachback'));
-    it('10. review priorities → ambiguous', () => expect(routeIntent('Review priorities').classification).toBe('ambiguous'));
+    it('10. review priorities → Daily Command daily-brief (UI-ROUTE-LOCAL-10 / EX-10)', () => supported('Review priorities', 'daily_command', 'daily-brief'));
     it('11. training review → Gravl review (DOS EX-11)', () => supported('Training review', 'fitness', 'gravl-review'));
     it('12. weekly workout review → fitness, not calendar', () => supported('Weekly workout review', 'fitness', 'gravl-review'));
     it('13. bare "Workout" → ambiguous fitness, never work', () => {
@@ -207,6 +207,27 @@ describe('intentRouter', () => {
     });
     it('R-4 · Not feeling well today → honestly unknown (no fitness anchor, no daily route)', () => {
       expect(routeIntent('Not feeling well today').classification).toBe('unknown');
+    });
+
+    // UI-ROUTE-LOCAL-10 / EX-10: "Review priorities" is a supported Daily
+    // Command route — without broadly claiming "review" or "priorities".
+    it('UI-ROUTE-LOCAL-10 / EX-10 · Review priorities → Daily Command daily-brief', () => {
+      const r = routeIntent('Review priorities');
+      expect(r.classification).toBe('supported');
+      expect(r.target).toBe('daily_command');
+      expect(r.suggestedWorkflowId).toBe('daily-brief');
+      expect(r.confidence).toBeGreaterThan(0);
+      expect(r.confidence).toBeLessThanOrEqual(0.9);
+    });
+    it('EX-10 guard · bare "priorities"/"review" stay honest, never silently daily-routed', () => {
+      for (const w of ['priorities', 'priority', 'review']) {
+        expect(['ambiguous', 'unknown'], w).toContain(routeIntent(w).classification);
+      }
+    });
+    it('EX-10 guard · "review" with another domain\'s content never lands on daily-brief', () => {
+      expect(routeIntent('Review this workout').suggestedWorkflowId).toBe('gravl-review');
+      expect(routeIntent('Review my meal plan').classification).toBe('unsupported');
+      expect(routeIntent('Review my workout priorities').target).toBe('fitness');
     });
 
     it('PC-4 · whitespace-padded "weekly   review" → weekly-review', () => {
