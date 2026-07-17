@@ -102,3 +102,54 @@ describe('C-review-3 · "Give me a preview of my week" → Weekly Review', () =>
     expect(r.suggestedWorkflowId).toBe('daily-brief');
   });
 });
+
+describe('C-wait-2 · "I am awaiting a reply from my supervisor" → Universal Operations', () => {
+  it('routes supported / universal-operations / universal-operations-review', () => {
+    const r = routeIntent('I am awaiting a reply from my supervisor');
+    expect(r.classification).toBe('supported');
+    expect(r.target).toBe('universal-operations');
+    expect(r.suggestedWorkflowId).toBe('universal-operations-review');
+    expect(r.confidence).toBeLessThanOrEqual(0.9);
+  });
+
+  it('"waiting for a reply" also routes as a waiting state', () => {
+    const r = routeIntent('Still waiting for a reply from the vendor');
+    expect(r.classification).toBe('supported');
+    expect(r.suggestedWorkflowId).toBe('universal-operations-review');
+  });
+
+  it('guard · draft/write/send/answer a reply never become Universal Operations', () => {
+    for (const i of [
+      'Draft a reply to my supervisor',
+      'Send a reply to the vendor',
+      'Help me write a reply while I am awaiting a reply from my supervisor',
+      'Answer the reply from my coworker',
+    ]) {
+      expect(routeIntent(i).suggestedWorkflowId, i).not.toBe('universal-operations-review');
+    }
+  });
+
+  it('guard · generic "reply" alone stays non-routed', () => {
+    const r = routeIntent('reply');
+    expect(['ambiguous', 'unknown']).toContain(r.classification);
+    expect(r.suggestedWorkflowId).toBeUndefined();
+  });
+
+  it('guard · Work Teachback precedence when a teachback action is material', () => {
+    const r = routeIntent('My teachback presentation for coworkers is awaiting a reply');
+    expect(r.classification).toBe('supported');
+    expect(r.target).toBe('work_project');
+    expect(r.suggestedWorkflowId).toBe('work-teachback');
+  });
+
+  it('guard · work-project requests stay put', () => {
+    const r = routeIntent('Finish the quarterly work report');
+    expect(r.suggestedWorkflowId).not.toBe('universal-operations-review');
+    expect(r.target).toBe('work_project');
+  });
+
+  it('guard · independent goals joined by "and" stay multi-domain', () => {
+    const r = routeIntent('Review my workout and tell me what is waiting on me');
+    expect(r.classification).toBe('multi_domain');
+  });
+});

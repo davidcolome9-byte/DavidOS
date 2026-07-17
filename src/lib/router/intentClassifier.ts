@@ -102,6 +102,12 @@ const WORK_TEACHBACK_SIGNALS = ['teachback', 'teach back', 'teach it back', 'cow
 // match a multi-word term).
 const CALENDAR_STRONG = ['weekly review', 'plan the week', 'plan my week', 'calendar', 'schedule', 'appointment', 'time block', 'open loops', 'reminder', 'reminders', 'preview of my week', 'preview of the week', 'weekly preview', 'week preview'];
 const UNIVERSAL_STRONG = ['universal operations', 'ops review', 'operations review', 'waiting on me', 'waiting on user', 'capture inbox', 'process my capture', 'autonomous work', 'autonomous blockers', 'cross-domain', 'cross domain'];
+// C-wait-2 — narrow waiting-STATE phrases only ("I am awaiting a reply …" is a
+// blocker report → Universal Operations). Generic "reply" is never sufficient,
+// and a request to draft/send/answer the reply is an ACTION request, not a
+// state report, so those verbs veto this detector.
+const WAITING_STATE_PHRASES = ['awaiting a reply', 'waiting for a reply'];
+const REPLY_COMPOSE_ACTIONS = ['draft', 'write', 'send', 'answer', 'respond', 'compose'];
 const PROMPT_STRONG = ['prompt', 'prompts', 'claude code', 'system instruction', 'chatgpt', 'codex', 'gemini'];
 const LIFEADMIN_STRONG = ['dog', 'dogs', 'vet', 'chore', 'chores', 'grocery', 'groceries', 'errand', 'errands', 'laundry', 'household', 'yard'];
 const DAILY_STRONG = ['plan my day', 'what should i do', 'daily brief', 'command brief', 'next move', 'overwhelmed'];
@@ -220,6 +226,9 @@ function calendarSupported(text: string): DetectedIntent | null {
 
 function universalSupported(text: string): DetectedIntent | null {
   if (has(text, UNIVERSAL_STRONG)) {
+    return { domain: 'universal-operations', kind: 'supported', goal: 'universal-ops', label: 'Universal Operations', workflowId: 'universal-operations-review' };
+  }
+  if (has(text, WAITING_STATE_PHRASES) && !has(text, REPLY_COMPOSE_ACTIONS)) {
     return { domain: 'universal-operations', kind: 'supported', goal: 'universal-ops', label: 'Universal Operations', workflowId: 'universal-operations-review' };
   }
   return null;

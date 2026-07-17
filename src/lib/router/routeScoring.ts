@@ -16,6 +16,8 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('autonomous blockers', 3), kw('capture inbox', 3), kw('process my capture', 3),
     kw('cross-domain', 2), kw('cross domain', 2), kw('source authority', 2),
     kw('one next action', 2), kw('approval boundary', 2),
+    // C-wait-2 — narrow waiting-state phrases; generic "reply" scores 0.
+    kw('awaiting a reply', 3), kw('waiting for a reply', 3),
   ],
   daily_command: [
     // "today"/"morning" removed: a bare temporal word is not evidence of the
