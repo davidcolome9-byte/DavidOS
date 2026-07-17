@@ -7,8 +7,9 @@ import { summarizeInput } from '../lib/workflows/templateRenderer';
 import { buildPrompt } from '../lib/workflows/continuity';
 import type { BuiltPrompt } from '../lib/workflows/continuity';
 import { buildGravlPrompt } from '../lib/workflows/gravlPrompt';
+import { buildReadinessPrompt } from '../lib/workflows/fitnessReadinessPrompt';
 import { evaluatePromptValidity, buildPromptConfigKey, evaluateActability } from '../lib/workflows/promptValidity';
-import { GRAVL_WORKFLOW_ID } from '../lib/router/fitnessRouting';
+import { GRAVL_WORKFLOW_ID, FITNESS_READINESS_WORKFLOW_ID } from '../lib/router/fitnessRouting';
 import { resolveCategory, resolveHistoryProfile, historyTargetCount } from '../lib/workflows/workflowMeta';
 import { buildProfilePromptBlock } from '../lib/health/profilePrompt';
 import { parseEntryDate } from '../lib/workflows/dateParsing';
@@ -100,6 +101,7 @@ export default function WorkflowRunner() {
   );
 
   const isGravl = workflow?.id === GRAVL_WORKFLOW_ID;
+  const isReadiness = workflow?.id === FITNESS_READINESS_WORKFLOW_ID;
   const isFitness = workflow ? resolveCategory(workflow) === 'fitness_health' : false;
   const historyProfile = workflow ? resolveHistoryProfile(workflow) : 'default';
   const hasProfileData = Boolean(state.healthProfile);
@@ -107,11 +109,13 @@ export default function WorkflowRunner() {
 
   const profileBlock = useMemo(() => {
     if (!isFitness || !includeProfile || !state.healthProfile) return null;
-    // The Gravl review uses a strict training-relevant field whitelist and
-    // drops medications/supplements plus the free-text summary; non-Gravl
-    // fitness workflows keep the full existing behavior.
-    return buildProfilePromptBlock(state.healthProfile, { deepAnalysis, gravlSafe: isGravl });
-  }, [isFitness, includeProfile, state.healthProfile, deepAnalysis, isGravl]);
+    // Gravl uses a training-relevant whitelist; Training Readiness uses a
+    // tighter readiness-specific whitelist (recovery baselines, training-load
+    // basics, movement restrictions, safety summary). Both drop medications,
+    // supplements, and free-text notes. Other fitness workflows keep the full
+    // existing behavior.
+    return buildProfilePromptBlock(state.healthProfile, { deepAnalysis, gravlSafe: isGravl, readinessSafe: isReadiness });
+  }, [isFitness, includeProfile, state.healthProfile, deepAnalysis, isGravl, isReadiness]);
 
   function pick(wf: Workflow) {
     setWorkflow(wf);
@@ -168,7 +172,13 @@ export default function WorkflowRunner() {
   function build() {
     if (!workflow || !input.trim()) return;
     const profileText = profileBlock && !profileBlock.empty ? profileBlock.text : undefined;
-    const result: BuiltPrompt = isGravl
+    const result: BuiltPrompt = isReadiness
+      ? buildReadinessPrompt({
+          request: input,
+          profileBlock: profileText,
+          healthProfile: includeProfile ? state.healthProfile : null,
+        })
+      : isGravl
       ? buildGravlPrompt({
           request: input,
           workoutText,
@@ -381,7 +391,12 @@ export default function WorkflowRunner() {
             <RiskBadge risk={workflow.risk} />
           </h2>
           <p className="muted small">{workflow.description}</p>
-          {isGravl ? (
+          {isReadiness ? (
+            <p className="muted small">
+              Builds from what you tell it about today, plus any recovery baselines from your saved
+              Health Profile. Prior saved handoffs are not pulled into this prompt.
+            </p>
+          ) : isGravl ? (
             <p className="muted small">
               Builds from your request and the Gravl workout you provide. Prior saved handoffs are
               not pulled into this prompt yet — Gravl history integration is deferred.
@@ -395,8 +410,24 @@ export default function WorkflowRunner() {
             </p>
           )}
 
+          {isReadiness && (
+            <div className="notice risk-block small" data-testid="readiness-safety-note">
+              <p><strong>Decision support, not medical diagnosis.</strong> This builds a prompt to help
+              you think through training today — it does not diagnose illness or injury and is not a
+              medical device.</p>
+              <p className="muted">Wearable readiness scores and HRV are <strong>optional supporting
+              data</strong> only — they never make training safe on their own. Severe symptoms (such as
+              chest pain, trouble breathing, fainting, or confusion) need professional or emergency
+              care, not this prompt.</p>
+            </div>
+          )}
+
           <label className="field" htmlFor="wf-input">
-            {isGravl ? 'Your request — what do you want from this workout? (required)' : 'Input — messy notes are fine'}
+            {isReadiness
+              ? 'How do you feel and what were you planning to train? (required)'
+              : isGravl
+              ? 'Your request — what do you want from this workout? (required)'
+              : 'Input — messy notes are fine'}
           </label>
           <textarea
             id="wf-input"
@@ -434,7 +465,7 @@ export default function WorkflowRunner() {
             </>
           )}
 
-          {!isGravl && (
+          {!isGravl && !isReadiness && (
             <>
               <label className="field" htmlFor="wf-style">Output style</label>
               <select id="wf-style" value={style} onChange={(e) => selectStyle(e.target.value)}>

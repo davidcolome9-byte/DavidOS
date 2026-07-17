@@ -1,0 +1,22 @@
+{
+  "id": "fitness-readiness",
+  "agentId": "fitness",
+  "name": "Training Readiness & Recovery",
+  "category": "fitness_health",
+  "historyProfile": "fitness_health",
+  "outputMode": "custom",
+  "description": "Turn how you feel today plus any recovery signals into one conservative, provider-neutral Universal AI Prompt that helps you decide whether to train as planned, modify the session, do light recovery only, rest and reassess, seek non-emergency medical advice, or stop and seek urgent care. Decision support only — it does not diagnose, and it never claims a wearable score makes training safe.",
+  "inputHint": "Describe how you feel and what you were planning to train (e.g. \"Fighting a cold, was going to lift heavy legs — train or rest?\"). Add symptoms, sleep, soreness, or HRV/resting-HR vs your baseline if you have them. Severe symptoms need professional or emergency care, not this prompt.",
+  "outputStyles": ["Universal AI Prompt"],
+  "risk": "draft_only",
+  "assumptions": [
+    "Your request is required; every symptom, recovery, and wearable detail is optional and used only when you provide it",
+    "The output is one provider-neutral Universal AI Prompt — no AI is called here and nothing leaves this device",
+    "This is decision support, not a diagnosis, and not a medical device; it does not prescribe medication or treatment",
+    "Wearable readiness scores and HRV are supporting signals only — a normal score never overrides real symptoms like chest pain or trouble breathing",
+    "Health Profile context is opt-in; with it excluded, no profile facts appear. When included, only a readiness-relevant field whitelist is used — nutrition macros, body metrics, medications, supplements, and free-text notes are excluded",
+    "The workflow never selects a diagnosis and never promises certainty; severe or red-flag symptoms are routed to professional or emergency care"
+  ],
+  "nextAction": "Copy the Universal AI Prompt, paste it into ChatGPT or Claude, and add any extra detail there. For severe or emergency symptoms, seek professional or emergency care instead.",
+  "template": "Evaluate training readiness for style {{style}} on {{date}}. Request:\n\n{{input}}\n\n(This fallback template is not used by the readiness builder; the Universal AI Prompt is assembled deterministically.)"
+}

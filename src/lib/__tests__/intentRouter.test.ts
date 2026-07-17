@@ -140,7 +140,10 @@ describe('intentRouter', () => {
     it('1. Gravl review → Gravl Workout Review', () => supported('Review the workout Gravl gave me', 'fitness', 'gravl-review'));
     it('2. clean workout notes → Fitness Handoff', () => supported('Clean up today’s workout notes', 'fitness', 'fitness-handoff'));
     it('3. log workout → Fitness Handoff', () => supported('Log today’s workout', 'fitness', 'fitness-handoff'));
-    it('4. sick/train → recognized fitness readiness, unsupported', () => unsupported('I feel sick and do not know whether to train', 'fitness'));
+    // EX-04 / UI-ROUTE-LOCAL-04 — illness + a train decision is now a supported
+    // Training Readiness route (previously honestly unsupported; now it has a
+    // workflow). It must NOT reach Fitness Handoff.
+    it('4. sick/train → supported Training Readiness', () => supported('I feel sick and do not know whether to train', 'fitness', 'fitness-readiness'));
     it('5. plan meals → recognized nutrition, unsupported', () => unsupported('Help me plan my meals', 'fitness'));
     it('6. organize work project → recognized work planning, unsupported', () => unsupported('Help me organize a work project', 'work_project'));
     it('7. analyze gym progress → recognized fitness progress, unsupported', () => unsupported('Analyze my gym progress', 'fitness'));
@@ -200,10 +203,11 @@ describe('intentRouter', () => {
       expect(r.recognizedDomain).toBe('fitness');
       expect(r.target).toBe('unknown');
     });
-    it('C-train-4 · Should I train today? → fitness readiness, unsupported (not daily)', () => {
+    it('C-train-4 · Should I train today? → supported Training Readiness (not daily, not Gravl)', () => {
       const r = routeIntent('Should I train today?');
-      expect(r.classification).toBe('unsupported');
-      expect(r.recognizedDomain).toBe('fitness');
+      expect(r.classification).toBe('supported');
+      expect(r.target).toBe('fitness');
+      expect(r.suggestedWorkflowId).toBe('fitness-readiness');
     });
     it('R-4 · Not feeling well today → honestly unknown (no fitness anchor, no daily route)', () => {
       expect(routeIntent('Not feeling well today').classification).toBe('unknown');

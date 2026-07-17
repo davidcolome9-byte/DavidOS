@@ -50,10 +50,14 @@ describe('C-fit-2 · "Review my fitness plan" → Gravl review', () => {
     }
   });
 
-  it('guard · readiness questions stay honestly unsupported', () => {
+  it('guard · readiness questions route to Training Readiness (never Fitness Handoff)', () => {
+    // Previously honestly unsupported; illness + a train/rest/skip decision now
+    // routes to the fitness-readiness workflow, and must never fall through to
+    // Fitness Handoff or be misrouted to Daily/Calendar.
     const r = routeIntent('I feel sick, should I skip the gym?');
-    expect(r.classification).toBe('unsupported');
-    expect(r.recognizedDomain).toBe('fitness');
+    expect(r.classification).toBe('supported');
+    expect(r.target).toBe('fitness');
+    expect(r.suggestedWorkflowId).toBe('fitness-readiness');
   });
 });
 

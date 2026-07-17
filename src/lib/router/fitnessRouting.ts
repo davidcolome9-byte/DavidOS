@@ -16,6 +16,7 @@ import { matchesTerm } from './termMatch';
 
 export const GRAVL_WORKFLOW_ID = 'gravl-review';
 export const FITNESS_HANDOFF_WORKFLOW_ID = 'fitness-handoff';
+export const FITNESS_READINESS_WORKFLOW_ID = 'fitness-readiness';
 
 const GRAVL_WORKFLOW_NAME = 'Gravl Workout Review & Optimization';
 const FITNESS_HANDOFF_NAME = 'Fitness Handoff';

@@ -1,4 +1,4 @@
-# Current State — 2026-07-15
+# Current State — 2026-07-17
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.)
@@ -17,17 +17,21 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   exists but offline launch can fail right after a deploy or on a
   first-ever visit — OL-001 is the authoritative description; do not
   claim full offline reliability until it is fixed.
-- **8 agents / 9 workflows** as portable JSON specs in `seed/` (7 domain
+- **8 agents / 10 workflows** as portable JSON specs in `seed/` (7 domain
   agents + the Universal Operations coordination hub, merged from main
   during this sprint), rendered as cards, launched via palette, buttons,
-  or slash commands. The Gravl Workout Review & Optimization workflow
-  (`gravl-review`, DOS-WF-001) is the newest.
+  or slash commands. The Training Readiness & Recovery workflow
+  (`fitness-readiness`, DOS-FIT-READY) is the newest.
 - **Rule-based intent router** with confidence (capped 0.9), reasoning,
   and matched-term display; slash commands bypass routing. Fitness intent
   is now resolved deterministically to a specific workflow — Gravl review/
   optimize vs. the cleaning/logging Fitness Handoff — instead of
   collapsing every workout request into the handoff; a genuine tie offers
-  two plain-language choices rather than silently picking one.
+  two plain-language choices rather than silently picking one. An
+  illness/recovery signal plus a train/rest/deload/safety decision routes to
+  Training Readiness & Recovery **before** Gravl or Fitness Handoff (correcting
+  the unsafe "illness + safe to lift → Fitness Handoff" outcome); a bare
+  symptom with no training decision is never routed.
 - **Continuity-aware Workflow Runner**: prior-handoff retrieval (3
   default / 7 fitness), regex metric extraction with confidence labels,
   conservative date parsing, raw-excerpt fallback on weak extraction,
@@ -52,6 +56,22 @@ count changes. (History: see git log and docs/DECISIONS.md.)
   Saved prompts are
   local-device-only artifacts (title, workflow id, original input, built
   prompt, included-context metadata, creation time).
+- **Training Readiness & Recovery** (`fitness-readiness`): builds one
+  provider-neutral Universal AI Prompt (no AI call here) to help decide whether
+  to train as planned, modify the session, do light recovery only, rest and
+  reassess, seek non-emergency medical advice, or stop and seek urgent/emergency
+  care. Decision support only — it never diagnoses, never prescribes, and never
+  claims a wearable/HRV score makes training safe; the "neck rule" is explicitly
+  rejected as a sufficient test. Supplied red-flag facts (chest pain, radiating
+  pain, trouble breathing, fainting/confusion, possible heart attack/stroke,
+  severe dehydration, severe/worsening symptoms) force a prominent emergency-
+  escalation directive at the top of the prompt; respiratory-illness signals add
+  the "improving overall AND fever-free 24h without fever-reducing medication
+  before resuming" guidance. Health Profile context uses a tighter readiness
+  whitelist (recovery baselines, training-load basics, movement restrictions,
+  safety summary; nutrition/body-metrics/medications/supplements/free-text
+  excluded) and inclusion is disclosed in the UI and prompt. The page presents
+  itself as decision support, not a medical device.
 - **Macro Target Snapshot** (newest): deterministic target-vs-current
   macro comparison appended to fitness prompts when the entry contains
   nutrition totals and the profile has targets.
