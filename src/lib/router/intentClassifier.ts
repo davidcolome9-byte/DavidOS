@@ -47,6 +47,14 @@ const FITNESS_ANCHORS = ['workout', 'workouts', 'gym', 'exercise', 'lift', 'grav
 const STRONG_GRAVL_PHRASES = ['gravl', 'workout plan', 'workout program', 'program review', 'is this workout safe'];
 const GRAVL_ACTIONS = ['review', 'optimize', 'optimise', 'optimization', 'optimisation', 'improve', 'safe', 'progression', 'plan', 'planning', 'program', 'feedback', 'critique'];
 
+// C-fit-2 — the narrow NOUN PHRASE "fitness plan" is Gravl-review context, but
+// only when paired with a real review-style action ("Review my fitness plan").
+// Deliberately not an anchor and not a strong phrase: bare "fitness"/"plan"/
+// "review" stay weak, bare "fitness plan" stays ambiguous, and "meal plan"/
+// "fitness goals" never match this phrase.
+const FITNESS_PLAN_CONTEXT = ['fitness plan'];
+const FITNESS_PLAN_ACTIONS = ['review', 'optimize', 'optimise', 'optimization', 'optimisation', 'improve', 'critique', 'feedback', 'progression'];
+
 // "training"/"routine" is a weak generic word that collides with WORK training
 // ("training material"/"fraud training program for coworkers"). It is a fitness
 // review/plan command ONLY when paired with a review/plan action AND no work
@@ -136,6 +144,19 @@ function foodLogging(text: string): DetectedIntent | null {
 function fitnessTrainingReview(text: string): DetectedIntent | null {
   if (has(text, WORK_TEACHBACK_SIGNALS)) return null;
   if (has(text, TRAINING_CONTEXT) && has(text, TRAINING_ACTIONS)) {
+    return { domain: 'fitness', kind: 'supported', goal: 'fitness', label: 'fitness', workflowId: undefined };
+  }
+  return null;
+}
+
+/**
+ * "Review my fitness plan" → a supported fitness review (C-fit-2). Same shape
+ * and Work-teachback guard as fitnessTrainingReview: a training presentation
+ * for coworkers must never flip to fitness.
+ */
+function fitnessPlanReview(text: string): DetectedIntent | null {
+  if (has(text, WORK_TEACHBACK_SIGNALS)) return null;
+  if (has(text, FITNESS_PLAN_CONTEXT) && has(text, FITNESS_PLAN_ACTIONS)) {
     return { domain: 'fitness', kind: 'supported', goal: 'fitness', label: 'fitness', workflowId: undefined };
   }
   return null;
@@ -237,7 +258,7 @@ function dailySupported(text: string): DetectedIntent | null {
 export function detectIntents(input: string): DetectedIntent[] {
   const text = input.toLowerCase();
   const detectors = [
-    fitnessSupported, foodLogging, workSupported, fitnessTrainingReview, calendarSupported,
+    fitnessSupported, foodLogging, workSupported, fitnessTrainingReview, fitnessPlanReview, calendarSupported,
     universalSupported, promptSupported, contentSupported, lifeAdminSupported, dailySupported,
     fitnessReadiness, nutritionPlanning, fitnessProgress, workProjectPlanning,
   ];
