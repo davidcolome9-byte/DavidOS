@@ -354,3 +354,67 @@ touched.
   neither this log nor the validator source trips the strengthened scan;
   concrete synthetic examples live only in the declared-skip test fixture. The
   scan still covers all tracked text files.
+
+## DOS-FIT-READY — Training Readiness & Recovery (2026-07-17)
+
+- **New narrow workflow `fitness-readiness` (Training Readiness & Recovery).**
+  A conservative, provider-neutral prompt builder that helps decide whether to
+  train as planned, modify the session, do light recovery only, rest and
+  reassess, seek non-emergency medical advice, or stop and seek urgent/emergency
+  care. It is decision support, not a diagnosis, and is not a medical device.
+  Seed spec: `seed/workflows/fitness-readiness.json` (fitness agent,
+  `fitness_health` category/history, `custom` output mode, `draft_only` risk,
+  single `Universal AI Prompt` output style). Registered through the existing
+  workflow registry; count is now 8 agents / 10 workflows.
+- **Dedicated deterministic builder, not the shared continuity engine.**
+  `src/lib/workflows/fitnessReadinessPrompt.ts` assembles one Universal AI Prompt
+  requiring seven sections: readiness decision, main reasons, optional session
+  modification, recovery priorities, reassessment conditions, an explicit safety
+  block, and an uncertainty statement. No AI is called; the JSON `template` is a
+  validator-satisfying fallback only. The Workflow Runner special-cases
+  `fitness-readiness` alongside `gravl-review`; all other workflows are unchanged.
+- **Forced conservative red-flag handling.** Supplied red-flag facts (chest
+  pain/pressure/tightness, pain radiating to arm/jaw/back, trouble breathing,
+  fainting/near-fainting, confusion/new neurological symptoms, possible heart
+  attack/stroke, severe dehydration or inability to keep fluids down, and any
+  severe or rapidly worsening symptom) inject a prominent emergency-escalation
+  directive at the TOP of the prompt. The standing escalation rule is present in
+  every prompt even when nothing is detected. A normal wearable/HRV/resting-HR
+  score is stated to never override symptoms. The "neck rule" is explicitly
+  rejected as a sufficient safety test. Respiratory-illness signals add the
+  "improving overall AND fever-free 24h without fever-reducing medication before
+  resuming" guidance. The builder never diagnoses, never prescribes, and never
+  promises certainty; it invents nothing and preserves the missing/unknown/
+  unavailable/not-measured/zero/explicitly-denied distinctions.
+- **Readiness-specific Health Profile whitelist.** `profilePrompt.ts` gains a
+  `readinessSafe` option using a tighter allowlist than Gravl: recovery
+  baselines (sleep, HRV baseline, resting-HR baseline), training-load basics
+  (frequency, split, style), movement restrictions, current training notes, the
+  primary goal, and the generated movement-safety summary only. Nutrition macros,
+  body metrics, medications, supplements, and all free-text notes are excluded.
+  `gravlSafe` and default behavior are unchanged. The UI and generated prompt
+  both disclose whether Health Profile context was included.
+- **Routing conversion with precedence and negative guards.** The readiness
+  detector in `intentClassifier.ts` is converted from recognized-but-unsupported
+  to a supported route for `fitness-readiness`. It fires only when a symptom /
+  recovery / readiness-doubt signal co-occurs with a real training decision
+  (train/rest/skip/deload/gym/lift/workout or a readiness-decision phrase);
+  "deload"/"deload week" were added to the training-decision vocabulary. A bare
+  symptom or metric with no training decision ("I feel sick", "HRV", "tired",
+  "sore", "cold", "fever", "chest pain") stays unknown and is never routed.
+  `detectIntents` drops the generic Gravl/Handoff fitness goal when a readiness
+  call is present, so illness/recovery + a train/rest/safety decision routes to
+  Fitness Readiness BEFORE Gravl or Fitness Handoff — correcting the unsafe/
+  dishonest R-3 outcome (illness + "safe to lift" reaching Fitness Handoff).
+  `intentRouter` honors an explicit fitness workflow (readiness, food logging)
+  and defers to the Gravl-vs-Handoff resolver only for the generic fitness goal.
+  Ordinary workout review/safety with no illness/recovery stays Gravl; work
+  training precedence, nutrition/progress honesty, multi-domain detection, the
+  17-case visible suite, and the three PR #7 corrections are unchanged.
+- **Corpus effect (unchanged 153-case expectations).** Strict classification
+  122→127 (EX-04, C-train-4, R-1, R-2 unsupported→supported; R-5 ambiguous→
+  supported); R-3 stays strict-pass but its emitted workflow changed from the
+  unsafe `fitness-handoff` to `fitness-readiness`. Tuple conformance (107) and
+  operational acceptance (146) are unchanged. Exactly these six IDs changed; no
+  unrelated case regressed. Two in-repo unit tests and one routing-metrics lock
+  that pinned the pre-correction behavior were updated to the corrected routing.
