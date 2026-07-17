@@ -47,6 +47,14 @@ const FITNESS_ANCHORS = ['workout', 'workouts', 'gym', 'exercise', 'lift', 'grav
 const STRONG_GRAVL_PHRASES = ['gravl', 'workout plan', 'workout program', 'program review', 'is this workout safe'];
 const GRAVL_ACTIONS = ['review', 'optimize', 'optimise', 'optimization', 'optimisation', 'improve', 'safe', 'progression', 'plan', 'planning', 'program', 'feedback', 'critique'];
 
+// C-fit-2 — the narrow NOUN PHRASE "fitness plan" is Gravl-review context, but
+// only when paired with a real review-style action ("Review my fitness plan").
+// Deliberately not an anchor and not a strong phrase: bare "fitness"/"plan"/
+// "review" stay weak, bare "fitness plan" stays ambiguous, and "meal plan"/
+// "fitness goals" never match this phrase.
+const FITNESS_PLAN_CONTEXT = ['fitness plan'];
+const FITNESS_PLAN_ACTIONS = ['review', 'optimize', 'optimise', 'optimization', 'optimisation', 'improve', 'critique', 'feedback', 'progression'];
+
 // "training"/"routine" is a weak generic word that collides with WORK training
 // ("training material"/"fraud training program for coworkers"). It is a fitness
 // review/plan command ONLY when paired with a review/plan action AND no work
@@ -88,8 +96,18 @@ const PROJECT_PLANNING = ['organize', 'organise', 'plan', 'planning', 'milestone
 // topic word (fraud/phishing/cybersecurity), which describes subject matter and
 // must not by itself route a "plan this project" request into a teachback.
 const WORK_TEACHBACK_SIGNALS = ['teachback', 'teach back', 'teach it back', 'coworker', 'coworkers', 'job aid', 'presentation', 'one-pager', 'slide', 'teach my team', 'teach the team'];
-const CALENDAR_STRONG = ['weekly review', 'plan the week', 'plan my week', 'calendar', 'schedule', 'appointment', 'time block', 'open loops', 'reminder', 'reminders'];
+// C-review-3 — narrow weekly-preview PHRASES only. Generic "preview"/"review"
+// stay out of this table, so slide/content/prompt previews keep their own
+// domains and "weekly workout review" stays fitness (non-adjacent words never
+// match a multi-word term).
+const CALENDAR_STRONG = ['weekly review', 'plan the week', 'plan my week', 'calendar', 'schedule', 'appointment', 'time block', 'open loops', 'reminder', 'reminders', 'preview of my week', 'preview of the week', 'weekly preview', 'week preview'];
 const UNIVERSAL_STRONG = ['universal operations', 'ops review', 'operations review', 'waiting on me', 'waiting on user', 'capture inbox', 'process my capture', 'autonomous work', 'autonomous blockers', 'cross-domain', 'cross domain'];
+// C-wait-2 — narrow waiting-STATE phrases only ("I am awaiting a reply …" is a
+// blocker report → Universal Operations). Generic "reply" is never sufficient,
+// and a request to draft/send/answer the reply is an ACTION request, not a
+// state report, so those verbs veto this detector.
+const WAITING_STATE_PHRASES = ['awaiting a reply', 'waiting for a reply'];
+const REPLY_COMPOSE_ACTIONS = ['draft', 'write', 'send', 'answer', 'respond', 'compose'];
 const PROMPT_STRONG = ['prompt', 'prompts', 'claude code', 'system instruction', 'chatgpt', 'codex', 'gemini'];
 const LIFEADMIN_STRONG = ['dog', 'dogs', 'vet', 'chore', 'chores', 'grocery', 'groceries', 'errand', 'errands', 'laundry', 'household', 'yard'];
 const DAILY_STRONG = ['plan my day', 'what should i do', 'daily brief', 'command brief', 'next move', 'overwhelmed'];
@@ -136,6 +154,19 @@ function foodLogging(text: string): DetectedIntent | null {
 function fitnessTrainingReview(text: string): DetectedIntent | null {
   if (has(text, WORK_TEACHBACK_SIGNALS)) return null;
   if (has(text, TRAINING_CONTEXT) && has(text, TRAINING_ACTIONS)) {
+    return { domain: 'fitness', kind: 'supported', goal: 'fitness', label: 'fitness', workflowId: undefined };
+  }
+  return null;
+}
+
+/**
+ * "Review my fitness plan" → a supported fitness review (C-fit-2). Same shape
+ * and Work-teachback guard as fitnessTrainingReview: a training presentation
+ * for coworkers must never flip to fitness.
+ */
+function fitnessPlanReview(text: string): DetectedIntent | null {
+  if (has(text, WORK_TEACHBACK_SIGNALS)) return null;
+  if (has(text, FITNESS_PLAN_CONTEXT) && has(text, FITNESS_PLAN_ACTIONS)) {
     return { domain: 'fitness', kind: 'supported', goal: 'fitness', label: 'fitness', workflowId: undefined };
   }
   return null;
@@ -197,6 +228,9 @@ function universalSupported(text: string): DetectedIntent | null {
   if (has(text, UNIVERSAL_STRONG)) {
     return { domain: 'universal-operations', kind: 'supported', goal: 'universal-ops', label: 'Universal Operations', workflowId: 'universal-operations-review' };
   }
+  if (has(text, WAITING_STATE_PHRASES) && !has(text, REPLY_COMPOSE_ACTIONS)) {
+    return { domain: 'universal-operations', kind: 'supported', goal: 'universal-ops', label: 'Universal Operations', workflowId: 'universal-operations-review' };
+  }
   return null;
 }
 
@@ -237,7 +271,7 @@ function dailySupported(text: string): DetectedIntent | null {
 export function detectIntents(input: string): DetectedIntent[] {
   const text = input.toLowerCase();
   const detectors = [
-    fitnessSupported, foodLogging, workSupported, fitnessTrainingReview, calendarSupported,
+    fitnessSupported, foodLogging, workSupported, fitnessTrainingReview, fitnessPlanReview, calendarSupported,
     universalSupported, promptSupported, contentSupported, lifeAdminSupported, dailySupported,
     fitnessReadiness, nutritionPlanning, fitnessProgress, workProjectPlanning,
   ];

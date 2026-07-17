@@ -16,6 +16,8 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('autonomous blockers', 3), kw('capture inbox', 3), kw('process my capture', 3),
     kw('cross-domain', 2), kw('cross domain', 2), kw('source authority', 2),
     kw('one next action', 2), kw('approval boundary', 2),
+    // C-wait-2 — narrow waiting-state phrases; generic "reply" scores 0.
+    kw('awaiting a reply', 3), kw('waiting for a reply', 3),
   ],
   daily_command: [
     // "today"/"morning" removed: a bare temporal word is not evidence of the
@@ -49,6 +51,8 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('week'), kw('weekly', 2), kw('calendar', 2), kw('schedule', 2),
     kw('remind'), kw('reminder', 2), kw('reminders', 2), kw('plan the week', 3),
     kw('time block', 2), kw('appointment'), kw('open loops', 2), kw('weekly review', 3),
+    // C-review-3 — narrow weekly-preview phrases; generic "preview" scores 0.
+    kw('preview of my week', 3), kw('preview of the week', 3), kw('weekly preview', 3), kw('week preview', 3),
   ],
   dogs_home_life_admin: [
     kw('dog', 2), kw('dogs', 2), kw('vet', 2),

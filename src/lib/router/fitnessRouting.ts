@@ -39,6 +39,9 @@ const GRAVL_CONTEXT: string[] = [
   'gravl', 'workout', 'workouts', 'exercise', 'training',
   'workout plan', 'workout program', 'training plan', 'training program',
   'program review', 'routine',
+  // C-fit-2 — the narrow phrase only; bare "fitness" is NOT Gravl context, so
+  // "review my meal plan"/"review my macros" stay ineligible here.
+  'fitness plan',
 ];
 
 /**
