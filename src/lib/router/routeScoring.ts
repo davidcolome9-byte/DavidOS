@@ -1,4 +1,5 @@
 import type { AgentId } from '../types';
+import { matchesTerm } from './termMatch';
 
 interface Keyword {
   term: string;
@@ -17,9 +18,12 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('one next action', 2), kw('approval boundary', 2),
   ],
   daily_command: [
-    kw('today'), kw('priorities'), kw('priority'), kw('focus'), kw('overwhelmed'),
+    // "today"/"morning" removed: a bare temporal word is not evidence of the
+    // Daily domain and produced false weak routes ("Not feeling well today" →
+    // daily). Strong daily phrases below still carry the domain.
+    kw('priorities'), kw('priority'), kw('focus'), kw('overwhelmed'),
     kw('daily brief', 2), kw('command brief', 2), kw('next move', 2),
-    kw('what should i do', 3), kw('plan my day', 3), kw('morning'), kw('bandwidth'),
+    kw('what should i do', 3), kw('plan my day', 3), kw('bandwidth'),
   ],
   fitness: [
     kw('workout', 2), kw('gym'), kw('macro'), kw('macros'), kw('protein'), kw('meal'),
@@ -27,6 +31,7 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('muscle'), kw('training'), kw('recovery'), kw('calories'), kw('recomp', 2),
     kw('fitness', 2), kw('cardio'), kw('lift'), kw('screenshot'), kw('screenshots'),
     kw('goals or remaining', 3), kw('remaining'), kw('operation david', 3), kw('grams'),
+    kw('gravl', 3),
   ],
   work_project: [
     kw('teachback', 3), kw('teach back', 3), kw('coworker', 2), kw('coworkers', 2),
@@ -72,7 +77,7 @@ export function scoreInput(input: string): AgentScore[] {
     let score = 0;
     const matched: string[] = [];
     for (const { term, weight } of AGENT_KEYWORDS[agentId]) {
-      if (text.includes(term)) {
+      if (matchesTerm(text, term)) {
         score += weight;
         matched.push(term);
       }

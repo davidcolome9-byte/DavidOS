@@ -1,5 +1,6 @@
 import type { AppState } from '../types';
-import { normalizeState } from './localStore';
+import { normalizeState, CURRENT_SCHEMA_VERSION } from './localStore';
+import { validateImportedState, formatImportErrors } from './importValidation';
 
 // Arrays a valid backup must contain. artifacts/healthProfile are intentionally
 // absent — older backups predate them and are backfilled by normalizeState.
@@ -50,6 +51,40 @@ export function parseImport(json: string): AppState {
   if (typeof state.schemaVersion !== 'number') {
     throw new Error('Backup missing schemaVersion.');
   }
+  // Forward-version guard: a backup from a NEWER DavidOS is not applied — we
+  // would drop fields we don't understand. The current data is left untouched.
+  // Diagnostics describe the field and the compatibility problem WITHOUT echoing
+  // the supplied version value (POST-M-PRIV-01); only this app's own supported
+  // version is safe to name.
+  if (state.schemaVersion > CURRENT_SCHEMA_VERSION) {
+    throw new Error(
+      `This backup's "schemaVersion" is newer than this app understands ` +
+      `(supported: ${CURRENT_SCHEMA_VERSION}). Update DavidOS to import it. ` +
+      `Your current data was not changed.`,
+    );
+  }
+  // The OUTER envelope version must be consistent with the inner state and must
+  // not itself claim a newer schema. A future envelope wrapped around a current
+  // state was previously accepted (its version metadata was ignored), which
+  // violates the reject-before-replace guarantee.
+  if (env.schemaVersion !== undefined) {
+    if (typeof env.schemaVersion !== 'number') {
+      throw new Error('Backup envelope schemaVersion must be a number.');
+    }
+    if (env.schemaVersion > CURRENT_SCHEMA_VERSION) {
+      throw new Error(
+        `This backup's envelope "schemaVersion" is newer than this app understands ` +
+        `(supported: ${CURRENT_SCHEMA_VERSION}). Update DavidOS to import it. ` +
+        `Your current data was not changed.`,
+      );
+    }
+    if (env.schemaVersion !== state.schemaVersion) {
+      throw new Error(
+        'This backup is inconsistent (its envelope "schemaVersion" does not match ' +
+        'its data "schemaVersion") and was not imported. Your current data was not changed.',
+      );
+    }
+  }
   for (const key of REQUIRED_ARRAYS) {
     if (!Array.isArray(state[key])) {
       throw new Error(`Backup missing required section: ${key}.`);
@@ -57,6 +92,13 @@ export function parseImport(json: string): AppState {
   }
   if (!state.settings || typeof state.settings !== 'object') {
     throw new Error('Backup missing settings.');
+  }
+  // Deep per-entity validation — reject malformed items with a clear, value-free
+  // message (boot-time recovery still repairs; import must not silently accept
+  // structurally broken data).
+  const errors = validateImportedState(state);
+  if (errors.length > 0) {
+    throw new Error(`This backup has invalid data and was not imported:\n${formatImportErrors(errors)}`);
   }
   // A backup that predates Health Profiles carries no profile AT ALL. That
   // must import as "nothing to say about the profile" (null → the import

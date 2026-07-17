@@ -10,7 +10,7 @@
     "Garmin/screenshot metric cleanup",
     "Cooking measurements (grams and mL)",
     "Fitness diary formatting",
-    "Claude handoff generation"
+    "AI handoff generation"
   ],
   "inputs": [
     "Messy food/training notes",

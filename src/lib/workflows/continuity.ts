@@ -39,6 +39,67 @@ export function getPriorHandoffs(all: Handoff[], workflowId: string, targetCount
     .slice(0, targetCount);
 }
 
+// ---------- Correction-relationship integrity (Phase 3 correction pass) ------
+
+/**
+ * Reconcile handoff correction relationships so the set is always internally
+ * consistent — used after a deletion and again at import/boot:
+ *
+ *  1. An orphaned correction (its `correctsHandoffId` points at a handoff that
+ *     is no longer present) is repaired into a normal standalone entry: the
+ *     dangling pointer is dropped and a `correction` is demoted to `active`, so
+ *     the UI never shows a correction of a missing original.
+ *  2. `superseded` is recomputed from scratch: a handoff is superseded IFF some
+ *     surviving handoff still corrects it. A handoff that is no longer corrected
+ *     is restored to `correction` (if it itself corrects another) or `active`.
+ *
+ * Items that do not change keep their identity (no needless mutation).
+ */
+export function normalizeHandoffRelationships(handoffs: Handoff[]): Handoff[] {
+  const ids = new Set(handoffs.map((h) => h.id));
+
+  // Pass 1 — repair orphaned corrections (pointer to a missing original).
+  const repaired = handoffs.map((h) => {
+    if (h.correctsHandoffId && !ids.has(h.correctsHandoffId)) {
+      const { correctsHandoffId: _drop, ...rest } = h;
+      return h.status === 'correction' ? { ...rest, status: 'active' as const } : { ...rest };
+    }
+    return h;
+  });
+
+  // Which handoffs are still actively corrected by a surviving correction?
+  const correctedTargets = new Set(
+    repaired.filter((h) => h.correctsHandoffId).map((h) => h.correctsHandoffId as string),
+  );
+
+  // Pass 2 — recompute superseded from the surviving relationships.
+  return repaired.map((h) => {
+    if (correctedTargets.has(h.id)) {
+      return h.status === 'superseded' ? h : { ...h, status: 'superseded' as const };
+    }
+    if (h.status === 'superseded') {
+      // No longer corrected → it must not stay superseded.
+      const restored: Handoff['status'] = h.correctsHandoffId ? 'correction' : 'active';
+      return { ...h, status: restored };
+    }
+    return h;
+  });
+}
+
+/**
+ * Delete a handoff and repair the surviving relationships in one step, so a
+ * deletion can never leave an orphaned correction or a stuck-superseded
+ * original. Unrelated handoffs are untouched.
+ */
+export function deleteHandoff(handoffs: Handoff[], id: string): Handoff[] {
+  return normalizeHandoffRelationships(handoffs.filter((h) => h.id !== id));
+}
+
+/** True when some other handoff is a correction of `id` (has corrections). */
+export function hasCorrections(handoffs: Handoff[], id: string): boolean {
+  return handoffs.some((h) => h.correctsHandoffId === id);
+}
+
 // ---------- History formatting (Phase 5) ----------
 
 interface FormattedHistory {
@@ -224,9 +285,25 @@ export interface BuildPromptArgs {
  *   ## Prior Context for Analysis
  *   ## Analysis Instructions
  */
+/**
+ * The request explicitly asks for analysis (DOS-WF-001R E). A clean-handoff
+ * workflow escalates to analysis ONLY when one of these appears.
+ */
+const ANALYSIS_REQUEST = /\b(analy[sz]e|analysis|insight|insights|recommend|recommendation|recommendations|evaluate|evaluation|assess|assessment|critique|how am i doing|trends?)\b/i;
+
+function resolveHandoffOutputMode(workflow: Workflow, input: string): WorkflowOutputMode {
+  const base = resolveOutputMode(workflow);
+  // A clean-handoff default stays clean unless the request explicitly asks for
+  // analysis / insights / recommendations / evaluation.
+  if (base === 'clean_handoff_only' && ANALYSIS_REQUEST.test(input)) {
+    return 'analysis_recommendations';
+  }
+  return base;
+}
+
 export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock, healthProfile }: BuildPromptArgs): BuiltPrompt {
   const historyProfile = resolveHistoryProfile(workflow);
-  const outputMode = resolveOutputMode(workflow);
+  const outputMode = resolveHandoffOutputMode(workflow, input);
   const fitnessMode = resolveCategory(workflow) === 'fitness_health';
   const target = historyTargetCount(historyProfile);
 

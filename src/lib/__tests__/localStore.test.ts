@@ -402,3 +402,44 @@ describe('buildResetState (DAV-002)', () => {
     expect(buildResetState(afterDelete, false).healthProfile).toBeNull();
   });
 });
+
+// DOS-WF-001R Phase 2C — data from a NEWER DavidOS must not be loaded, repaired,
+// or overwritten at boot; it is preserved and the app runs blank + read-only.
+describe('forward-version guard at boot', () => {
+  it('rejects newer-schema data, preserves it, and refuses to persist over it', () => {
+    const future = { ...buildDefaultState(), schemaVersion: 999 };
+    storage.data.set(STORAGE_KEY, JSON.stringify(future));
+    const result = loadPersistedState();
+    expect(result.state).toBeNull();
+    expect(result.recovery.canPersist).toBe(false);
+    expect(result.recovery.message).toMatch(/newer version/i);
+    // The original newer-version blob is left exactly as-is.
+    expect(storage.data.get(STORAGE_KEY)).toBe(JSON.stringify(future));
+  });
+
+  it('still loads current-schema data normally', () => {
+    storage.data.set(STORAGE_KEY, JSON.stringify(buildDefaultState()));
+    expect(loadPersistedState().state).not.toBeNull();
+  });
+
+  // POST-M-PRIV-01 — the boot-time diagnostic (UI banner AND console log) must
+  // not echo the stored schema-version value; 987654 is a synthetic marker.
+  it('newer-schema diagnostics never echo the stored version value', () => {
+    const SYNTH = 987654;
+    const future = { ...buildDefaultState(), schemaVersion: SYNTH };
+    storage.data.set(STORAGE_KEY, JSON.stringify(future));
+
+    const warnings: string[] = [];
+    const originalWarn = console.warn;
+    console.warn = (...args: unknown[]) => { warnings.push(args.map(String).join(' ')); };
+    try {
+      const result = loadPersistedState();
+      expect(result.state).toBeNull();
+      expect(result.recovery.message).toMatch(/newer version/i);
+      expect(result.recovery.message).not.toContain(String(SYNTH));
+      expect(warnings.join('\n')).not.toContain(String(SYNTH));
+    } finally {
+      console.warn = originalWarn;
+    }
+  });
+});

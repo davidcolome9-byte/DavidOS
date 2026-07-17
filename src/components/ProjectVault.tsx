@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore, upsert, removeById } from '../state/store';
 import type { Project, ProjectStatus } from '../lib/types';
 import { uid, nowIso } from '../lib/types';
+import { redactedCommandLabel } from '../lib/audit/redaction';
 
 const STATUS_TONE: Record<ProjectStatus, string> = { active: 'ok', paused: 'warn', done: 'neutral' };
 
@@ -15,11 +16,15 @@ export default function ProjectVault() {
   const [editing, setEditing] = useState<Project | null>(null);
 
   function save(project: Project) {
+    const existing = state.projects.some((p) => p.id === project.id);
     update((s) => ({ ...s, projects: upsert(s.projects, { ...project, updatedAt: nowIso() }) }));
+    // The project name is personal free text — the audit record stores only the
+    // event type, a non-reversible fingerprint, and a length (POST-H-PRIV-01).
     audit({
-      command: `Save project: ${project.name}`,
+      command: redactedCommandLabel(existing ? 'project_updated' : 'project_created', project.name),
       actionType: 'local_write',
       approvalStatus: 'not_required',
+      actionTaken: true,
       resultSummary: 'Project saved locally.',
     });
     setEditing(null);
@@ -30,10 +35,12 @@ export default function ProjectVault() {
     if (!project) return;
     if (!window.confirm(`Delete project "${project.name}"? This only affects local data.`)) return;
     update((s) => ({ ...s, projects: removeById(s.projects, id) }));
+    // Same privacy rule as save: never store the project name verbatim.
     audit({
-      command: `Delete project: ${project.name}`,
+      command: redactedCommandLabel('project_deleted', project.name),
       actionType: 'local_write',
       approvalStatus: 'approved',
+      actionTaken: true,
       resultSummary: 'Project deleted from local vault.',
     });
     setEditing(null);
@@ -73,8 +80,18 @@ export default function ProjectVault() {
       {editing && (
         <div className="card" style={{ borderColor: 'var(--accent)' }}>
           <h2>{state.projects.some((p) => p.id === editing.id) ? 'Edit project' : 'New project'}</h2>
-          <label className="field">Name</label>
-          <input type="text" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
+          <label className="field" htmlFor="project-name">Name <span aria-hidden="true">*</span><span className="visually-hidden"> (required)</span></label>
+          <input
+            id="project-name"
+            type="text"
+            value={editing.name}
+            onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+            aria-invalid={editing.name.trim() === ''}
+            aria-describedby="project-name-hint"
+          />
+          {editing.name.trim() === '' && (
+            <p id="project-name-hint" className="notice small" role="alert">A name is required to save this project.</p>
+          )}
           <label className="field">Status</label>
           <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as ProjectStatus })}>
             <option value="active">active</option>
@@ -88,7 +105,7 @@ export default function ProjectVault() {
           <label className="field">Notes</label>
           <textarea value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} />
           <div className="btn-row">
-            <button className="primary" onClick={() => editing.name.trim() && save(editing)}>Save (local)</button>
+            <button className="primary" onClick={() => save(editing)} disabled={editing.name.trim() === ''}>Save (local)</button>
             <button onClick={() => setEditing(null)}>Cancel</button>
             {state.projects.some((p) => p.id === editing.id) && (
               <button className="danger" onClick={() => remove(editing.id)}>Delete</button>

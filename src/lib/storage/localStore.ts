@@ -1,9 +1,18 @@
-import type { AppState, Project, Prompt, PromptVersion } from '../types';
+import type { AppState, Handoff, Project, Prompt, PromptVersion } from '../types';
 import { seedHealthProfile } from '../../data/healthProfileSeed';
+import { normalizeHandoffRelationships } from '../workflows/continuity';
 
 export const STORAGE_KEY = 'davidos-state-v1';
 /** Unreadable or lossy-repaired blobs are preserved under unique keys with this prefix. */
 export const RECOVERY_KEY_PREFIX = `${STORAGE_KEY}-recovery-`;
+
+/**
+ * The one authoritative schema version this build understands. Data stamped with
+ * a HIGHER version was produced by a newer DavidOS and must not be normalized or
+ * overwritten (we would silently drop fields we don't know about). It is
+ * preserved and surfaced instead. Bump this only alongside a real migration.
+ */
+export const CURRENT_SCHEMA_VERSION = 1;
 
 /**
  * localStorage-backed persistence for v1.
@@ -94,7 +103,9 @@ export function normalizeState(state: AppState): AppState {
     projects,
     prompts,
     contextItems: objectArray(state.contextItems),
-    handoffs: objectArray(state.handoffs),
+    // Repair correction relationships so a stored/imported set never carries an
+    // orphaned correction or a stuck-superseded original.
+    handoffs: normalizeHandoffRelationships(objectArray<Handoff>(state.handoffs)),
     artifacts: objectArray(state.artifacts),
     // Seed-if-missing: `undefined` means the state predates Health Profiles →
     // seed one. `null` means the user explicitly deleted it → respect that.
@@ -247,6 +258,30 @@ export function loadPersistedState(): LoadResult {
         rawPreserved: false,
         canPersist: false,
         message: 'Saved data could not be read, and backing it up failed. Saving is paused so the stored copy is not overwritten — free up storage, then reload.',
+      },
+    };
+  }
+
+  // Forward-version guard: data from a NEWER DavidOS must not be normalized or
+  // overwritten (we would drop fields we don't understand). Preserve it exactly
+  // and run in memory with defaults so the newer data survives for that version.
+  if (parsed.schemaVersion > CURRENT_SCHEMA_VERSION) {
+    const key = preserveRawBlob(raw);
+    // Neither the log line nor the UI message echoes the stored version value
+    // (POST-M-PRIV-01) — only this app's own supported version is named.
+    console.warn(`DavidOS: stored data has a "schemaVersion" newer than this app understands (supported: ${CURRENT_SCHEMA_VERSION}); not overwriting it.`);
+    return {
+      state: null,
+      recovery: {
+        kind: 'unreadable',
+        rawPreserved: Boolean(key),
+        recoveryKey: key ?? undefined,
+        canPersist: false,
+        message:
+          `This saved data was created by a newer version of DavidOS than this app understands ` +
+          `(supported schema: ${CURRENT_SCHEMA_VERSION}). To avoid corrupting it, the app started ` +
+          `with a blank workspace and will not save over your data. Open the newer version, or update ` +
+          `this one.` + (key ? ` A copy was preserved on this device.` : ''),
       },
     };
   }

@@ -1,5 +1,6 @@
 import type { Command } from './types';
 import { getWorkflow } from './workflows/workflowRegistry';
+import { fingerprintInput, redactedCommandLabel } from './audit/redaction';
 
 export interface DomainWorkflowRoute {
   domain: string;
@@ -57,7 +58,9 @@ export function workflowTargetToParams(target: string, args = ''): URLSearchPara
 }
 
 export function resolveDomainRouteCommand(input: string): DomainRouteCommandResolution {
-  const auditCommand = `/route ${input}`.trim();
+  // The raw route text is never persisted — only a safe event label with a
+  // fingerprint (F-05). The router still receives the real text via routeInput.
+  const auditCommand = redactedCommandLabel('Slash /route', input);
   const route = resolveDomainWorkflowRoute(input);
   if (!route) {
     return {
@@ -65,7 +68,7 @@ export function resolveDomainRouteCommand(input: string): DomainRouteCommandReso
       actionTaken: false,
       route: null,
       routeInput: input,
-      resultSummary: `Unknown domain route "${input || '(empty)'}"; using the existing clarification flow.`,
+      resultSummary: `Unknown domain route (fp ${fingerprintInput(input)}); using the existing clarification flow.`,
       usesClarificationUx: true,
     };
   }

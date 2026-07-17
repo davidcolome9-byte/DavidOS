@@ -6,9 +6,9 @@ import { AGENTS } from '../agents/agentRegistry';
 describe('templateRenderer', () => {
   it('fills input, style, and date placeholders', () => {
     const wf = getWorkflow('fitness-handoff')!;
-    const out = renderTemplate(wf, 'bench 3x8 @ 60kg', 'Claude handoff');
+    const out = renderTemplate(wf, 'bench 3x8 @ 60kg', 'AI handoff');
     expect(out).toContain('bench 3x8 @ 60kg');
-    expect(out).toContain('Claude handoff');
+    expect(out).toContain('AI handoff');
     expect(out).not.toContain('{{input}}');
     expect(out).not.toContain('{{style}}');
     expect(out).not.toContain('{{date}}');

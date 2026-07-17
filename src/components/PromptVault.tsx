@@ -3,6 +3,7 @@ import { useStore, upsert, removeById } from '../state/store';
 import type { Prompt } from '../lib/types';
 import { uid, nowIso } from '../lib/types';
 import { AGENTS } from '../lib/agents/agentRegistry';
+import { redactedCommandLabel } from '../lib/audit/redaction';
 
 const EMPTY: Omit<Prompt, 'id' | 'updatedAt'> = {
   title: '', body: '', category: 'General', tags: [], favorite: false, versions: [],
@@ -31,11 +32,15 @@ export default function PromptVault() {
         ? [{ body: existing.body, savedAt: existing.updatedAt }, ...existing.versions].slice(0, 10)
         : prompt.versions;
     update((s) => ({ ...s, prompts: upsert(s.prompts, { ...prompt, versions, updatedAt: nowIso() }) }));
+    // Prompt titles and bodies are personal free text — the audit record stores
+    // only the event type, a title fingerprint, the title length, and the body
+    // length (POST-H-PRIV-01). The prompt text itself never enters the log.
     audit({
-      command: `Save prompt: ${prompt.title}`,
+      command: redactedCommandLabel(existing ? 'prompt_updated' : 'prompt_created', prompt.title),
       actionType: 'local_write',
       approvalStatus: 'not_required',
-      resultSummary: existing ? 'Prompt updated (previous version kept).' : 'Prompt created.',
+      actionTaken: true,
+      resultSummary: (existing ? 'Prompt updated (previous version kept)' : 'Prompt created') + ` · body ${prompt.body.length} chars.`,
     });
     setEditing(null);
   }
@@ -103,8 +108,18 @@ export default function PromptVault() {
       {editing && (
         <div className="card" style={{ borderColor: 'var(--accent)' }}>
           <h2>{state.prompts.some((p) => p.id === editing.id) ? 'Edit prompt' : 'New prompt'}</h2>
-          <label className="field">Title</label>
-          <input type="text" value={editing.title} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+          <label className="field" htmlFor="prompt-title">Title <span aria-hidden="true">*</span><span className="visually-hidden"> (required)</span></label>
+          <input
+            id="prompt-title"
+            type="text"
+            value={editing.title}
+            onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+            aria-invalid={editing.title.trim() === ''}
+            aria-describedby="prompt-title-hint"
+          />
+          {editing.title.trim() === '' && (
+            <p id="prompt-title-hint" className="notice small" role="alert">A title is required to save this prompt.</p>
+          )}
           <label className="field">Category</label>
           <input type="text" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
           <label className="field">Tags (comma-separated)</label>
@@ -127,7 +142,7 @@ export default function PromptVault() {
             ⚠️ Keep sensitive personal/work details as [PLACEHOLDERS] — prompts get pasted into external AI tools.
           </p>
           <div className="btn-row">
-            <button className="primary" onClick={() => editing.title.trim() && save(editing)}>Save (local)</button>
+            <button className="primary" onClick={() => save(editing)} disabled={editing.title.trim() === ''}>Save (local)</button>
             <button onClick={() => setEditing(null)}>Cancel</button>
             {state.prompts.some((p) => p.id === editing.id) && (
               <button className="danger" onClick={() => remove(editing.id)}>Delete</button>

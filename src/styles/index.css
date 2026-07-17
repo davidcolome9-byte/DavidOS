@@ -317,3 +317,12 @@ details.item summary::-webkit-details-marker { display: none; }
 .more-icon { font-size: 1.4rem; line-height: 1; width: 28px; text-align: center; }
 .more-text { display: flex; flex-direction: column; gap: 1px; flex: 1; }
 .more-chev { color: var(--text-dim); font-size: 1.3rem; }
+
+/* Screen-reader-only text: visually hidden but announced by assistive tech. */
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+  overflow: hidden; white-space: nowrap;
+}
