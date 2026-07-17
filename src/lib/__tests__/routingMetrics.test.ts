@@ -26,10 +26,15 @@ import { routeIntent } from '../router/intentRouter';
  *   M-2       multi_domain, but a smaller domain set than registered
  *   L-2       multi_domain, but a smaller domain set than registered
  *
- * These five are OUT OF SCOPE for the daily-use trio and their behavior must
- * not drift as a side effect. If any assertion below starts failing, the
- * strict-vs-tuple bookkeeping changed and both metrics must be re-derived —
- * do not paper over it by editing corpus expectations.
+ * C-week-3, M-1, M-2, and L-2 are OUT OF SCOPE here and must not drift. R-3 IS
+ * in scope for the Training Readiness package: its concrete workflow changed
+ * from the unsafe/dishonest Fitness Handoff to the fitness-readiness workflow.
+ * The strict/tuple relationship is unchanged (still strict-pass / tuple-fail,
+ * because the corpus registers an honest-choice — no single workflow — for this
+ * readiness case), only the emitted workflow is now the safe one. If any OTHER
+ * assertion below starts failing, the strict-vs-tuple bookkeeping changed and
+ * both metrics must be re-derived — do not paper over it by editing corpus
+ * expectations.
  */
 describe('routing metrics · strict score vs tuple conformance are separate', () => {
   it('C-week-3 · strict-pass (supported) with an unregistered concrete workflow', () => {
@@ -41,11 +46,14 @@ describe('routing metrics · strict score vs tuple conformance are separate', ()
     expect(r.suggestedWorkflowId).toBe('life-admin-checklist');
   });
 
-  it('R-3 · strict-pass (supported) with an unregistered concrete workflow', () => {
+  it('R-3 · strict-pass (supported) now routes to the SAFE readiness workflow', () => {
     const r = routeIntent('Fighting a cold, is it safe to lift heavy?');
     expect(r.classification).toBe('supported');
     expect(r.target).toBe('fitness');
-    expect(r.suggestedWorkflowId).toBe('fitness-handoff'); // tuple divergence
+    // Corrected: illness + "safe to lift" no longer reaches Fitness Handoff.
+    // Still a tuple divergence (corpus registers an honest-choice, no single
+    // workflow), but the emitted workflow is now the conservative readiness one.
+    expect(r.suggestedWorkflowId).toBe('fitness-readiness');
   });
 
   it('M-1 · strict-pass (multi_domain) with a smaller domain set than registered', () => {

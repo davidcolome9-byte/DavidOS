@@ -37,14 +37,21 @@ function supportedResult(intent: DetectedIntent, matched: string[], confidence: 
   let classification: RouteResult['classification'] = 'supported';
   let nextAction = `Run the ${AGENT_NAMES[intent.domain]} agent's ${intent.label} workflow.`;
   if (intent.domain === 'fitness') {
-    const fit = resolveFitnessWorkflow(input);
-    if (fit.tie) {
-      classification = 'ambiguous';
-      alternatives = fit.options;
-      workflowId = undefined;
-      nextAction = 'Two fitness workflows fit — pick one below.';
+    if (intent.workflowId) {
+      // An explicit fitness workflow (Training Readiness, food logging) is
+      // honored as detected. Only the generic fitness intent (workflowId
+      // undefined) defers to the Gravl vs Handoff resolver below.
+      workflowId = intent.workflowId;
     } else {
-      workflowId = fit.workflowId;
+      const fit = resolveFitnessWorkflow(input);
+      if (fit.tie) {
+        classification = 'ambiguous';
+        alternatives = fit.options;
+        workflowId = undefined;
+        nextAction = 'Two fitness workflows fit — pick one below.';
+      } else {
+        workflowId = fit.workflowId;
+      }
     }
   }
   return {

@@ -73,7 +73,10 @@ const LOG_VERBS = ['log', 'logged', 'logging', 'track', 'tracked', 'record'];
 // Recognized-but-unsupported vocabularies.
 const ILLNESS_WORDS = ['sick', 'ill', 'illness', 'unwell', 'under the weather', 'flu', 'cold', 'fever', 'nauseous', 'run down', 'rundown', 'not feeling well', 'feel awful'];
 const RECOVERY_DOUBT = ['hrv', 'slept', 'sleep', 'sore', 'soreness', 'fatigued', 'fatigue', 'exhausted', 'overtrained', 'deload', 'rest day', 'readiness'];
-const TRAIN_DECISION = ['train', 'training', 'workout', 'lift', 'gym', 'rest', 'skip'];
+// Training-decision words that make a symptom/recovery signal an actual
+// train/rest/deload CALL (not a bare complaint). "deload"/"deload week" are
+// training decisions too, so "Sore and tired, deload week?" is a readiness call.
+const TRAIN_DECISION = ['train', 'training', 'workout', 'lift', 'gym', 'rest', 'skip', 'deload', 'deload week'];
 
 const NUTRITION_WORDS = ['meal', 'meals', 'nutrition', 'diet', 'eating', 'macros', 'calorie', 'calories'];
 const PLANNING_WORDS = ['plan', 'planning', 'prep', 'prepare', 'meal plan', 'meal prep', 'meal-plan'];
@@ -172,13 +175,29 @@ function fitnessPlanReview(text: string): DetectedIntent | null {
   return null;
 }
 
+/**
+ * Training Readiness & Recovery → the fitness-readiness workflow (supported).
+ *
+ * Fires only when a symptom / recovery / readiness-doubt signal co-occurs with a
+ * real training decision (train / rest / skip / deload / gym / lift / workout, or
+ * a readiness-decision phrase). That AND-gate is the negative guard: a bare
+ * symptom or metric with no training decision — "I feel sick", "HRV", "tired",
+ * "sore", "cold", "fever", "chest pain" — does NOT route here.
+ *
+ * A Work-teachback context ("training presentation for coworkers") is excluded
+ * so a work request never flips to readiness. Precedence over the generic
+ * Gravl/Handoff fitness match is enforced in detectIntents (the generic fitness
+ * goal is dropped when readiness fires), correcting the unsafe/dishonest
+ * "illness + safe to lift -> Fitness Handoff" outcome.
+ */
 function fitnessReadiness(text: string): DetectedIntent | null {
+  if (has(text, WORK_TEACHBACK_SIGNALS)) return null;
   const illness = has(text, ILLNESS_WORDS);
   const recovery = has(text, RECOVERY_DOUBT);
   const decision = has(text, READINESS_DECISION);
   const trainCtx = has(text, TRAIN_DECISION);
   if ((illness || recovery || decision) && trainCtx) {
-    return { domain: 'fitness', kind: 'unsupported', goal: 'fitness-readiness', label: 'fitness readiness / illness-training decision' };
+    return { domain: 'fitness', kind: 'supported', goal: 'fitness-readiness', label: 'Training Readiness & Recovery', workflowId: 'fitness-readiness' };
   }
   return null;
 }
@@ -270,10 +289,12 @@ function dailySupported(text: string): DetectedIntent | null {
  */
 export function detectIntents(input: string): DetectedIntent[] {
   const text = input.toLowerCase();
+  // fitnessReadiness runs first so an illness/recovery + train/rest/deload
+  // decision is recognized before the generic Gravl/Handoff fitness match.
   const detectors = [
-    fitnessSupported, foodLogging, workSupported, fitnessTrainingReview, fitnessPlanReview, calendarSupported,
-    universalSupported, promptSupported, contentSupported, lifeAdminSupported, dailySupported,
-    fitnessReadiness, nutritionPlanning, fitnessProgress, workProjectPlanning,
+    fitnessReadiness, fitnessSupported, foodLogging, workSupported, fitnessTrainingReview, fitnessPlanReview,
+    calendarSupported, universalSupported, promptSupported, contentSupported, lifeAdminSupported, dailySupported,
+    nutritionPlanning, fitnessProgress, workProjectPlanning,
   ];
   const found: DetectedIntent[] = [];
   const seen = new Set<string>();
@@ -282,16 +303,26 @@ export function detectIntents(input: string): DetectedIntent[] {
     if (r && !seen.has(r.goal)) { seen.add(r.goal); found.push(r); }
   }
 
+  // Readiness precedence: a readiness call supersedes a generic Gravl/Handoff
+  // fitness match on the SAME request, so illness/recovery + a train/rest/safety
+  // decision routes to Fitness Readiness rather than reaching Fitness Handoff.
+  // Only the generic fitness goal (no explicit workflow) is dropped; an explicit
+  // food-logging handoff stays intact, and cross-domain goals are untouched.
+  let intents = found;
+  if (intents.some((i) => i.goal === 'fitness-readiness')) {
+    intents = intents.filter((i) => !(i.goal === 'fitness' && !i.workflowId));
+  }
+
   // Subordinate reduction: a bare calendar framing verb ("remind me …") around a
   // stronger content domain is not an independent goal.
   const onlyCalendarFraming =
     has(text, CALENDAR_SUBORDINATE_ONLY) &&
     !has(text, ['weekly review', 'plan the week', 'calendar', 'appointment', 'time block', 'open loops']);
   if (onlyCalendarFraming) {
-    const nonCalendar = found.filter((i) => i.domain !== 'calendar_planning');
+    const nonCalendar = intents.filter((i) => i.domain !== 'calendar_planning');
     if (nonCalendar.length > 0) return dedupeGoals(nonCalendar);
   }
-  return found;
+  return intents;
 }
 
 function dedupeGoals(intents: DetectedIntent[]): DetectedIntent[] {
