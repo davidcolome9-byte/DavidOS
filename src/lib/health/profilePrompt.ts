@@ -70,24 +70,49 @@ const GRAVL_ALLOWED_PATHS = new Set<string>([
 ]);
 
 /**
+ * Readiness-specific field whitelist (fitness-readiness). Deliberately TIGHTER
+ * than the Gravl set: only context that bears on a safe train / modify / rest
+ * decision is allowed — recovery baselines, training-load basics, movement
+ * restrictions, and the generated movement-safety summary. Nutrition macros,
+ * body metrics (weight/height/waist/body-fat), medications, supplements, and
+ * all free-text notes are excluded; they are not needed to decide whether to
+ * train today and keeping them out minimizes what a copied prompt carries.
+ * Like the Gravl set this is an explicit allowlist, so a newly added profile
+ * field is inert for readiness until it is deliberately listed here.
+ */
+const READINESS_ALLOWED_PATHS = new Set<string>([
+  'goals.primaryGoal',
+  'recoveryTargets.sleepHours', 'recoveryTargets.hrvBaseline', 'recoveryTargets.restingHeartRateBaseline',
+  'trainingPlan.weeklyFrequency', 'trainingPlan.split', 'trainingPlan.preferredStyle',
+  'trainingPlan.movementRestrictions', 'trainingPlan.currentTrainingNotes',
+  'medicalContext.safetySummary',
+]);
+
+/**
  * Build the "## Personal Targets / Regimen Context" block (Phase 10).
  * Structured fields first, then Prompt Summary (or a keyword-prioritized
  * freeform excerpt). Returns hash/fingerprint metadata for logs — routine logs
  * never store the actual text.
  *
- * `gravlSafe` restricts output to GRAVL_ALLOWED_PATHS, force-excludes
- * medications/supplements, and drops the free-text summary. Non-Gravl callers
- * omit it and keep the full existing behavior unchanged.
+ * `gravlSafe` restricts output to GRAVL_ALLOWED_PATHS and `readinessSafe`
+ * restricts it to the tighter READINESS_ALLOWED_PATHS; both force-exclude
+ * medications/supplements and drop the free-text summary. Callers that omit
+ * both keep the full existing behavior unchanged.
  */
 export function buildProfilePromptBlock(
   profile: HealthFitnessProfile,
-  opts: { deepAnalysis?: boolean; excludeSupplementsMedications?: boolean; gravlSafe?: boolean } = {},
+  opts: { deepAnalysis?: boolean; excludeSupplementsMedications?: boolean; gravlSafe?: boolean; readinessSafe?: boolean } = {},
 ): ProfilePromptBlock {
   const gravlSafe = Boolean(opts.gravlSafe);
-  const excludeMeds = gravlSafe || Boolean(opts.excludeSupplementsMedications);
+  const readinessSafe = Boolean(opts.readinessSafe);
+  // Whitelist mode: output is restricted to an explicit allowlist and the
+  // free-text summary is dropped. Readiness uses the tighter allowlist.
+  const restricted = gravlSafe || readinessSafe;
+  const allowedPaths = readinessSafe ? READINESS_ALLOWED_PATHS : GRAVL_ALLOWED_PATHS;
+  const excludeMeds = restricted || Boolean(opts.excludeSupplementsMedications);
   const fields: { path: string; text: string }[] = [];
   const add = (path: string, text: string | null) => {
-    if (text && (!gravlSafe || GRAVL_ALLOWED_PATHS.has(path))) fields.push({ path, text });
+    if (text && (!restricted || allowedPaths.has(path))) fields.push({ path, text });
   };
 
   const g = profile.goals;
@@ -162,10 +187,10 @@ export function buildProfilePromptBlock(
   let summaryText = '';
   let promptSummaryCharCount: number | undefined;
   let freeformExcerptCharCount: number | undefined;
-  if (!gravlSafe && profile.promptSummary?.trim()) {
+  if (!restricted && profile.promptSummary?.trim()) {
     summaryText = profile.promptSummary.trim();
     promptSummaryCharCount = summaryText.length;
-  } else if (!gravlSafe && profile.freeformContext?.trim()) {
+  } else if (!restricted && profile.freeformContext?.trim()) {
     const cap = opts.deepAnalysis ? 3000 : 1500;
     summaryText = keywordExcerpt(profile.freeformContext.trim(), cap);
     freeformExcerptCharCount = summaryText.length;
