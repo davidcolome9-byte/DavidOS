@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeStyleSync } from '../workflows/styleSync';
+import { computeStyleSync, canonicalStyleParam } from '../workflows/styleSync';
 import { resolveLogsTab, isLogsTab } from '../workflows/logsTabs';
 import { getWorkflow } from '../workflows/workflowRegistry';
 
@@ -72,6 +72,56 @@ describe('computeStyleSync (Phase 1G)', () => {
     });
     expect(d.shouldSetStyle).toBe(false);
     expect(d.shouldInvalidate).toBe(false);
+  });
+});
+
+describe('canonicalStyleParam (F-07)', () => {
+  it('a non-default style is carried verbatim in the URL', () => {
+    expect(canonicalStyleParam(handoff, otherStyle)).toBe(otherStyle);
+  });
+
+  it('the workflow default carries no style param', () => {
+    expect(canonicalStyleParam(handoff, defaultStyle)).toBeNull();
+  });
+
+  it('an invalid style resolves to the default and carries no param', () => {
+    expect(canonicalStyleParam(handoff, 'not-a-real-style')).toBeNull();
+  });
+
+  it('a manual pick round-trips through the URL sync unchanged', () => {
+    // Manual pick of a non-default style → URL gains style=otherStyle →
+    // Effect 1 applies exactly that style (and invalidates the built result).
+    const param = canonicalStyleParam(handoff, otherStyle)!;
+    const applied = computeStyleSync({
+      wf: handoff, requestedStyle: param,
+      currentWorkflowId: 'fitness-handoff', currentStyle: defaultStyle,
+      lastStyleParam: null,
+    });
+    expect(applied.nextStyle).toBe(otherStyle);
+    expect(applied.shouldSetStyle).toBe(true);
+    expect(applied.shouldInvalidate).toBe(true);
+
+    // Re-applying the same URL state is a no-op — no update loop.
+    const again = computeStyleSync({
+      wf: handoff, requestedStyle: param,
+      currentWorkflowId: 'fitness-handoff', currentStyle: otherStyle,
+      lastStyleParam: param,
+    });
+    expect(again.shouldSetStyle).toBe(false);
+    expect(again.shouldInvalidate).toBe(false);
+  });
+
+  it('picking the default back removes the param and restores the default', () => {
+    // URL had style=otherStyle; the manual default pick deletes the param →
+    // Effect 1 sees the removal and restores the workflow default.
+    expect(canonicalStyleParam(handoff, defaultStyle)).toBeNull();
+    const applied = computeStyleSync({
+      wf: handoff, requestedStyle: null,
+      currentWorkflowId: 'fitness-handoff', currentStyle: otherStyle,
+      lastStyleParam: otherStyle,
+    });
+    expect(applied.nextStyle).toBe(defaultStyle);
+    expect(applied.shouldSetStyle).toBe(true);
   });
 });
 

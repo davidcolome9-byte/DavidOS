@@ -35,6 +35,18 @@ export interface StyleSyncDecision {
   shouldInvalidate: boolean;
 }
 
+/**
+ * Canonical URL `style` param for a manual style pick (F-07): the workflow
+ * default carries NO param; any other valid style is carried verbatim; an
+ * invalid style resolves to the default (and therefore no param). Keeping the
+ * default param-less means every style state has exactly one URL, so reload,
+ * Back/Forward, and shared links can't disagree with the select.
+ */
+export function canonicalStyleParam(wf: Workflow, nextStyle: string): string | null {
+  const resolved = resolveWorkflowOutputStyle(wf, nextStyle);
+  return resolved === wf.outputStyles[0] ? null : resolved;
+}
+
 export function computeStyleSync(inp: StyleSyncInput): StyleSyncDecision {
   const { wf, requestedStyle, currentWorkflowId, currentStyle, lastStyleParam } = inp;
   const workflowChanged = wf.id !== currentWorkflowId;

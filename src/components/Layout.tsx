@@ -1,5 +1,7 @@
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useStore } from '../state/store';
+import StaleTabDialog from './StaleTabDialog';
 
 // Primary bottom-nav tabs. Kept to 5 so touch targets stay large on a
 // phone. Everything else lives under "More" (see MoreMenu.tsx).
@@ -13,28 +15,57 @@ const PRIMARY_NAV = [
 
 export default function Layout() {
   const { persistFailed, recovery, externalChange } = useStore();
+  // F-08: dismissing the stale dialog is a LOCAL view choice only. The stale
+  // condition (`externalChange`) lives in the store and keeps persistence
+  // suppressed, so a dismissed dialog can never permit an overwrite — the
+  // dialog is simply replaced by a persistent warning that can reopen it.
+  const [staleDialogDismissed, setStaleDialogDismissed] = useState(false);
+  const staleDialogOpen = externalChange && !staleDialogDismissed;
+  const headerRef = useRef<HTMLElement | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
+  const staleDetailsRef = useRef<HTMLButtonElement | null>(null);
+
+  // While the stale dialog is open, everything behind it is inert: not
+  // clickable, not focusable, and hidden from assistive technology.
+  useEffect(() => {
+    for (const ref of [headerRef, mainRef, navRef]) {
+      const el = ref.current;
+      if (!el) continue;
+      el.toggleAttribute('inert', staleDialogOpen);
+      if (staleDialogOpen) el.setAttribute('aria-hidden', 'true');
+      else el.removeAttribute('aria-hidden');
+    }
+  }, [staleDialogOpen]);
+
+  // After the dialog is dismissed, focus lands on the persistent stale
+  // warning's reopen control so keyboard users are not stranded.
+  useEffect(() => {
+    if (externalChange && staleDialogDismissed) staleDetailsRef.current?.focus();
+  }, [externalChange, staleDialogDismissed]);
+
   return (
     <div className="app-shell">
-      {externalChange && (
-        <div className="modal-overlay" role="alertdialog" aria-modal="true" data-testid="crosstab-guard">
-          <div className="modal">
-            <h2>⚠️ Updated in another tab</h2>
-            <p className="muted">
-              DavidOS was changed in another tab or window. To avoid overwriting those newer changes,
-              this tab has stopped saving. Nothing here has been lost — it simply won't be written.
-            </p>
-            <p className="muted small">Reload to continue with the latest saved data.</p>
-            <div className="btn-row">
-              <button className="primary" onClick={() => window.location.reload()}>Reload with latest</button>
-            </div>
-          </div>
-        </div>
-      )}
-      <header className="app-header">
+      {staleDialogOpen && <StaleTabDialog onDismiss={() => setStaleDialogDismissed(true)} />}
+      <header className="app-header" ref={headerRef}>
         <h1>David<span>OS</span></h1>
         <span className="date">{new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
       </header>
-      <main>
+      <main ref={mainRef}>
+        {externalChange && staleDialogDismissed && (
+          <div className="notice risk-block" role="alert" data-testid="crosstab-stale-banner" style={{ borderStyle: 'solid' }}>
+            <strong>⚠️ This tab is out of date.</strong>{' '}
+            <span className="small">
+              DavidOS was changed in another tab, so saving from this tab stays
+              paused — changes made here will not be written. Reload to continue
+              with the latest saved data.
+            </span>
+            <div className="btn-row">
+              <button className="primary" onClick={() => window.location.reload()}>Reload with latest</button>
+              <button ref={staleDetailsRef} onClick={() => setStaleDialogDismissed(false)}>Show details</button>
+            </div>
+          </div>
+        )}
         {recovery.message && (
           <div className="notice risk-block" role="alert" data-testid="recovery-banner" style={{ borderStyle: 'solid' }}>
             <strong>⚠️ Data recovery notice.</strong>{' '}
@@ -52,7 +83,7 @@ export default function Layout() {
         )}
         <Outlet />
       </main>
-      <nav className="bottom-nav">
+      <nav className="bottom-nav" ref={navRef}>
         {PRIMARY_NAV.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
             <span className="nav-icon">{item.icon}</span>

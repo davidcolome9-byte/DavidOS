@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AGENTS, getAgent } from '../lib/agents/agentRegistry';
 import { WORKFLOWS, getWorkflow, resolveWorkflowOutputStyle } from '../lib/workflows/workflowRegistry';
-import { computeStyleSync } from '../lib/workflows/styleSync';
+import { computeStyleSync, canonicalStyleParam } from '../lib/workflows/styleSync';
 import { summarizeInput } from '../lib/workflows/templateRenderer';
 import { buildPrompt } from '../lib/workflows/continuity';
 import type { BuiltPrompt } from '../lib/workflows/continuity';
@@ -125,6 +125,23 @@ export default function WorkflowRunner() {
     // param) does not clear a typed request when switching workflows.
     const trimmed = input.trim();
     setParams(trimmed ? { wf: wf.id, input } : { wf: wf.id }, { replace: true });
+  }
+
+  // F-07 — a manual style pick canonicalizes the URL instead of only mutating
+  // local state: non-default styles travel as ?style=..., the workflow default
+  // carries no style param. The state update flows back through Effect 1
+  // (URL → state), so manual picks, reload, Back/Forward, and shared links all
+  // take the same path and can never disagree. Pushes one history entry per
+  // actual change (the select only fires on change; an already-canonical URL
+  // is left untouched), so Back restores the previous style without duplicates.
+  function selectStyle(nextStyle: string) {
+    if (!workflow) return;
+    const canonical = canonicalStyleParam(workflow, nextStyle);
+    const p = new URLSearchParams(params);
+    p.set('wf', workflow.id);
+    if (canonical === null) p.delete('style');
+    else p.set('style', canonical);
+    if (p.toString() !== params.toString()) setParams(p);
   }
 
   // Staleness keys on the FULL context hash, not the shortened display
@@ -420,7 +437,7 @@ export default function WorkflowRunner() {
           {!isGravl && (
             <>
               <label className="field" htmlFor="wf-style">Output style</label>
-              <select id="wf-style" value={style} onChange={(e) => setStyle(e.target.value)}>
+              <select id="wf-style" value={style} onChange={(e) => selectStyle(e.target.value)}>
                 {workflow.outputStyles.map((s) => <option key={s} value={s}>{s}</option>)}
               </select>
             </>

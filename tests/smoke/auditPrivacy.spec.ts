@@ -64,6 +64,34 @@ test('prompt create audit records never carry the title or body (POST-H-PRIV-01)
   expect(stored).toContain(SECRET_BODY);
 });
 
+test('context save audit records never carry the title or body (POST-H-PRIV-01)', async ({ page }) => {
+  const SECRET_BODY = 'ZZPRIV-browser-context-immigration-status-notes';
+  await page.goto('/#/context');
+  await expect(page.getByRole('heading', { name: 'Context Vault' })).toBeVisible();
+  // Capture the first item's real (seeded) title, then edit its body.
+  const firstItem = page.locator('details').first();
+  const title = (await firstItem.locator('strong').first().textContent()) ?? '';
+  expect(title).not.toBe('');
+  await firstItem.locator('summary').click();
+  await firstItem.getByRole('button', { name: 'Edit' }).click();
+  await firstItem.locator('textarea').fill(SECRET_BODY);
+  await firstItem.getByRole('button', { name: 'Save (local)' }).click();
+
+  // The audit log page shows a safe event label — never the title or body.
+  await page.goto('/#/logs');
+  await expect(page.getByRole('heading', { name: /Audit log/ })).toBeVisible();
+  await expect(page.getByText(/context_updated · fp [0-9a-f]{12} · \d+ chars/).first()).toBeVisible();
+  await expect(page.locator('body')).not.toContainText('ZZPRIV');
+  const audit = await auditLogSerialized(page);
+  expect(audit).not.toContain('ZZPRIV');
+  expect(audit).not.toContain(title);
+
+  // The context body itself is stored (that is the vault's purpose) — only
+  // the audit records must be clean.
+  const stored = await page.evaluate(([key]) => window.localStorage.getItem(key) ?? '', [STORAGE_KEY]);
+  expect(stored).toContain(SECRET_BODY);
+});
+
 test('boot-time future-schema banner never echoes the stored version (POST-M-PRIV-01)', async ({ page }) => {
   const SYNTH_VERSION = 987654;
   await page.addInitScript(
