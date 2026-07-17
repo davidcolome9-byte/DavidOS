@@ -96,7 +96,11 @@ const PROJECT_PLANNING = ['organize', 'organise', 'plan', 'planning', 'milestone
 // topic word (fraud/phishing/cybersecurity), which describes subject matter and
 // must not by itself route a "plan this project" request into a teachback.
 const WORK_TEACHBACK_SIGNALS = ['teachback', 'teach back', 'teach it back', 'coworker', 'coworkers', 'job aid', 'presentation', 'one-pager', 'slide', 'teach my team', 'teach the team'];
-const CALENDAR_STRONG = ['weekly review', 'plan the week', 'plan my week', 'calendar', 'schedule', 'appointment', 'time block', 'open loops', 'reminder', 'reminders'];
+// C-review-3 — narrow weekly-preview PHRASES only. Generic "preview"/"review"
+// stay out of this table, so slide/content/prompt previews keep their own
+// domains and "weekly workout review" stays fitness (non-adjacent words never
+// match a multi-word term).
+const CALENDAR_STRONG = ['weekly review', 'plan the week', 'plan my week', 'calendar', 'schedule', 'appointment', 'time block', 'open loops', 'reminder', 'reminders', 'preview of my week', 'preview of the week', 'weekly preview', 'week preview'];
 const UNIVERSAL_STRONG = ['universal operations', 'ops review', 'operations review', 'waiting on me', 'waiting on user', 'capture inbox', 'process my capture', 'autonomous work', 'autonomous blockers', 'cross-domain', 'cross domain'];
 const PROMPT_STRONG = ['prompt', 'prompts', 'claude code', 'system instruction', 'chatgpt', 'codex', 'gemini'];
 const LIFEADMIN_STRONG = ['dog', 'dogs', 'vet', 'chore', 'chores', 'grocery', 'groceries', 'errand', 'errands', 'laundry', 'household', 'yard'];

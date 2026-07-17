@@ -49,6 +49,8 @@ export const AGENT_KEYWORDS: Record<AgentId, Keyword[]> = {
     kw('week'), kw('weekly', 2), kw('calendar', 2), kw('schedule', 2),
     kw('remind'), kw('reminder', 2), kw('reminders', 2), kw('plan the week', 3),
     kw('time block', 2), kw('appointment'), kw('open loops', 2), kw('weekly review', 3),
+    // C-review-3 — narrow weekly-preview phrases; generic "preview" scores 0.
+    kw('preview of my week', 3), kw('preview of the week', 3), kw('weekly preview', 3), kw('week preview', 3),
   ],
   dogs_home_life_admin: [
     kw('dog', 2), kw('dogs', 2), kw('vet', 2),

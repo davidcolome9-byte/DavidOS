@@ -56,3 +56,49 @@ describe('C-fit-2 · "Review my fitness plan" → Gravl review', () => {
     expect(r.recognizedDomain).toBe('fitness');
   });
 });
+
+describe('C-review-3 · "Give me a preview of my week" → Weekly Review', () => {
+  it('routes supported / calendar_planning / weekly-review', () => {
+    const r = routeIntent('Give me a preview of my week');
+    expect(r.classification).toBe('supported');
+    expect(r.target).toBe('calendar_planning');
+    expect(r.suggestedWorkflowId).toBe('weekly-review');
+    expect(r.confidence).toBeLessThanOrEqual(0.9);
+  });
+
+  it('close weekly-preview phrasings also route', () => {
+    for (const i of ['Weekly preview please', 'A preview of the week ahead']) {
+      const r = routeIntent(i);
+      expect(r.classification, i).toBe('supported');
+      expect(r.suggestedWorkflowId, i).toBe('weekly-review');
+    }
+  });
+
+  it('guard · slide/content/prompt previews keep their own domains', () => {
+    const slide = routeIntent('Preview the slide deck before the meeting');
+    expect(slide.target).toBe('work_project');
+    expect(slide.suggestedWorkflowId).toBe('work-teachback');
+    expect(routeIntent('Preview my content post').suggestedWorkflowId).not.toBe('weekly-review');
+    expect(routeIntent('Preview this prompt').suggestedWorkflowId).not.toBe('weekly-review');
+  });
+
+  it('guard · weekly workout review stays fitness (Gravl)', () => {
+    const r = routeIntent('Weekly workout review');
+    expect(r.target).toBe('fitness');
+    expect(r.suggestedWorkflowId).toBe('gravl-review');
+  });
+
+  it('guard · bare "week" and "preview" remain non-routed', () => {
+    for (const i of ['week', 'preview']) {
+      const r = routeIntent(i);
+      expect(['ambiguous', 'unknown'], i).toContain(r.classification);
+      expect(r.suggestedWorkflowId, i).toBeUndefined();
+    }
+  });
+
+  it('guard · Review priorities stays Daily Brief', () => {
+    const r = routeIntent('Review priorities');
+    expect(r.target).toBe('daily_command');
+    expect(r.suggestedWorkflowId).toBe('daily-brief');
+  });
+});
