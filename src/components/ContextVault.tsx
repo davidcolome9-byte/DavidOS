@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useStore, upsert } from '../state/store';
 import type { ContextItem, ContextKind } from '../lib/types';
 import { nowIso } from '../lib/types';
+import { redactedCommandLabel } from '../lib/audit/redaction';
 
 const KIND_LABEL: Record<ContextKind, string> = {
   stable: 'Stable context',
@@ -36,11 +37,15 @@ export default function ContextVault() {
       ...s,
       contextItems: upsert(s.contextItems, { ...item, body: draft, updatedAt: nowIso() }),
     }));
+    // Context titles and bodies are personal free text — the audit record
+    // stores only the event type, a non-reversible fingerprint of the title,
+    // and lengths (POST-H-PRIV-01, same rule as Project/Prompt audits).
     audit({
-      command: `Edit context: ${item.title}`,
+      command: redactedCommandLabel('context_updated', item.title),
       actionType: 'local_write',
       approvalStatus: 'not_required',
-      resultSummary: 'Context item saved locally.',
+      actionTaken: true,
+      resultSummary: `Context item updated · body ${draft.length} chars.`,
     });
     setEditingId(null);
   }

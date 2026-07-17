@@ -7,18 +7,21 @@ import { MemoryRouter } from 'react-router-dom';
 import { StoreProvider } from '../../state/store';
 import ProjectVault from '../ProjectVault';
 import PromptVault from '../PromptVault';
+import ContextVault from '../ContextVault';
 import { STORAGE_KEY } from '../../lib/storage/localStore';
 
-// POST-H-PRIV-01 — new Project and Prompt audit records must not store titles,
-// descriptions, prompt bodies, or other personal free text verbatim. These
-// tests drive the REAL vault components with distinctive synthetic private
-// text and prove it never reaches the audit log or its serialized state.
+// POST-H-PRIV-01 — new Project, Prompt, and Context audit records must not
+// store titles, descriptions, bodies, or other personal free text verbatim.
+// These tests drive the REAL vault components with distinctive synthetic
+// private text and prove it never reaches the audit log or its serialized
+// state.
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
 const SECRET_PROJECT = 'ZZPRIV-project-divorce-lawyer-search';
 const SECRET_PROMPT_TITLE = 'ZZPRIV-prompt-salary-negotiation';
 const SECRET_PROMPT_BODY = 'ZZPRIV-body-my-manager-is-Alex-and-I-earn-99999';
+const SECRET_CONTEXT_BODY = 'ZZPRIV-context-body-my-therapist-is-Sam-in-Austin';
 
 function fakeLocalStorage() {
   const store = new Map<string, string>();
@@ -145,5 +148,31 @@ describe('Prompt audit privacy (POST-H-PRIV-01)', () => {
     // The prompt itself IS stored (that's the vault's job) — only the audit
     // records must be clean.
     expect(storage.store.get(STORAGE_KEY)).toContain(SECRET_PROMPT_BODY);
+  });
+});
+
+describe('Context audit privacy (POST-H-PRIV-01)', () => {
+  it('save audit records never contain the context title or body', async () => {
+    await mount(<ContextVault />);
+
+    // Edit the first seeded context item; capture its real title so we can
+    // prove the audit log never stores it.
+    const title = container.querySelector('details strong')?.textContent ?? '';
+    expect(title).not.toBe('');
+    await click('Edit');
+    await type(container.querySelector('textarea')!, SECRET_CONTEXT_BODY);
+    await click('Save (local)');
+
+    const log = auditLog();
+    expect(log.length).toBeGreaterThan(0);
+    expect(log[0].command).toMatch(/^context_updated · fp [0-9a-f]{12} · \d+ chars$/);
+    expect(log[0].resultSummary).toMatch(/^Context item updated · body \d+ chars\.$/);
+    const serialized = serializedAuditLog();
+    expect(serialized).not.toContain('ZZPRIV');
+    expect(serialized).not.toContain(title);
+
+    // The context body itself IS stored (that's the vault's job) — only the
+    // audit records must be clean.
+    expect(storage.store.get(STORAGE_KEY)).toContain(SECRET_CONTEXT_BODY);
   });
 });
