@@ -10,6 +10,7 @@ import weeklyReview from '../../../seed/workflows/weekly-review.json';
 import lifeAdminChecklist from '../../../seed/workflows/life-admin-checklist.json';
 import contentAssetPlanner from '../../../seed/workflows/content-asset-planner.json';
 import gravlReview from '../../../seed/workflows/gravl-review.json';
+import fitnessReadiness from '../../../seed/workflows/fitness-readiness.json';
 
 /**
  * Workflows are JSON specs in /seed/workflows — same idea as agents:
@@ -45,6 +46,7 @@ export const WORKFLOWS: Workflow[] = validateWorkflowRegistry([
   lifeAdminChecklist,
   contentAssetPlanner,
   gravlReview,
+  fitnessReadiness,
 ] as Workflow[]);
 
 export function getWorkflow(id: string): Workflow | undefined {
