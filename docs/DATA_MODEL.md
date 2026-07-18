@@ -36,6 +36,27 @@ load from `seed/` via registries at build time.
 - Persist failures (quota, unavailable) return `false` from
   `persistState()` and surface as a visible warning banner.
 
+## Storage usage & retention (OL-003)
+
+`src/lib/storage/storageUsage.ts` (pure) measures the serialized state
+per collection plus DavidOS's other keys (recovery blobs, health draft)
+against a ~5MB quota ESTIMATE (browser localStorage quotas are
+UTF-16-unit based and vendor-specific; the UI labels every size as an
+estimate). Levels: warning ≥70%, critical ≥90%.
+
+- Settings → Data → Storage (`src/components/StorageManager.tsx`)
+  shows the meter/breakdown and hosts the ONLY destructive retention
+  action: "Prune saved prompts…" — keep the newest N artifacts, exact
+  delete count and freed size shown first, "Export backup first"
+  offered inside the dialog, `PRUNE` typed to confirm, open/cancel/
+  complete all audited. Disabled whenever persistence is suppressed.
+- At critical level, Layout shows an app-wide banner pointing to
+  Settings → Data — protection BEFORE the persist-failure banner.
+- Retention applies to `artifacts` only. `handoffs` are append-only
+  canonical history and are never pruned; `auditLog` is already capped
+  at 300 entries (`src/lib/audit/auditLog.ts`). Nothing is ever
+  deleted automatically.
+
 ## Load & recovery states
 
 `loadPersistedState()` classifies stored state (`inspectStructure`) and

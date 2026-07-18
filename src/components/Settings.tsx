@@ -23,6 +23,7 @@ import type { AppState, IntegrationAdapter, IntegrationMethod } from '../lib/typ
 import ApprovalGate from './ApprovalGate';
 import type { ApprovalRequest } from './ApprovalGate';
 import RiskBadge from './RiskBadge';
+import StorageManager from './StorageManager';
 
 interface PendingCall {
   adapter: IntegrationAdapter;
@@ -452,6 +453,7 @@ export default function Settings() {
           }}
         />
         {flash && <p className="notice flash">{flash}</p>}
+        <StorageManager />
       </div>
 
       <div className="card" id="drive-sync">

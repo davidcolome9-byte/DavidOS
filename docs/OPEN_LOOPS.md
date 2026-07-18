@@ -27,7 +27,10 @@ Readiness & Recovery — the live deployed release). Items fixed in the
 
 ### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion
 - **Domain:** persistence · **Kind:** defect (by-design gap awaiting a
-  product decision) · **Status:** Verified + Requires David
+  product decision) · **Status:** Verified + **Candidate implemented**
+  on `fix/ol-003-storage-protection-retention` (base `c2d7dff`) —
+  NOT merged, NOT deployed; stays open until reviewed, merged, and
+  verified live.
 - **Problem:** every full prompt saved as an artifact is multi-KB;
   nothing caps `artifacts`/`handoffs`. A heavy user eventually hits the
   ~5MB localStorage quota. (The failure is VISIBLE via the persist
@@ -35,14 +38,26 @@ Readiness & Recovery — the live deployed release). Items fixed in the
 - **Evidence (re-verified 2026-07-17):** `src/components/WorkflowRunner.tsx:312`
   (uncapped prepend), only `auditLog` is capped
   (`src/lib/audit/auditLog.ts`).
-- **Approach:** David must choose a retention policy (e.g. keep last N
-  artifacts, or prompt-to-export-then-prune). Retention must never
-  destructively delete without explicit user action. A storage-usage
-  meter in Settings → Data is approvable now.
+- **Chosen policy (per David's 2026-07-18 OL-003 work order; details in
+  docs/DECISIONS.md):** prompt-to-export-then-prune, explicit and
+  guarded — never automatic. Storage-usage meter + threshold warnings
+  in Settings → Data; app-wide banner at critical level; artifact-only
+  prune (keep newest N, exact effect shown, export offered, type
+  `PRUNE` to confirm, fully audited). Handoffs are append-only
+  canonical history and are never pruned.
+- **Candidate implementation:** `src/lib/storage/storageUsage.ts`
+  (pure measurement + prune planning), `src/components/StorageManager.tsx`
+  (meter + guarded prune dialog in Settings → Data), critical-level
+  banner in `src/components/Layout.tsx`. No `AppState` schema change.
 - **Acceptance:** storage usage visible; chosen policy enforced with
   user-visible pruning, never silent deletion.
-- **Validation:** unit tests for the cap logic; `npm run verify`.
-- **Complexity:** M · **Approval:** YES (retention policy)
+- **Validation (candidate, this branch):**
+  `src/lib/__tests__/storageUsage.test.ts` (14 unit),
+  `src/components/__tests__/storageRetention.test.tsx` (6 integration),
+  `tests/smoke/storageRetention.spec.ts` (5 Playwright);
+  `npm run verify` green.
+- **Complexity:** M · **Approval:** retention policy decided 2026-07-18
+  (explicit guarded prune); merge/deploy approval still pending
 
 ## P2 — correctness & robustness
 
