@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { clearPersistedState } from '../lib/storage/localStore';
+import { commitImport } from '../lib/storage/importCommit';
 import { buildResetState } from '../lib/storage/resetState';
 import { hasHealthDraft, clearHealthDraft } from '../lib/health/profileDraft';
 import { fingerprintInput } from '../lib/audit/redaction';
@@ -35,7 +37,7 @@ const EXPORT_WARNING =
 const DRIVE_BACKUP_PATH = formatDrivePath(DRIVE_BACKUP_FOLDER_PATH);
 
 export default function Settings() {
-  const { state, update, audit } = useStore();
+  const { state, update, audit, recovery, externalChange } = useStore();
   const fileInput = useRef<HTMLInputElement>(null);
   const [flash, setFlash] = useState('');
   const [pending, setPending] = useState<PendingCall | null>(null);
@@ -50,11 +52,21 @@ export default function Settings() {
   const [resetText, setResetText] = useState('');
   const [alsoDeleteHealth, setAlsoDeleteHealth] = useState(false);
 
-  // Import health-profile conflict modal
-  const [importConflict, setImportConflict] = useState<{ state: AppState; fileName: string } | null>(null);
+  // Import health-profile conflict modal. discardDraftConfirmed records whether
+  // the user already passed the unsaved-draft gate for THIS import — the commit
+  // re-checks the draft at apply time and needs to know the answer was given.
+  const [importConflict, setImportConflict] =
+    useState<{ state: AppState; fileName: string; discardDraftConfirmed: boolean } | null>(null);
   // Unsaved Health Profile draft vs import: a valid import must never silently
   // wipe an in-progress draft, so we interrupt and make the user choose.
   const [draftConflict, setDraftConflict] = useState<{ state: AppState; fileName: string } | null>(null);
+  const draftDialogRef = useRef<HTMLDivElement>(null);
+  const draftCancelRef = useRef<HTMLButtonElement>(null);
+  // The safe choice (Cancel) is the default: it receives focus when the
+  // unsaved-draft dialog opens, so Enter can never discard by accident.
+  useEffect(() => {
+    if (draftConflict) draftCancelRef.current?.focus();
+  }, [draftConflict]);
   const driveConfigured = isGoogleDriveConfigured();
   const driveConnected = isDriveSessionFresh(driveSession);
 
@@ -95,17 +107,38 @@ export default function Settings() {
   }
 
   /** Apply an imported backup. healthChoice decides the profile when it matters. */
-  function applyImport(imported: AppState, healthChoice: 'imported' | 'keep-current', fileName: string) {
+  function applyImport(
+    imported: AppState,
+    healthChoice: 'imported' | 'keep-current',
+    fileName: string,
+    discardDraftConfirmed: boolean,
+  ) {
     const next: AppState =
       healthChoice === 'keep-current'
         ? { ...imported, healthProfile: state.healthProfile }
         : imported;
-    // Reaching applyImport means the user passed the draft-conflict gate by
-    // explicitly choosing to discard (a kept draft aborts the import earlier).
-    // Clearing HERE — at the actual apply — means a later cancel (e.g. the
-    // replace-data confirm) leaves the draft intact, so no path discards it
-    // without importing. A no-op when there was no draft. Never logged.
-    clearHealthDraft();
+    // Centralized draft-aware commit (importCommit.ts): the unsaved-draft check
+    // is repeated HERE, at the actual apply — a draft that appeared after the
+    // file-select gate re-raises the choice instead of being silently erased —
+    // and a confirmed discard clears the draft only AFTER the imported state
+    // was durably written. A failed write aborts the whole import: stored
+    // state and draft both stay exactly as they were. Never logged.
+    const result = commitImport(next, {
+      discardDraftConfirmed,
+      persistAllowed: recovery.canPersist && !externalChange,
+    });
+    if (!result.ok) {
+      setImportConflict(null);
+      if (result.reason === 'draft_blocked') {
+        setDraftConflict({ state: imported, fileName });
+        return;
+      }
+      setFlash(
+        'Import failed: the imported data could not be saved on this device. ' +
+        'Nothing was changed and your unsaved Health Profile edits were kept.',
+      );
+      return;
+    }
     update(() => next);
     // The filename can carry personal text — record only a fingerprint (F-05).
     audit({
@@ -122,18 +155,18 @@ export default function Settings() {
   }
 
   /** The rest of the import flow once any unsaved-draft conflict is resolved. */
-  function continueImport(imported: AppState, fileName: string) {
+  function continueImport(imported: AppState, fileName: string, discardDraftConfirmed: boolean) {
     setDraftConflict(null);
     // Health Profile is never silently overwritten. (Backups that predate
     // profiles arrive with healthProfile === null — no false conflict.)
     if (imported.healthProfile && state.healthProfile) {
-      setImportConflict({ state: imported, fileName });
+      setImportConflict({ state: imported, fileName, discardDraftConfirmed });
       return;
     }
     if (!window.confirm('Importing replaces your current DavidOS data on this device. Continue?')) return;
     // If the imported backup has no profile but you have one, keep yours (don't wipe it).
     const choice = imported.healthProfile ? 'imported' : 'keep-current';
-    applyImport(imported, choice, fileName);
+    applyImport(imported, choice, fileName, discardDraftConfirmed);
   }
 
   async function importData(file: File) {
@@ -152,7 +185,36 @@ export default function Settings() {
       setDraftConflict({ state: imported, fileName: file.name });
       return;
     }
-    continueImport(imported, file.name);
+    continueImport(imported, file.name, false);
+  }
+
+  function cancelDraftConflict() {
+    setDraftConflict(null);
+    setFlash('Import cancelled — your unsaved Health Profile edits were kept.');
+  }
+
+  /** Escape cancels (the safe choice); Tab is trapped inside the dialog. */
+  function onDraftDialogKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      cancelDraftConflict();
+      return;
+    }
+    if (e.key !== 'Tab' || !draftDialogRef.current) return;
+    const focusables = [...draftDialogRef.current.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )];
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === draftDialogRef.current)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   async function connectDrive() {
@@ -517,23 +579,24 @@ export default function Settings() {
 
       {/* Unsaved Health Profile draft vs import — never silently discard it. */}
       {draftConflict && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="draft-conflict-title">
-          <div className="modal">
+        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="draft-conflict-title" aria-describedby="draft-conflict-desc">
+          <div className="modal" ref={draftDialogRef} tabIndex={-1} onKeyDown={onDraftDialogKeyDown} data-testid="import-draft-guard">
             <h2 id="draft-conflict-title">Unsaved Health Profile edits</h2>
-            <p className="muted">
+            <p className="muted" id="draft-conflict-desc">
               You have <strong>unsaved Health Profile edits</strong> in progress. Importing this backup
               replaces your local data — if you continue without keeping them, those unsaved edits are gone.
             </p>
             <div className="btn-row">
               <button
                 className="primary"
-                onClick={() => { setDraftConflict(null); setFlash('Import cancelled — your unsaved Health Profile edits were kept.'); }}
+                ref={draftCancelRef}
+                onClick={cancelDraftConflict}
               >
                 Cancel &amp; keep my edits
               </button>
               <button
                 className="danger"
-                onClick={() => continueImport(draftConflict.state, draftConflict.fileName)}
+                onClick={() => continueImport(draftConflict.state, draftConflict.fileName, true)}
               >
                 Discard edits &amp; import
               </button>
@@ -552,10 +615,13 @@ export default function Settings() {
               will be imported either way — choose what happens to your Health Profile.
             </p>
             <div className="btn-row">
-              <button className="primary" onClick={() => applyImport(importConflict.state, 'keep-current', importConflict.fileName)}>
+              <button
+                className="primary"
+                onClick={() => applyImport(importConflict.state, 'keep-current', importConflict.fileName, importConflict.discardDraftConfirmed)}
+              >
                 Keep current
               </button>
-              <button onClick={() => applyImport(importConflict.state, 'imported', importConflict.fileName)}>
+              <button onClick={() => applyImport(importConflict.state, 'imported', importConflict.fileName, importConflict.discardDraftConfirmed)}>
                 Replace with imported
               </button>
               <button className="ghost" onClick={() => { setImportConflict(null); setFlash('Import cancelled.'); }}>
