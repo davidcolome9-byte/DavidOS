@@ -15,57 +15,18 @@ needed, and a status marker:
   history in the "Resolved & deployed" section at the bottom
 - **Obsolete** — kept for history
 
-**Last full reconciliation: 2026-07-17**, verified item-by-item against
-`main` @ `f01a822ed063156bc418d4efaa8a135f7d42d0fd` (PR #8, Training
-Readiness & Recovery — the live deployed release). Items fixed in the
+**Last full reconciliation: 2026-07-18**, verified item-by-item against
+`main` @ `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c` (PR #14, Storage
+Protection & Retention — the live deployed release). Items fixed in the
 2026-07-12 stabilization sprint are not listed; see git history
-(`fb76122`) and docs/DECISIONS.md.
+and docs/DECISIONS.md.
 
 ---
 
 ## P1 — data safety & core promises
 
-### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion
-- **Domain:** persistence · **Kind:** defect (by-design gap awaiting a
-  product decision) · **Status:** Verified + **Candidate implemented**
-  on `fix/ol-003-storage-protection-retention` (base `c2d7dff`) —
-  NOT merged, NOT deployed; stays open until reviewed, merged, and
-  verified live.
-- **Problem:** every full prompt saved as an artifact is multi-KB;
-  nothing caps `artifacts`/`handoffs`. A heavy user eventually hits the
-  ~5MB localStorage quota. (The failure is VISIBLE via the persist
-  warning banner, but still inevitable.)
-- **Evidence (re-verified 2026-07-17):** `src/components/WorkflowRunner.tsx:312`
-  (uncapped prepend), only `auditLog` is capped
-  (`src/lib/audit/auditLog.ts`).
-- **Chosen policy (per David's 2026-07-18 OL-003 work order; details in
-  docs/DECISIONS.md):** prompt-to-export-then-prune, explicit and
-  guarded — never automatic. Storage-usage meter + threshold warnings
-  in Settings → Data; app-wide banner at critical level; artifact-only
-  prune (keep newest N, exact effect shown, export offered, type
-  `PRUNE` to confirm, fully audited). Handoffs are append-only
-  canonical history and are never pruned.
-- **Candidate implementation:** `src/lib/storage/storageUsage.ts`
-  (pure measurement + prune planning), `src/components/StorageManager.tsx`
-  (meter + guarded prune dialog in Settings → Data), critical-level
-  banner in `src/components/Layout.tsx`. No `AppState` schema change.
-  Review correction (2026-07-18): the prune commit is transactional —
-  durable `persistState()` write first, active state replaced and
-  success reported only after it succeeds; a failed write changes
-  nothing and reports a clear error. Pruning is disabled while
-  persistence is suppressed (recovery boot, stale tab) or failing
-  (`persistFailed`). Dialog: Escape = Cancel, Cancel holds initial
-  focus; full focus trapping stays with OL-015.
-- **Acceptance:** storage usage visible; chosen policy enforced with
-  user-visible pruning, never silent deletion.
-- **Validation (candidate, this branch):**
-  `src/lib/__tests__/storageUsage.test.ts` (14 unit),
-  `src/components/__tests__/storageRetention.test.tsx` (13 integration,
-  incl. persistence-health guards and transactional-commit failure),
-  `tests/smoke/storageRetention.spec.ts` (5 Playwright);
-  `npm run verify` green.
-- **Complexity:** M · **Approval:** retention policy decided 2026-07-18
-  (explicit guarded prune); merge/deploy approval still pending
+*(No open items)*
+
 
 ## P2 — correctness & robustness
 
@@ -260,11 +221,17 @@ Readiness & Recovery — the live deployed release). Items fixed in the
 
 ---
 
-## Resolved & deployed (closed 2026-07-17 reconciliation)
+## Resolved & deployed (closed 2026-07-18 reconciliation)
 
 Each item below was independently re-verified as implemented on `main`
-@ `f01a822` and live on GitHub Pages. Kept for history; do not reopen
+@ `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c` and live on GitHub Pages. Kept for history; do not reopen
 without new evidence.
+
+### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion — RESOLVED
+- **Resolved by:** PR #14 (merged 2026-07-18, squash merge/deployed SHA `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c`), recording approved feature SHA `19e303b107c3540639a1a04809b5bd270290dd01`, Pages run `29656188235`, and deployment ID `5504316437`.
+- **Current behavior:** Measurements are pure and destructive-free. Destiny of saved prompt artifacts is controlled by explicit guarded prune dialog (keep newest N), which computes prune delta first, durably commits the pruned state before updating in-memory state (transactional commit), and disables pruning if storage is locked or failing. App-wide warning banner at critical levels. Handoffs remain append-only canonical history and are never pruned.
+- **Limitations Preserved:** Storage readings are browser-dependent estimates; recovery blobs are measured but not pruned; retention count remains user-controlled; handoffs are append-only; full modal focus trapping is tracked under OL-015.
+- **Tests:** `src/lib/__tests__/storageUsage.test.ts` (14 unit), `src/components/__tests__/storageRetention.test.tsx` (13 integration), `tests/smoke/storageRetention.spec.ts` (5 Playwright).
 
 ### OL-027 · Import can destroy an unsaved Health Profile draft without a committed import — RESOLVED
 - **Resolved by:** PR #12 (merged 2026-07-18, squash merge/deployed SHA `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f`), recording feature SHA `bfa5512d1fad96af6c4bfd56de852f131cdb387e` and Pages run `29651209208`.

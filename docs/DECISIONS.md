@@ -460,13 +460,11 @@ Squash-merge release (PR #12, commit `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f`)
 - **Validation & Safety Guard:** Backup imports reject malformed or newer schema-version backups before any draft or state mutation.
 - **Verification:** 100% automated test coverage in unit/integration tests (511 passing) and browser smoke tests (88 passing), along with live deployment and isolated automated browser tests.
 
-## 2026-07-18 — OL-003 Storage Protection & Retention (candidate, this branch)
+## 2026-07-18 — OL-003 Storage Protection & Retention (PR #14)
 
-Candidate implementation on `fix/ol-003-storage-protection-retention`
-(base `c2d7dff`), NOT merged or deployed. The retention-policy decision
-OL-003 was waiting on came from David's OL-003 work order: destructive
-storage operations must be explicit, guarded, user-visible actions —
-nothing is ever deleted automatically.
+Squash-merge release (PR #14, commit `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c`), resolving OL-003. Approved feature SHA `19e303b107c3540639a1a04809b5bd270290dd01`, auto-deployed to GitHub Pages via run `29656188235` (deployment ID `5504316437`). Post-merge live verification passed 40/40 focused acceptance criteria. Archived live-release report: `C:\dev\backups\DavidOS-OL-003-storage-protection-retention-live-release-2026-07-18.md` (9,730 bytes, SHA-256: `587E13309E66AF7DDACA1C6E78B822499E04F4A601D7D00E3563E128E2B1E6C1`).
+
+The retention-policy decision OL-003 was waiting on came from David's OL-003 work order: destructive storage operations must be explicit, guarded, user-visible actions — nothing is ever deleted automatically.
 
 - **Retention scope: artifacts only.** Saved prompt artifacts are the
   unbounded multi-KB growth named in OL-003 and are re-generatable.
