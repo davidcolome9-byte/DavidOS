@@ -25,34 +25,6 @@ Readiness & Recovery — the live deployed release). Items fixed in the
 
 ## P1 — data safety & core promises
 
-### OL-027 · Import can destroy an unsaved Health Profile draft without a committed import
-- **Domain:** persistence/health · **Kind:** defect (residual gap after OL-002) ·
-  **Status:** Verified · candidate fix on `fix/health-profile-import-draft-protection`
-  (NOT merged, NOT deployed)
-- **Problem:** the import flow cleared the unsaved Health Profile draft
-  BEFORE the imported state was durably written, and only checked for a
-  draft at file-select time. Two failure modes reproduced by test:
-  (1) a confirmed import whose localStorage write fails (quota) destroys
-  the draft while a reload restores the OLD state — the draft is gone
-  without a committed import; (2) a draft that comes into existence after
-  the file-select gate (edits in another tab, an import dialog left open)
-  is erased with no warning when the import is applied.
-- **Evidence:** reproduced at `c505d0f` by
-  `src/components/__tests__/importDraftProtection.test.tsx` (commit-failure
-  and late-draft cases fail pre-fix; ordering check shows the draft key
-  removed before any state write).
-- **Candidate fix (on branch):** `src/lib/storage/importCommit.ts` — one
-  centralized draft-aware commit: re-checks the draft at apply time
-  (re-raising the explicit Cancel/Discard choice when discard was not
-  confirmed), durably persists the imported state FIRST, clears the draft
-  only after that write succeeded, and aborts the whole import on a failed
-  or suppressed write with a value-free message. The draft-conflict dialog
-  gained focus management (initial focus on Cancel, Tab trap, Escape =
-  Cancel; the destructive choice is never the default).
-- **Validation:** `importCommit.test.ts`, `importDraftProtection.test.tsx`,
-  `tests/smoke/healthDraftImport.spec.ts`; full `npm run verify:full`.
-- **Complexity:** M · **Approval:** merge/deploy pending David's review
-
 ### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion
 - **Domain:** persistence · **Kind:** defect (by-design gap awaiting a
   product decision) · **Status:** Verified + Requires David
@@ -270,6 +242,11 @@ Readiness & Recovery — the live deployed release). Items fixed in the
 Each item below was independently re-verified as implemented on `main`
 @ `f01a822` and live on GitHub Pages. Kept for history; do not reopen
 without new evidence.
+
+### OL-027 · Import can destroy an unsaved Health Profile draft without a committed import — RESOLVED
+- **Resolved by:** PR #12 (merged 2026-07-18, squash merge/deployed SHA `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f`), recording feature SHA `bfa5512d1fad96af6c4bfd56de852f131cdb387e` and Pages run `29651209208`.
+- **Current behavior:** Unsaved Health Profile draft is preserved until the backup import has been successfully written to persistent storage. Discard/Cancel warning modal manages focus properly, Dismiss/Escape is supported, invalid or future backups are safely rejected before state mutation.
+- **Tests:** `src/lib/__tests__/importCommit.test.ts`, `src/components/__tests__/importDraftProtection.test.tsx`, `tests/smoke/healthDraftImport.spec.ts`.
 
 ### OL-002 · Unsaved Health Profile edits destroyed by in-app navigation — RESOLVED
 - **Resolved by:** PR #5 (merged 2026-07-16, merge commit `183c505`),

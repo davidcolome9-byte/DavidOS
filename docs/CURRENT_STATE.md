@@ -1,4 +1,4 @@
-# Current State — 2026-07-17
+# Current State — 2026-07-18
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -7,12 +7,12 @@ the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
 ## Version
 
-**v0.2 + Reliable Offline Launch release (PR #10)**, on `main` @
-`f9074dfa672b44381bc1212c0190807a28b4de34` (squash merge of PR #10,
-merged 2026-07-17) @ GitHub `davidcolome9-byte/DavidOS`, auto-deployed
+**v0.2 + Health Profile Import Draft Protection release (PR #12)**, on `main` @
+`789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f` (squash merge of PR #12,
+merged 2026-07-18) @ GitHub `davidcolome9-byte/DavidOS`, auto-deployed
 to GitHub Pages (https://davidcolome9-byte.github.io/DavidOS/) on every
-push to `main`. The `deploy.yml` run for `f9074df` (run ID 29624655811)
-succeeded on 2026-07-17 (full verify + smoke gate on the deployed SHA
+push to `main`. The `deploy.yml` run for `789fe4d` (run ID 29651209208)
+succeeded on 2026-07-18 (full verify + smoke gate on the deployed SHA
 before publishing), and the release passed post-merge live verification
 the same day, including manual Android PWA Path B offline verification.
 
@@ -131,13 +131,13 @@ the same day, including manual Android PWA Path B offline verification.
   prompts; it never calls an AI provider (planned as v0.6, OL-025).
   **Native packaging: not built** (Capacitor wrapper planned, v0.7).
 
-## Verification status (2026-07-17, `main` @ `f9074dfa672b44381bc1212c0190807a28b4de34`, post-PR #10)
+## Verification status (2026-07-18, `main` @ `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f`, post-PR #12)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 37 files, **490 tests**, all passing (`npm test`), including **26 offline unit tests**.
-- Browser smoke tests: **80 passing** in 12 files (`npm run test:smoke`,
-  Playwright chromium, production build; phone + laptop viewports), including **8 offline Playwright tests**.
+- Unit tests: 39 files, **511 tests**, all passing (`npm test`), including **26 offline unit tests** (21/21 focused unit and integration tests are included within the 511/511 total unit tests).
+- Browser smoke tests: **88 passing** in 13 files (`npm run test:smoke`,
+  Playwright chromium, production build; phone + laptop viewports), including **8 offline Playwright tests** (11/11 focused smoke tests are included within the 88/88 total Playwright tests).
 - Authoritative visible routing suite: **17/17** (PR #8 verification).
 - Routing acceptance corpus (153 cases, read-only ground truth outside
   the repo; metric definitions locked in
@@ -158,14 +158,16 @@ Exact counts live here ONLY (other docs reference this file):
   request and on pushes to main; Pages deploys (`deploy.yml`) run the
   same full gate — including smoke tests — on the deployed SHA before
   publishing.
-- Deployed to GitHub Pages: the `deploy.yml` run on `f9074df` succeeded
-  2026-07-17 (the deploy gate runs the full verify + smoke suite on the
+- Deployed to GitHub Pages: the `deploy.yml` run on `789fe4d` succeeded
+  2026-07-18 (the deploy gate runs the full verify + smoke suite on the
   deployed SHA before publishing), and post-merge live verification of
   the deployed release passed the same day.
 - Android Installed-PWA Status: Manual verification on a target Android PWA client via Path B (fresh install) succeeded, proving successful service-worker installation, offline launch, repeated offline launch, local data preservation, and offline routing. *Limitation:* Android Path B does not manually prove an in-place upgrade from a pre-PR #10 installation (Path A was not performed); in-place update capability is verified via automated Build A to Build B E2E tests.
 
 ## Release history (merged & deployed)
 
+- **PR #12 — Health Profile Import Draft Protection** (merged 2026-07-18, squash
+  `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f`): commits imports atomically before clearing Health Profile draft; Cancel button focused by default in dialog; Esc key preservation; rejects malformed/future JSON imports; resolved OL-027.
 - **PR #10 — Reliable Offline Launch** (merged 2026-07-17, squash
   `f9074dfa672b44381bc1212c0190807a28b4de34`): generates complete build-derived
   precached shell manifest; atomic SW updates with fallback on failed install;
@@ -194,9 +196,9 @@ Exact counts live here ONLY (other docs reference this file):
   2026-07-13); **PR #1 — Universal Operations Core** (merged
   2026-07-12).
 
-## Repository state (branches & worktrees, 2026-07-17)
+## Repository state (branches & worktrees, 2026-07-18)
 
-Stable production branch: `main` @ `f9074dfa672b44381bc1212c0190807a28b4de34` (clean; local == origin).
+Stable production branch: `main` @ `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f` (clean; local == origin).
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
@@ -207,6 +209,7 @@ whenever David chooses (removal deliberately NOT performed by agents):
 - `fix/dos-routing-daily-use-trio` @ `024cbd5` (PR #7)
 - `feat/dos-fitness-readiness-recovery` @ `d8e9a21` (PR #8)
 - `fix/dos-fnd-001-atomic-offline-launch` @ `287445957c92d2c835f9b181024cb210d8145f4c` (PR #10)
+- `fix/health-profile-import-draft-protection` @ `bfa5512d1fad96af6c4bfd56de852f131cdb387e` (PR #12)
 
 Stale local draft branches — NOT merged, NOT reviewed, NOT deployed;
 do not treat their contents as shipped:
