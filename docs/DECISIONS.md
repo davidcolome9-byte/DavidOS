@@ -450,3 +450,12 @@ workflows changed.
 - **Authority boundaries restated:** docs/OPEN_LOOPS.md is the single
   backlog; docs/CURRENT_STATE.md is the single production-state
   snapshot and the only place exact counts live.
+
+## 2026-07-18 — Health Profile Import Draft Protection (PR #12)
+
+Squash-merge release (PR #12, commit `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f`) resolving OL-027.
+
+- **Atomic Import Commit:** Implemented `commitImport` in `src/lib/storage/importCommit.ts` to coordinate state writing and draft clearing. The backup state is written to persistence first; only after a successful write is the unsaved Health Profile draft cleared from localStorage. If the write fails, the entire import is aborted to prevent draft loss without a committed import.
+- **Enhanced Dialog Focus & Keyboard Accessibility:** The warning dialog manages focus correctly: the "Cancel" action is focused by default, focus is trapped within the modal, and the Escape key dismisses the dialog (preserving the draft).
+- **Validation & Safety Guard:** Backup imports reject malformed or newer schema-version backups before any draft or state mutation.
+- **Verification:** 100% automated test coverage in unit/integration tests (511 passing) and browser smoke tests (88 passing), along with live deployment and isolated automated browser tests.
