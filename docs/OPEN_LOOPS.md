@@ -49,11 +49,19 @@ Readiness & Recovery — the live deployed release). Items fixed in the
   (pure measurement + prune planning), `src/components/StorageManager.tsx`
   (meter + guarded prune dialog in Settings → Data), critical-level
   banner in `src/components/Layout.tsx`. No `AppState` schema change.
+  Review correction (2026-07-18): the prune commit is transactional —
+  durable `persistState()` write first, active state replaced and
+  success reported only after it succeeds; a failed write changes
+  nothing and reports a clear error. Pruning is disabled while
+  persistence is suppressed (recovery boot, stale tab) or failing
+  (`persistFailed`). Dialog: Escape = Cancel, Cancel holds initial
+  focus; full focus trapping stays with OL-015.
 - **Acceptance:** storage usage visible; chosen policy enforced with
   user-visible pruning, never silent deletion.
 - **Validation (candidate, this branch):**
   `src/lib/__tests__/storageUsage.test.ts` (14 unit),
-  `src/components/__tests__/storageRetention.test.tsx` (6 integration),
+  `src/components/__tests__/storageRetention.test.tsx` (13 integration,
+  incl. persistence-health guards and transactional-commit failure),
   `tests/smoke/storageRetention.spec.ts` (5 Playwright);
   `npm run verify` green.
 - **Complexity:** M · **Approval:** retention policy decided 2026-07-18

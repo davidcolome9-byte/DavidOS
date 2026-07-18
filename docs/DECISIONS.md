@@ -492,3 +492,33 @@ nothing is ever deleted automatically.
 - **No schema change.** No new `AppState` fields; keep-count is a
   dialog input, not persisted policy. Old state and backups load
   unchanged; no `normalizeState` migration needed.
+
+## 2026-07-18 — OL-003 correction: prune made persistence-atomic
+
+Independent review of the OL-003 candidate found the prune commit
+non-transactional: React state was replaced (and success reported)
+before the deferred store effect attempted the durable write, and
+`persistFailed` did not disable pruning. Correction (separate commit on
+`fix/ol-003-storage-protection-retention`):
+
+- **Persist-first commit.** `confirmPrune` now computes the pruned
+  AppState without mutating anything, writes it durably via
+  `persistState()` (the same canonical boundary `commitImport` uses),
+  and only after a successful write replaces the active state, closes
+  the dialog, audits completion, and reports success. localStorage
+  writes are atomic per key, so a failed write leaves the stored
+  original untouched; the in-memory state is not replaced either.
+  A failure is audited (actionTaken false) and reported with a clear,
+  value-free error. The store effect's redundant-write skip means the
+  persist-first write introduces no second conflicting mechanism.
+- **Health guard extended.** Pruning is disabled while persistence is
+  suppressed (recovery boot, stale tab) OR already failing
+  (`persistFailed`). After a failed prune write, the failure audit
+  re-probes persistence through the normal store effect, so
+  `persistFailed` truthfully reflects device health and keeps pruning
+  unavailable until a write succeeds. Known trade-off: at hard quota
+  exhaustion pruning is blocked too — the recovery path is export +
+  reset, which is why the ≥90% banner warns before that point.
+- **Dialog accessibility (local only):** Escape now cancels and Cancel
+  receives initial focus. Full focus trapping remains OL-015; no
+  modal-system rewrite.

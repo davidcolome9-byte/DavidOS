@@ -49,7 +49,18 @@ estimate). Levels: warning ≥70%, critical ≥90%.
   action: "Prune saved prompts…" — keep the newest N artifacts, exact
   delete count and freed size shown first, "Export backup first"
   offered inside the dialog, `PRUNE` typed to confirm, open/cancel/
-  complete all audited. Disabled whenever persistence is suppressed.
+  complete/failed all audited. Disabled whenever persistence is
+  suppressed (boot recovery, stale tab) OR already failing
+  (`persistFailed`).
+- The prune commit is transactional: the complete pruned AppState is
+  written durably through `persistState()` (the canonical persistence
+  boundary, same as `commitImport`) BEFORE the active React state is
+  replaced or success is reported — mirroring the import-commit
+  pattern. A failed write leaves both the stored blob and the
+  in-memory state exactly as they were, reports a clear error, and
+  pruning stays unavailable until persistence is healthy again. The
+  store's persistence effect skips redundant writes, so the persist-
+  first write never conflicts with it.
 - At critical level, Layout shows an app-wide banner pointing to
   Settings → Data — protection BEFORE the persist-failure banner.
 - Retention applies to `artifacts` only. `handoffs` are append-only

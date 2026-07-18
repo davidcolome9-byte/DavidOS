@@ -6,7 +6,7 @@ import type { Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
 import { StoreProvider } from '../../state/store';
 import Settings from '../Settings';
-import { STORAGE_KEY } from '../../lib/storage/localStore';
+import { STORAGE_KEY, RECOVERY_KEY_PREFIX } from '../../lib/storage/localStore';
 import { buildDefaultState } from '../../data/defaultState';
 import type { AppState, Handoff, WorkflowArtifact } from '../../lib/types';
 
@@ -54,10 +54,28 @@ const HANDOFFS = [synHandoff('h1'), synHandoff('h2')];
 
 function fakeLocalStorage() {
   const store = new Map<string, string>();
+  let failStateWrites = false;
+  let failRecoveryWrites = false;
   return {
     store,
+    /** Simulate quota exhaustion for the main state key (atomic: value untouched). */
+    setFailStateWrites(v: boolean) {
+      failStateWrites = v;
+    },
+    /** Simulate quota exhaustion for recovery-blob preservation writes. */
+    setFailRecoveryWrites(v: boolean) {
+      failRecoveryWrites = v;
+    },
     getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
-    setItem: (k: string, v: string) => void store.set(k, String(v)),
+    setItem: (k: string, v: string) => {
+      if (failStateWrites && k === STORAGE_KEY) {
+        throw new DOMException('quota', 'QuotaExceededError');
+      }
+      if (failRecoveryWrites && k.startsWith(RECOVERY_KEY_PREFIX)) {
+        throw new DOMException('quota', 'QuotaExceededError');
+      }
+      store.set(k, String(v));
+    },
     removeItem: (k: string) => void store.delete(k),
     clear: () => store.clear(),
     key: (i: number) => [...store.keys()][i] ?? null,
@@ -225,5 +243,130 @@ describe('guarded prune flow', () => {
     await click(byTestId('storage-prune-confirm')!);
     expect(storedState().artifacts).toEqual([]);
     expect(storedState().handoffs).toHaveLength(2);
+  });
+});
+
+// Destructive pruning is allowed ONLY while persistence is healthy: not
+// suppressed by boot recovery, not suppressed by a stale tab, not already
+// failing. Each guard is proven independently.
+describe('persistence health guards', () => {
+  it('persistFailed disables pruning and shows the disabled note', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    await mountSettings();
+    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(false);
+
+    // Any state change now fails to persist → persistFailed becomes true.
+    storage.setFailStateWrites(true);
+    const themeButton = [...container.querySelectorAll('button')].find((b) =>
+      /Switch to (light|dark) mode/.test(b.textContent ?? ''),
+    )!;
+    await click(themeButton);
+
+    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(true);
+    expect(byTestId('storage-prune-disabled-note')).not.toBeNull();
+  });
+
+  it('stale-tab suppression (externalChange) disables pruning', async () => {
+    await mountSettings();
+    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(false);
+
+    // The `storage` event only fires for OTHER tabs' writes — simulate one.
+    const ev = new Event('storage');
+    Object.defineProperty(ev, 'key', { value: STORAGE_KEY });
+    await act(async () => {
+      window.dispatchEvent(ev);
+    });
+
+    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(true);
+    expect(byTestId('storage-prune-disabled-note')).not.toBeNull();
+  });
+
+  it('boot-recovery suppression (unpreserved lossy repair) disables pruning', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // Lossy-repairable state (invalid settings) whose recovery-blob
+    // preservation fails → recovery.canPersist === false for the session.
+    storage.store.set(
+      STORAGE_KEY,
+      JSON.stringify({ ...baseline, settings: 'damaged-not-an-object' }),
+    );
+    storage.setFailRecoveryWrites(true);
+    await mountSettings();
+
+    // Artifacts survived the repair, so only the guard explains the disable.
+    expect(byTestId('storage-breakdown')!.textContent).toContain('Saved prompts (artifacts) (4)');
+    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(true);
+    expect(byTestId('storage-prune-disabled-note')).not.toBeNull();
+  });
+});
+
+// The prune commit is transactional: durable write FIRST via persistState,
+// active-state replacement and success reporting only after it succeeds.
+describe('transactional prune commit', () => {
+  it('a failed durable write deletes nothing: stored state, in-memory state, and no success claim', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    await mountSettings();
+    await openPruneDialog();
+    await setInput(byTestId<HTMLInputElement>('storage-prune-keep')!, '2');
+    await setInput(byTestId<HTMLInputElement>('storage-prune-confirm-text')!, 'PRUNE');
+
+    // Snapshot AFTER the dialog-open audit has persisted, right before the
+    // failing write — from here on the durable copy must not change at all.
+    const storedBefore = storage.store.get(STORAGE_KEY);
+    storage.setFailStateWrites(true);
+    await click(byTestId('storage-prune-confirm')!);
+
+    // Original durable state byte-identical; no partial write.
+    expect(storage.store.get(STORAGE_KEY)).toBe(storedBefore);
+    // Original React state retained — all 4 artifacts still reported.
+    expect(byTestId('storage-breakdown')!.textContent).toContain('Saved prompts (artifacts) (4)');
+    // No success claim anywhere; a clear non-private error instead.
+    expect(container.textContent).not.toContain('Deleted 2 saved prompt(s)');
+    expect(container.textContent).toContain('Prune failed');
+    expect(container.textContent).toContain('nothing was deleted');
+    expect(byTestId('storage-prune-dialog')).toBeNull();
+    // The failure re-probed persistence health → pruning stays unavailable.
+    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(true);
+    expect(byTestId('storage-prune-disabled-note')).not.toBeNull();
+  });
+
+  it('success: the pruned state is durably written and only then reported', async () => {
+    await mountSettings();
+    await openPruneDialog();
+    await setInput(byTestId<HTMLInputElement>('storage-prune-keep')!, '2');
+    await setInput(byTestId<HTMLInputElement>('storage-prune-confirm-text')!, 'PRUNE');
+    await click(byTestId('storage-prune-confirm')!);
+
+    // Durable copy holds the pruned artifacts (the failure test above proves
+    // replacement and success reporting are gated on this write succeeding).
+    const s = storedState();
+    expect(s.artifacts.map((a) => a.id)).toEqual(['a4', 'a3']);
+    expect(s.handoffs).toHaveLength(2);
+    expect(container.textContent).toContain('Deleted 2 saved prompt(s)');
+    const done = s.auditLog.find((e) => e.command === 'Prune saved prompts — completed');
+    expect(done?.actionTaken).toBe(true);
+    // Pruning remains available — persistence is healthy.
+    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(false);
+  });
+});
+
+describe('dialog accessibility (local scope; full trap is OL-015)', () => {
+  it('Cancel has initial focus so Enter can never delete by accident', async () => {
+    await mountSettings();
+    await openPruneDialog();
+    expect(document.activeElement).toBe(byTestId('storage-prune-cancel'));
+  });
+
+  it('Escape cancels: dialog closes, nothing deleted', async () => {
+    await mountSettings();
+    const dialog = await openPruneDialog();
+    await setInput(byTestId<HTMLInputElement>('storage-prune-keep')!, '1');
+    await setInput(byTestId<HTMLInputElement>('storage-prune-confirm-text')!, 'PRUNE');
+    await act(async () => {
+      dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    });
+    expect(byTestId('storage-prune-dialog')).toBeNull();
+    expect(storedState().artifacts).toHaveLength(4);
+    expect(container.textContent).toContain('Prune cancelled — nothing was deleted.');
   });
 });

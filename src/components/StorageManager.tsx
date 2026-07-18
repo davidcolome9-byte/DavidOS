@@ -1,12 +1,15 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup } from '../lib/storage/exportImport';
+import { persistState } from '../lib/storage/localStore';
 import {
   formatUnits,
   measureStorageUsage,
   planArtifactPrune,
 } from '../lib/storage/storageUsage';
 import type { StorageReader } from '../lib/storage/storageUsage';
+import type { AppState } from '../lib/types';
 
 /**
  * Settings → Data → Storage: usage meter + explicit, guarded artifact
@@ -33,19 +36,26 @@ const LEVEL_BADGE = {
 } as const;
 
 export default function StorageManager() {
-  const { state, update, audit, recovery, externalChange } = useStore();
+  const { state, update, audit, recovery, externalChange, persistFailed } = useStore();
   const [pruneOpen, setPruneOpen] = useState(false);
   const [keepText, setKeepText] = useState(String(DEFAULT_KEEP));
   const [confirmText, setConfirmText] = useState('');
   const [flash, setFlash] = useState('');
+  const cancelRef = useRef<HTMLButtonElement>(null);
+
+  // The safe choice (Cancel) receives focus when the dialog opens, so Enter
+  // can never confirm a delete by accident. (Full focus trapping: OL-015.)
+  useEffect(() => {
+    if (pruneOpen) cancelRef.current?.focus();
+  }, [pruneOpen]);
 
   const usage = useMemo(() => measureStorageUsage(state, safeLocalStorage()), [state]);
   const badge = LEVEL_BADGE[usage.level];
 
-  // While persistence is suppressed (unpreserved recovery boot, stale tab),
-  // a prune would change memory but not the stored copy — confusing at best,
-  // an inconsistent delete at worst. Disable it for the session instead.
-  const canPrune = recovery.canPersist && !externalChange;
+  // Destructive pruning requires HEALTHY persistence. While it is suppressed
+  // (unpreserved recovery boot, stale tab) or already failing (quota /
+  // unavailable), a prune could not commit durably — so it is disabled.
+  const canPrune = recovery.canPersist && !externalChange && !persistFailed;
 
   const keepCount = Math.max(0, Math.floor(Number(keepText) || 0));
   const plan = useMemo(
@@ -91,11 +101,42 @@ export default function StorageManager() {
   }
 
   function confirmPrune() {
-    if (confirmText !== 'PRUNE' || plan.prune.length === 0 || !canPrune) return;
-    const removed = plan.prune.length;
-    const freed = formatUnits(plan.freedUnits);
-    const kept = plan.keep;
-    update((s) => ({ ...s, artifacts: planArtifactPrune(s.artifacts, keepCount).keep }));
+    if (confirmText !== 'PRUNE' || !canPrune) return;
+    // Plan from the live state WITHOUT mutating anything yet.
+    const current = planArtifactPrune(state.artifacts, keepCount);
+    if (current.prune.length === 0) return;
+    const next: AppState = { ...state, artifacts: current.keep };
+    // Transactional delete: the complete pruned state must be durably written
+    // through the canonical persistence boundary BEFORE the active state is
+    // replaced or success is reported. localStorage writes are atomic per key,
+    // so a failed write leaves the stored original exactly as it was.
+    let committed: boolean;
+    try {
+      committed = persistState(next);
+    } catch {
+      committed = false;
+    }
+    if (!committed) {
+      setPruneOpen(false);
+      // This audit append changes state, so the store's normal persistence
+      // effect re-probes the device: persistFailed then reflects real health
+      // (keeping pruning disabled and raising the app-wide warning) or clears
+      // if the failure was transient.
+      audit({
+        command: 'Prune saved prompts — failed',
+        actionType: 'local_write',
+        approvalStatus: 'approved',
+        actionTaken: false,
+        resultSummary:
+          'Durable write of the pruned state failed. Nothing was deleted; stored and in-memory data are unchanged.',
+      });
+      setFlash(
+        'Prune failed: the pruned state could not be saved on this device, so nothing was deleted. ' +
+        'Free up storage or export a backup, then try again.',
+      );
+      return;
+    }
+    update(() => next);
     setPruneOpen(false);
     audit({
       command: 'Prune saved prompts — completed',
@@ -103,10 +144,13 @@ export default function StorageManager() {
       approvalStatus: 'approved',
       actionTaken: true,
       resultSummary:
-        `Deleted the ${removed} oldest saved prompt artifact(s), keeping the newest ${kept.length} ` +
-        `(~${freed} freed). Handoff history untouched.`,
+        `Deleted the ${current.prune.length} oldest saved prompt artifact(s), keeping the newest ` +
+        `${current.keep.length} (~${formatUnits(current.freedUnits)} freed). Handoff history untouched.`,
     });
-    setFlash(`Deleted ${removed} saved prompt(s); kept the newest ${kept.length}. Handoff history was not touched.`);
+    setFlash(
+      `Deleted ${current.prune.length} saved prompt(s); kept the newest ${current.keep.length}. ` +
+      'Handoff history was not touched.',
+    );
   }
 
   const pct = Math.min(100, Math.round(usage.usedFraction * 100));
@@ -164,8 +208,9 @@ export default function StorageManager() {
         </button>
       </div>
       {!canPrune && (
-        <p className="muted small">
-          Pruning is disabled while saving to this device is paused (see the warning above).
+        <p className="muted small" data-testid="storage-prune-disabled-note">
+          Pruning is disabled while saving to this device is paused or failing (see the warning
+          above) — a delete that cannot be durably saved is never performed.
         </p>
       )}
       <p className="muted small">
@@ -174,10 +219,20 @@ export default function StorageManager() {
       </p>
       {flash && <p className="notice flash">{flash}</p>}
 
-      {/* Prune modal — type-to-confirm, exact effect shown, export offered first. */}
+      {/* Prune modal — type-to-confirm, exact effect shown, export offered first.
+          Escape is Cancel (the safe choice); full focus trapping is OL-015. */}
       {pruneOpen && (
         <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal" data-testid="storage-prune-dialog">
+          <div
+            className="modal"
+            data-testid="storage-prune-dialog"
+            onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
+              if (e.key === 'Escape') {
+                e.stopPropagation();
+                cancelPrune();
+              }
+            }}
+          >
             <h2>⚠️ Prune saved prompts</h2>
             <p className="muted">
               You have <strong>{state.artifacts.length}</strong> saved prompt artifact(s) using{' '}
@@ -222,7 +277,7 @@ export default function StorageManager() {
               >
                 Delete {plan.prune.length} oldest saved prompt(s)
               </button>
-              <button data-testid="storage-prune-cancel" onClick={cancelPrune}>Cancel</button>
+              <button data-testid="storage-prune-cancel" ref={cancelRef} onClick={cancelPrune}>Cancel</button>
             </div>
           </div>
         </div>
