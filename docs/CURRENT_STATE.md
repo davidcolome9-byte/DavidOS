@@ -7,23 +7,23 @@ the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
 ## Version
 
-**v0.2 + Training Readiness & Recovery release (PR #8)**, on `main` @
-`f01a822ed063156bc418d4efaa8a135f7d42d0fd` (squash merge of PR #8,
+**v0.2 + Reliable Offline Launch release (PR #10)**, on `main` @
+`f9074dfa672b44381bc1212c0190807a28b4de34` (squash merge of PR #10,
 merged 2026-07-17) @ GitHub `davidcolome9-byte/DavidOS`, auto-deployed
 to GitHub Pages (https://davidcolome9-byte.github.io/DavidOS/) on every
-push to `main`. The `deploy.yml` run for `f01a822` succeeded on
-2026-07-17 (full verify + smoke gate on the deployed SHA before
-publishing), and the release passed post-merge live verification the
-same day.
+push to `main`. The `deploy.yml` run for `f9074df` (run ID 29624655811)
+succeeded on 2026-07-17 (full verify + smoke gate on the deployed SHA
+before publishing), and the release passed post-merge live verification
+the same day, including manual Android PWA Path B offline verification.
 
 ## What works today
 
 - **Command center shell**: 5-tab bottom nav (Home, Workflows, Projects,
   Logs, More) + grouped More menu; dark/light theme; installable PWA with
-  a reliable update flow (stamped sw version). App-shell offline caching
-  exists but offline launch can fail right after a deploy or on a
-  first-ever visit — OL-001 is the authoritative description; do not
-  claim full offline reliability until it is fixed.
+  an atomic, all-or-nothing app-shell offline caching manifest (stamped sw
+  version derived at build time from real dist/ output). Offline launch,
+  offline reload, history navigation, and offline intent routing are fully
+  reliable and verified (OL-001 resolved).
 - **8 agents / 10 workflows** as portable JSON specs in `seed/` (7 domain
   agents + the Universal Operations coordination hub), rendered as cards,
   launched via palette, buttons, or slash commands. The registry:
@@ -131,18 +131,18 @@ same day.
   prompts; it never calls an AI provider (planned as v0.6, OL-025).
   **Native packaging: not built** (Capacitor wrapper planned, v0.7).
 
-## Verification status (2026-07-17, `main` @ `f01a822`, post-PR #8)
+## Verification status (2026-07-17, `main` @ `f9074dfa672b44381bc1212c0190807a28b4de34`, post-PR #10)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 35 files, **464 tests**, all passing (`npm test`).
-- Browser smoke tests: **72 passing** in 11 files (`npm run test:smoke`,
-  Playwright chromium, production build; phone + laptop viewports).
+- Unit tests: 37 files, **490 tests**, all passing (`npm test`), including **26 offline unit tests**.
+- Browser smoke tests: **80 passing** in 12 files (`npm run test:smoke`,
+  Playwright chromium, production build; phone + laptop viewports), including **8 offline Playwright tests**.
 - Authoritative visible routing suite: **17/17** (PR #8 verification).
 - Routing acceptance corpus (153 cases, read-only ground truth outside
   the repo; metric definitions locked in
   `src/lib/__tests__/routingMetrics.test.ts`):
-  - Strict classification: **127/153** (122→127 with PR #8).
+  - Strict classification: **127/153**.
   - Tuple conformance: **107/153** — a stricter diagnostic
     (classification AND domain set AND workflow); always ≤ the strict
     score and never to be reported as the strict score.
@@ -158,14 +158,18 @@ Exact counts live here ONLY (other docs reference this file):
   request and on pushes to main; Pages deploys (`deploy.yml`) run the
   same full gate — including smoke tests — on the deployed SHA before
   publishing.
-- Deployed to GitHub Pages: the `deploy.yml` run on `f01a822` succeeded
+- Deployed to GitHub Pages: the `deploy.yml` run on `f9074df` succeeded
   2026-07-17 (the deploy gate runs the full verify + smoke suite on the
   deployed SHA before publishing), and post-merge live verification of
-  the deployed release passed the same day. Installed as a PWA on
-  David's Android phone.
+  the deployed release passed the same day.
+- Android Installed-PWA Status: Manual verification on a target Android PWA client via Path B (fresh install) succeeded, proving successful service-worker installation, offline launch, repeated offline launch, local data preservation, and offline routing. *Limitation:* Android Path B does not manually prove an in-place upgrade from a pre-PR #10 installation (Path A was not performed); in-place update capability is verified via automated Build A to Build B E2E tests.
 
 ## Release history (merged & deployed)
 
+- **PR #10 — Reliable Offline Launch** (merged 2026-07-17, squash
+  `f9074dfa672b44381bc1212c0190807a28b4de34`): generates complete build-derived
+  precached shell manifest; atomic SW updates with fallback on failed install;
+  offline reload, navigation, and routing; namespaced cleanup; resolved OL-001.
 - **PR #8 — Training Readiness & Recovery** (merged 2026-07-17, squash
   `f01a822`; feature-branch tip preserved at `d8e9a21`): the
   `fitness-readiness` workflow, readiness-safe profile whitelist,
@@ -192,26 +196,24 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Repository state (branches & worktrees, 2026-07-17)
 
-Stable production branch: `main` @ `f01a822` (clean; local == origin).
+Stable production branch: `main` @ `f9074dfa672b44381bc1212c0190807a28b4de34` (clean; local == origin).
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
 whenever David chooses (removal deliberately NOT performed by agents):
 
-- `feat/dos-priority-functional-baseline` @ `d2ad940` (PR #5, merge
-  commit `183c505`)
+- `feat/dos-priority-functional-baseline` @ `d2ad940` (PR #5, merge commit `183c505`)
 - `fix/dos-context-url-focus-followup` @ `74f3351` (PR #6)
 - `fix/dos-routing-daily-use-trio` @ `024cbd5` (PR #7)
-- `feat/dos-fitness-readiness-recovery` @ `d8e9a21` (PR #8; squash-merged,
-  so the tip is not an ancestor of `main` — the content IS live)
+- `feat/dos-fitness-readiness-recovery` @ `d8e9a21` (PR #8)
+- `fix/dos-fnd-001-atomic-offline-launch` @ `287445957c92d2c835f9b181024cb210d8145f4c` (PR #10)
 
 Stale local draft branches — NOT merged, NOT reviewed, NOT deployed;
 do not treat their contents as shipped:
 
 - `fix/dos-fnd-001-reliable-offline-launch` @ `bc3620d` — earlier
   OL-001 candidate, unreviewed draft; superseded by
-  `fix/dos-fnd-001-atomic-offline-launch` (DOS-FND-001), the current
-  candidate resolution pending independent review and deployment.
+  `fix/dos-fnd-001-atomic-offline-launch` (DOS-FND-001).
 - `fix/dos-wf-001r-a-word-boundary` @ `0ac1189` — word-boundary router
   experiment, unreviewed draft.
 - `chore/agent-readiness-stabilization`,
@@ -233,10 +235,6 @@ do not treat their contents as shipped:
 The authoritative list with priorities lives in
 [docs/OPEN_LOOPS.md](OPEN_LOOPS.md). Headlines:
 
-- Service-worker offline gaps after deploys (OL-001, highest priority;
-  a candidate resolution exists on
-  `fix/dos-fnd-001-atomic-offline-launch` pending independent review —
-  not merged or deployed, so production still has the defect).
 - Artifact/handoff retention policy (OL-003, Requires David).
 - v0.3 Drive sync beyond backup export (OL-024; plan:
   docs/google-drive-sync-plan.md).

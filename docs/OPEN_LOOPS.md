@@ -25,39 +25,6 @@ Readiness & Recovery — the live deployed release). Items fixed in the
 
 ## P1 — data safety & core promises
 
-### OL-001 · Offline launch breaks after first install and after every deploy
-- **Domain:** PWA/service worker · **Kind:** defect · **Status:** Verified + Ready
-- **Problem:** `public/sw.js` precaches only `./` + manifest at install;
-  its activate handler deletes ALL old caches. (a) On first visit the
-  hashed JS/CSS were fetched before the SW controlled the page → never
-  cached → offline launch white-screens until a second online visit.
-  (b) After a deploy, the new SW's activate deletes the old cache that
-  held the current assets → offline white-screen until the next online
-  reload.
-- **Evidence (re-verified 2026-07-17):** `public/sw.js:14-28` (precache
-  list + cache deletion), `src/app/main.tsx` (registration on window
-  load). Unchanged at `f01a822`.
-- **Note:** an unmerged draft branch `fix/dos-fnd-001-reliable-offline-launch`
-  (local, tip `bc3620d`) contains an earlier candidate fix; it is
-  preserved read-only and superseded. The current candidate resolution
-  (DOS-FND-001) lives on `fix/dos-fnd-001-atomic-offline-launch`: an
-  atomic install-time precache derived from the real `dist/` output,
-  verified complete before any old cache is removed, with unit and
-  Playwright offline coverage (first install, A→B update, failed-update
-  fallback). It is pending independent review, merge, and production
-  verification — this loop stays open until the fix lands on `main` and
-  is live-verified.
-- **Approach:** at install, fetch and cache the current page's asset
-  URLs (parse `dist/index.html` asset links, or inject an asset manifest
-  at build time next to the sw version stamp); only delete old caches
-  after the new cache is fully populated.
-- **Acceptance:** with the preview server stopped (offline), a
-  previously-visited app launches; after a redeploy + one online load,
-  offline launch still works. Playwright can simulate via
-  `context.setOffline(true)`.
-- **Validation:** `npm run verify:full` + a new offline smoke test +
-  manual check on the installed Android PWA.
-- **Complexity:** M · **Approval:** no (bug fix of an existing promise)
 
 ### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion
 - **Domain:** persistence · **Kind:** defect (by-design gap awaiting a
@@ -346,3 +313,15 @@ without new evidence.
   disabled with inline required-field feedback while the name/title is
   empty (`ProjectVault.tsx:108`, `PromptVault.tsx:145`).
 - **Tests:** `tests/smoke/vaultValidation.spec.ts`.
+
+### OL-001 · Offline launch breaks after first install and after every deploy — RESOLVED
+- **Resolved by:** PR #10 (merged 2026-07-17, merge commit `f9074dfa672b44381bc1212c0190807a28b4de34`).
+- **Current behavior:** The service worker now precaches a complete, build-derived production application-shell manifest (HTML, hashed JS/CSS, manifest, required icons) at install time, verified atomic and all-or-nothing. Deletions of superseded caches are namespaced to the scope (`/DavidOS/`) and are deferred until activate. Failed candidate installs automatically preserve the prior working version. Offline launch, history navigation (reload, back, forward), and intent routing are fully functional under offline conditions. Non-precached missing assets fail naturally instead of receiving a fake index.html response.
+- **Tests:** `src/lib/__tests__/serviceWorkerLifecycle.test.ts` (26 tests), `tests/smoke/offline.spec.ts` (8 tests), and live Pages deployment + manual Android PWA verification.
+- **Verification Evidence:**
+  - Squash-merge SHA: `f9074dfa672b44381bc1212c0190807a28b4de34`
+  - GitHub Pages deployment run: `29624655811` (success)
+  - 490/490 Unit tests passed, 80/80 Playwright tests passed.
+  - Live online load, atomic service worker installation (scope `/DavidOS/`, build cache `a6e0c91ae5f4e9f56522`), and offline reload verification passed.
+  - Android Path B (fresh install) offline verification passed on target device with repeated launches, local data preservation, and offline routing successful (no blank screens).
+- **Limitation:** The Android fresh-install test did not manually verify an upgrade of a PWA that had been installed before PR #10. Automated Build A to Build B coverage verifies the update lifecycle.
