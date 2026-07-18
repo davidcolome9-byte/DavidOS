@@ -459,3 +459,66 @@ Squash-merge release (PR #12, commit `789fe4d7fd2ad7cbfa5448a4efa10cd8c212128f`)
 - **Enhanced Dialog Focus & Keyboard Accessibility:** The warning dialog manages focus correctly: the "Cancel" action is focused by default, focus is trapped within the modal, and the Escape key dismisses the dialog (preserving the draft).
 - **Validation & Safety Guard:** Backup imports reject malformed or newer schema-version backups before any draft or state mutation.
 - **Verification:** 100% automated test coverage in unit/integration tests (511 passing) and browser smoke tests (88 passing), along with live deployment and isolated automated browser tests.
+
+## 2026-07-18 — OL-003 Storage Protection & Retention (candidate, this branch)
+
+Candidate implementation on `fix/ol-003-storage-protection-retention`
+(base `c2d7dff`), NOT merged or deployed. The retention-policy decision
+OL-003 was waiting on came from David's OL-003 work order: destructive
+storage operations must be explicit, guarded, user-visible actions —
+nothing is ever deleted automatically.
+
+- **Retention scope: artifacts only.** Saved prompt artifacts are the
+  unbounded multi-KB growth named in OL-003 and are re-generatable.
+  Handoffs are append-only canonical history (docs/SOURCE_OF_TRUTH.md)
+  and are NEVER pruned; the UI says so explicitly. Audit log was
+  already capped (300 entries).
+- **Guarded prune, reset-style.** Settings → Data → Storage gains a
+  "Prune saved prompts…" dialog: user picks keep-newest-N (default 50),
+  sees the exact delete count and freed size BEFORE anything happens,
+  is offered "Export backup first (JSON)" in the dialog
+  (prompt-to-export-then-prune), and must type `PRUNE` — the same
+  type-to-confirm guard as Reset. Open/cancel/complete are all audited.
+  Pruning is disabled whenever persistence is suppressed (recovery
+  boot, stale tab) so an in-memory-only delete can never happen.
+- **Storage usage meter.** `src/lib/storage/storageUsage.ts` (pure)
+  measures the serialized state per collection plus recovery blobs and
+  the health draft, against a ~5MB quota ESTIMATE (localStorage quotas
+  are UTF-16-unit based and browser-specific; the UI labels sizes as
+  estimates). Thresholds: warning ≥70%, critical ≥90%.
+- **Proactive protection banner.** At critical level an app-wide banner
+  (Layout) points to Settings → Data while an export can still be
+  saved — before the existing persist-failure banner becomes relevant.
+- **No schema change.** No new `AppState` fields; keep-count is a
+  dialog input, not persisted policy. Old state and backups load
+  unchanged; no `normalizeState` migration needed.
+
+## 2026-07-18 — OL-003 correction: prune made persistence-atomic
+
+Independent review of the OL-003 candidate found the prune commit
+non-transactional: React state was replaced (and success reported)
+before the deferred store effect attempted the durable write, and
+`persistFailed` did not disable pruning. Correction (separate commit on
+`fix/ol-003-storage-protection-retention`):
+
+- **Persist-first commit.** `confirmPrune` now computes the pruned
+  AppState without mutating anything, writes it durably via
+  `persistState()` (the same canonical boundary `commitImport` uses),
+  and only after a successful write replaces the active state, closes
+  the dialog, audits completion, and reports success. localStorage
+  writes are atomic per key, so a failed write leaves the stored
+  original untouched; the in-memory state is not replaced either.
+  A failure is audited (actionTaken false) and reported with a clear,
+  value-free error. The store effect's redundant-write skip means the
+  persist-first write introduces no second conflicting mechanism.
+- **Health guard extended.** Pruning is disabled while persistence is
+  suppressed (recovery boot, stale tab) OR already failing
+  (`persistFailed`). After a failed prune write, the failure audit
+  re-probes persistence through the normal store effect, so
+  `persistFailed` truthfully reflects device health and keeps pruning
+  unavailable until a write succeeds. Known trade-off: at hard quota
+  exhaustion pruning is blocked too — the recovery path is export +
+  reset, which is why the ≥90% banner warns before that point.
+- **Dialog accessibility (local only):** Escape now cancels and Cancel
+  receives initial focus. Full focus trapping remains OL-015; no
+  modal-system rewrite.

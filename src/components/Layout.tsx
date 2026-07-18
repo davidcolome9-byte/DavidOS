@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useStore } from '../state/store';
+import { measureStorageUsage } from '../lib/storage/storageUsage';
 import StaleTabDialog from './StaleTabDialog';
 
 // Primary bottom-nav tabs. Kept to 5 so touch targets stay large on a
@@ -14,7 +15,14 @@ const PRIMARY_NAV = [
 ];
 
 export default function Layout() {
-  const { persistFailed, recovery, externalChange } = useStore();
+  const { state, persistFailed, recovery, externalChange } = useStore();
+  // OL-003 protection: warn BEFORE storage runs out, while an export can
+  // still be saved. Measured per state change — same cadence as persistence.
+  const storageLevel = useMemo(() => {
+    let storage: Storage | null = null;
+    try { storage = window.localStorage; } catch { /* unavailable */ }
+    return measureStorageUsage(state, storage).level;
+  }, [state]);
   // F-08: dismissing the stale dialog is a LOCAL view choice only. The stale
   // condition (`externalChange`) lives in the store and keeps persistence
   // suppressed, so a dismissed dialog can never permit an overwrite — the
@@ -70,6 +78,16 @@ export default function Layout() {
           <div className="notice risk-block" role="alert" data-testid="recovery-banner" style={{ borderStyle: 'solid' }}>
             <strong>⚠️ Data recovery notice.</strong>{' '}
             <span className="small">{recovery.message}</span>
+          </div>
+        )}
+        {storageLevel === 'critical' && !persistFailed && (
+          <div className="notice risk-block" role="alert" data-testid="storage-critical-banner" style={{ borderStyle: 'solid' }}>
+            <strong>⚠️ Device storage is nearly full.</strong>{' '}
+            <span className="small">
+              When it runs out, new changes will stop saving on this device. Export a backup and
+              prune old saved prompts in <a href="#/settings">Settings → Data</a>. Nothing is
+              deleted automatically.
+            </span>
           </div>
         )}
         {persistFailed && (
