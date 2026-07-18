@@ -208,8 +208,10 @@ whenever David chooses (removal deliberately NOT performed by agents):
 Stale local draft branches — NOT merged, NOT reviewed, NOT deployed;
 do not treat their contents as shipped:
 
-- `fix/dos-fnd-001-reliable-offline-launch` @ `bc3620d` — candidate
-  OL-001 fix, unreviewed draft.
+- `fix/dos-fnd-001-reliable-offline-launch` @ `bc3620d` — earlier
+  OL-001 candidate, unreviewed draft; superseded by
+  `fix/dos-fnd-001-atomic-offline-launch` (DOS-FND-001), the current
+  candidate resolution pending independent review and deployment.
 - `fix/dos-wf-001r-a-word-boundary` @ `0ac1189` — word-boundary router
   experiment, unreviewed draft.
 - `chore/agent-readiness-stabilization`,
@@ -232,8 +234,9 @@ The authoritative list with priorities lives in
 [docs/OPEN_LOOPS.md](OPEN_LOOPS.md). Headlines:
 
 - Service-worker offline gaps after deploys (OL-001, highest priority;
-  an unmerged draft fix exists on
-  `fix/dos-fnd-001-reliable-offline-launch` but is not deployed).
+  a candidate resolution exists on
+  `fix/dos-fnd-001-atomic-offline-launch` pending independent review —
+  not merged or deployed, so production still has the defect).
 - Artifact/handoff retention policy (OL-003, Requires David).
 - v0.3 Drive sync beyond backup export (OL-024; plan:
   docs/google-drive-sync-plan.md).

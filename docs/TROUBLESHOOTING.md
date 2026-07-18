@@ -34,10 +34,20 @@ keep `base: './'` — the app is served from a subpath
 ## PWA / service worker
 
 **Installed PWA never shows new versions.** The build must end with
-`scripts/stamp-sw-version.mjs` replacing `__SW_VERSION__` in
-`dist/sw.js`. If someone removed the placeholder from `public/sw.js` or
-the stamp step from `npm run build`, updates silently stop. Restore
-both; users then need one full close/reopen of the app.
+`scripts/stamp-sw-version.mjs` replacing `__SW_VERSION__` (deterministic
+build identity) and `__SW_PRECACHE__` (asset manifest derived from
+`dist/`) in `dist/sw.js`. If someone removed the placeholders from
+`public/sw.js` or the stamp step from `npm run build`, updates silently
+stop. Restore both; users then need one full close/reopen of the app.
+
+**How offline updates work (candidate model, DOS-FND-001).** The worker
+precaches the complete app shell at install and verifies every asset
+landed before the new version may activate; superseded DavidOS caches
+are deleted only after that verification. A failed or partial deploy
+rejects the candidate install and the previous version keeps launching
+offline — no storage clearing or unregistering needed. Offline launch is
+only possible after at least one completed online visit; a first-ever
+visit while offline cannot work (no service worker exists yet).
 
 **Stale content while developing.** DevTools → Application → Service
 Workers → "Update on reload", or unregister the worker.

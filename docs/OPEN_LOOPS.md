@@ -38,9 +38,15 @@ Readiness & Recovery — the live deployed release). Items fixed in the
   list + cache deletion), `src/app/main.tsx` (registration on window
   load). Unchanged at `f01a822`.
 - **Note:** an unmerged draft branch `fix/dos-fnd-001-reliable-offline-launch`
-  (local, tip `bc3620d`) contains a candidate fix. It has NOT been
-  reviewed, merged, or deployed — this loop stays open until a fix lands
-  on `main`.
+  (local, tip `bc3620d`) contains an earlier candidate fix; it is
+  preserved read-only and superseded. The current candidate resolution
+  (DOS-FND-001) lives on `fix/dos-fnd-001-atomic-offline-launch`: an
+  atomic install-time precache derived from the real `dist/` output,
+  verified complete before any old cache is removed, with unit and
+  Playwright offline coverage (first install, A→B update, failed-update
+  fallback). It is pending independent review, merge, and production
+  verification — this loop stays open until the fix lands on `main` and
+  is live-verified.
 - **Approach:** at install, fetch and cache the current page's asset
   URLs (parse `dist/index.html` asset links, or inject an asset manifest
   at build time next to the sw version stamp); only delete old caches
