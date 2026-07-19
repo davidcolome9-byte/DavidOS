@@ -265,3 +265,60 @@ describe('buildPrompt', () => {
     });
   });
 });
+
+// DOS-WF-002A — canonical planning-state block insertion + zero-note building.
+describe('buildPrompt — planning state (Current DavidOS State)', () => {
+  const planningWf: Workflow = { ...generalWf, id: 'daily-brief', name: 'Daily Brief', stateContext: 'planning' };
+
+  it('inserts "## Current DavidOS State" between New Entry and Prior Context', () => {
+    const b = buildPrompt({
+      workflow: planningWf, input: 'today notes', style: 'Command brief', allHandoffs: [],
+      planningStateBlock: 'Priorities:\n1. Ship it',
+    });
+    const iNew = b.fullPrompt.indexOf('## New Entry to Analyze');
+    const iState = b.fullPrompt.indexOf('## Current DavidOS State');
+    const iPrior = b.fullPrompt.indexOf('## Prior Context for Analysis');
+    expect(iState).toBeGreaterThan(iNew);
+    expect(iPrior).toBeGreaterThan(iState);
+    expect(b.fullPrompt).toContain('Priorities:\n1. Ship it');
+  });
+
+  it('omits the section entirely when no planning-state block is supplied', () => {
+    const b = buildPrompt({ workflow: planningWf, input: 'today notes', style: 'Command brief', allHandoffs: [] });
+    expect(b.fullPrompt).not.toContain('## Current DavidOS State');
+  });
+
+  it('insertion is caller-gated on the supplied block, matching the Health Profile precedent', () => {
+    // buildPrompt() inserts whatever planningStateBlock is passed, the same
+    // way it inserts whatever profileBlock is passed — WorkflowRunner is
+    // responsible for only ever supplying one when workflow.stateContext is
+    // set. This test documents that contract at the continuity.ts layer.
+    const b = buildPrompt({
+      workflow: generalWf, input: 'teachback notes', style: 'One-pager', allHandoffs: [],
+      planningStateBlock: 'Priorities:\n1. Example',
+    });
+    expect(b.fullPrompt).toContain('## Current DavidOS State');
+  });
+
+  it('zero-note placeholder renders in New Entry instead of the generic marker', () => {
+    const b = buildPrompt({
+      workflow: planningWf, input: '', style: 'Command brief', allHandoffs: [],
+      zeroNotePlaceholder: '(no additional notes for today)',
+    });
+    expect(b.currentOnly).toBe('(no additional notes for today)');
+    expect(b.fullPrompt).not.toContain('no input provided');
+  });
+
+  it('typed input always wins over the zero-note placeholder', () => {
+    const b = buildPrompt({
+      workflow: planningWf, input: 'real notes', style: 'Command brief', allHandoffs: [],
+      zeroNotePlaceholder: '(no additional notes for today)',
+    });
+    expect(b.currentOnly).toBe('real notes');
+  });
+
+  it('without a zeroNotePlaceholder, empty input still falls back to the generic marker', () => {
+    const b = buildPrompt({ workflow: generalWf, input: '', style: 'One-pager', allHandoffs: [] });
+    expect(b.currentOnly).toBe('(no input provided)');
+  });
+});

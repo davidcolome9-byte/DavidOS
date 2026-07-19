@@ -276,6 +276,14 @@ export interface BuildPromptArgs {
   profileBlock?: string;
   /** Structured profile, used only for deterministic target-vs-current helpers. */
   healthProfile?: HealthFitnessProfile | null;
+  /** Rendered "## Current DavidOS State" block (DOS-WF-002A), omitted when excluded/empty. */
+  planningStateBlock?: string;
+  /**
+   * Locked placeholder shown in New Entry when input is empty (DOS-WF-002A,
+   * planning-context workflows only). Absent for every other workflow, which
+   * keeps the existing "(no input provided)" honesty marker.
+   */
+  zeroNotePlaceholder?: string;
 }
 
 /**
@@ -301,7 +309,7 @@ function resolveHandoffOutputMode(workflow: Workflow, input: string): WorkflowOu
   return base;
 }
 
-export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock, healthProfile }: BuildPromptArgs): BuiltPrompt {
+export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock, healthProfile, planningStateBlock, zeroNotePlaceholder }: BuildPromptArgs): BuiltPrompt {
   const historyProfile = resolveHistoryProfile(workflow);
   const outputMode = resolveHandoffOutputMode(workflow, input);
   const fitnessMode = resolveCategory(workflow) === 'fitness_health';
@@ -310,13 +318,14 @@ export function buildPrompt({ workflow, input, style, allHandoffs, profileBlock,
   const prior = getPriorHandoffs(allHandoffs, workflow.id, target);
   const history = formatHistory(prior, fitnessMode);
 
-  const currentOnly = input.trim() || '(no input provided)';
+  const currentOnly = input.trim() || zeroNotePlaceholder || '(no input provided)';
   const macroSnapshot =
     fitnessMode && input.trim()
       ? buildMacroTargetSnapshot(healthProfile ?? null, input)
       : null;
   const sections: string[] = [];
   sections.push('## New Entry to Analyze', '', currentOnly);
+  if (planningStateBlock) sections.push('', '## Current DavidOS State', '', planningStateBlock);
   if (profileBlock) sections.push('', '## Personal Targets / Regimen Context', '', profileBlock);
   if (macroSnapshot?.hasNutritionData && macroSnapshot.text) {
     sections.push('', '## Macro Target Snapshot', '', macroSnapshot.text);

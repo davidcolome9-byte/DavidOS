@@ -12,12 +12,20 @@ import { evaluatePromptValidity, buildPromptConfigKey, evaluateActability } from
 import { GRAVL_WORKFLOW_ID, FITNESS_READINESS_WORKFLOW_ID } from '../lib/router/fitnessRouting';
 import { resolveCategory, resolveHistoryProfile, historyTargetCount } from '../lib/workflows/workflowMeta';
 import { buildProfilePromptBlock } from '../lib/health/profilePrompt';
+import { buildPlanningContext, renderPlanningStateBlock } from '../lib/planning/planningContext';
 import { parseEntryDate } from '../lib/workflows/dateParsing';
 import { sha256Hex } from '../lib/utils/hash';
 import { useStore, upsert } from '../state/store';
 import { uid, nowIso } from '../lib/types';
 import type { AgentId, Handoff, Workflow, WorkflowArtifact } from '../lib/types';
 import RiskBadge from './RiskBadge';
+import PlanningContextDisclosure from './PlanningContextDisclosure';
+
+/** Locked "no notes typed" placeholders, keyed by planning-context mode (DOS-WF-002A). */
+const ZERO_NOTE_PLACEHOLDER: Record<'planning' | 'weekly', string> = {
+  planning: '(no additional notes for today)',
+  weekly: '(no additional notes for this week)',
+};
 
 type ViewMode = 'preview' | 'full_prompt';
 
@@ -43,6 +51,8 @@ export default function WorkflowRunner() {
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [includeProfile, setIncludeProfile] = useState(true);
   const [profileRevealLevel, setProfileRevealLevel] = useState(0); // 0=summary 1=metadata 2=text
+  const [includePlanningState, setIncludePlanningState] = useState(true);
+  const [planningRevealed, setPlanningRevealed] = useState(false);
   const [flash, setFlash] = useState('');
 
   // Tracks the `style` param from the previous navigation so Effect 1 can tell
@@ -106,6 +116,7 @@ export default function WorkflowRunner() {
   const historyProfile = workflow ? resolveHistoryProfile(workflow) : 'default';
   const hasProfileData = Boolean(state.healthProfile);
   const deepAnalysis = workflow?.outputMode === 'dashboard_full_analysis' || isFitness;
+  const stateContextMode = workflow?.stateContext;
 
   const profileBlock = useMemo(() => {
     if (!isFitness || !includeProfile || !state.healthProfile) return null;
@@ -116,6 +127,22 @@ export default function WorkflowRunner() {
     // existing behavior.
     return buildProfilePromptBlock(state.healthProfile, { deepAnalysis, gravlSafe: isGravl, readinessSafe: isReadiness });
   }, [isFitness, includeProfile, state.healthProfile, deepAnalysis, isGravl, isReadiness]);
+
+  // Canonical planning-state context (DOS-WF-002A) — Daily Brief / Weekly
+  // Review only. Approved fields only; see src/lib/planning/planningContext.ts.
+  const planningContext = useMemo(() => {
+    if (!stateContextMode || !includePlanningState) return null;
+    return buildPlanningContext(state, stateContextMode);
+    // buildPlanningContext only reads priorities/openLoops/reminders/projects,
+    // but it takes the whole `state` object, so `state` itself is the honest
+    // dependency (exhaustive-deps requires it since the identifier is used
+    // directly, unlike the sub-field access `state.healthProfile` above).
+  }, [stateContextMode, includePlanningState, state]);
+
+  const planningBlock = useMemo(
+    () => (planningContext ? renderPlanningStateBlock(planningContext) : null),
+    [planningContext],
+  );
 
   function pick(wf: Workflow) {
     setWorkflow(wf);
@@ -165,13 +192,19 @@ export default function WorkflowRunner() {
       profileFingerprint: profileContextHash,
       workoutText: isGravl ? workoutText : undefined,
       hasScreenshots: isGravl ? hasScreenshots : undefined,
+      includePlanningState: Boolean(stateContextMode) && includePlanningState,
+      planningContextFingerprint: stateContextMode ? planningBlock?.hash : undefined,
     });
   }
 
   /** Build Prompt: assemble the current prompt from the CURRENT input. */
   function build() {
-    if (!workflow || !input.trim()) return;
+    if (!workflow) return;
+    // Zero-note building is permitted only for planning-context workflows
+    // (DOS-WF-002A) — every other workflow keeps requiring typed input.
+    if (!input.trim() && !stateContextMode) return;
     const profileText = profileBlock && !profileBlock.empty ? profileBlock.text : undefined;
+    const planningText = includePlanningState && planningBlock && !planningBlock.empty ? planningBlock.text : undefined;
     const result: BuiltPrompt = isReadiness
       ? buildReadinessPrompt({
           request: input,
@@ -193,10 +226,13 @@ export default function WorkflowRunner() {
           allHandoffs: state.handoffs,
           profileBlock: profileText,
           healthProfile: includeProfile ? state.healthProfile : null,
+          planningStateBlock: planningText,
+          zeroNotePlaceholder: stateContextMode ? ZERO_NOTE_PLACEHOLDER[stateContextMode] : undefined,
         });
     setBuilt(result);
     setBuiltConfigKey(currentConfigKey(workflow));
     setProfileRevealLevel(0);
+    setPlanningRevealed(false);
     audit({
       command: `Build prompt: ${workflow.name}`,
       agentId: workflow.agentId,
@@ -206,7 +242,11 @@ export default function WorkflowRunner() {
       actionTaken: true,
       resultSummary:
         `Built prompt ${result.fingerprint} · ${result.priorCount} prior handoffs · ` +
-        `profile ${profileText ? 'included' : 'excluded'} — draft only, nothing sent.`,
+        `profile ${profileText ? 'included' : 'excluded'}` +
+        (stateContextMode
+          ? ` · planning state ${planningText ? `included (${planningBlock?.fingerprint})` : 'excluded'}`
+          : '') +
+        ` — draft only, nothing sent.`,
     });
     setFlash('');
   }
@@ -219,7 +259,7 @@ export default function WorkflowRunner() {
    * helper so the rule is unit-tested and identical to the button-enable rule.
    */
   function guardAction(): boolean {
-    const v = built ? evaluatePromptValidity(built.fullPrompt, input) : null;
+    const v = built ? evaluatePromptValidity(built.fullPrompt, input, { allowEmptyRequest: Boolean(stateContextMode) }) : null;
     const res = evaluateActability({
       hasBuilt: Boolean(built),
       validity: v,
@@ -308,6 +348,20 @@ export default function WorkflowRunner() {
       sourceMode: viewMode,
       includedHandoffSnapshots: built.snapshots,
       healthProfilePromptMetadata: profileBlock?.metadata ?? { healthProfileIncluded: false },
+      planningContextPromptMetadata: stateContextMode
+        ? includePlanningState && planningBlock && !planningBlock.empty && planningContext
+          ? {
+              planningStateIncluded: true,
+              mode: stateContextMode,
+              priorityCount: planningContext.counts.priorities,
+              openLoopCount: planningContext.counts.openLoops,
+              reminderCount: planningContext.counts.reminders,
+              projectCount: planningContext.counts.projects,
+              promptContextHash: planningBlock.hash,
+              promptContextFingerprint: planningBlock.fingerprint,
+            }
+          : { planningStateIncluded: false, mode: stateContextMode }
+        : undefined,
     };
     update((s) => ({ ...s, artifacts: [artifact, ...s.artifacts] }));
     audit({
@@ -323,7 +377,7 @@ export default function WorkflowRunner() {
   }
 
   function addOpenLoop() {
-    if (!guardAction() || !workflow) return;
+    if (!guardAction() || !workflow || !input.trim()) return;
     const label = `Follow up: ${workflow.name} — ${summarizeInput(input)}`;
     update((s) => ({
       ...s,
@@ -341,7 +395,7 @@ export default function WorkflowRunner() {
   const gravlIntake = isGravl && !(workoutText.trim() || hasScreenshots);
 
   // A built prompt is safe to copy/save only when it is valid AND fresh.
-  const validity = built ? evaluatePromptValidity(built.fullPrompt, input) : null;
+  const validity = built ? evaluatePromptValidity(built.fullPrompt, input, { allowEmptyRequest: Boolean(stateContextMode) }) : null;
   const stale = Boolean(built && workflow && builtConfigKey !== null && builtConfigKey !== currentConfigKey(workflow));
   const canAct = evaluateActability({
     hasBuilt: Boolean(built),
@@ -435,6 +489,12 @@ export default function WorkflowRunner() {
             onChange={(e) => setInput(e.target.value)}
             placeholder={workflow.inputHint}
           />
+          {stateContextMode && (
+            <p className="muted small">
+              Notes are optional — current priorities, open loops, reminders, and projects are
+              pulled in automatically below.
+            </p>
+          )}
 
           {isGravl && (
             <>
@@ -493,10 +553,22 @@ export default function WorkflowRunner() {
             <p className="notice">No usable Health Profile data saved yet — the prompt will say so.</p>
           )}
 
+          {stateContextMode && (
+            <PlanningContextDisclosure
+              mode={stateContextMode}
+              included={includePlanningState}
+              onToggle={setIncludePlanningState}
+              counts={planningContext?.counts ?? null}
+              block={planningBlock}
+              revealed={planningRevealed}
+              onReveal={() => setPlanningRevealed(true)}
+            />
+          )}
+
           <div className="btn-row">
-            <button className="primary" onClick={build} disabled={!input.trim()}>Build Prompt</button>
+            <button className="primary" onClick={build} disabled={!input.trim() && !stateContextMode}>Build Prompt</button>
           </div>
-          {!input.trim() && (
+          {!input.trim() && !stateContextMode && (
             <p className="muted small">Enter a request above to build the prompt.</p>
           )}
 
@@ -574,18 +646,27 @@ export default function WorkflowRunner() {
               <p className="muted small">Next action: {workflow.nextAction}</p>
               <div className="btn-row">
                 <button className="primary" onClick={() => copyText(built.fullPrompt, 'Prompt')} disabled={!canAct}>Copy Prompt</button>
-                <button onClick={() => copyText(built.currentOnly, 'Request only')} disabled={!canAct}>Copy Request Only</button>
+                <button onClick={() => copyText(built.currentOnly, 'Request only')} disabled={!canAct || !input.trim()}>Copy Request Only</button>
               </div>
               <p className="muted small">
                 <strong>Copy Request Only</strong> copies just your current request — without prior
-                workflow context, Health Profile context, or workout details.
+                workflow context, Health Profile context, planning state, or workout details.
               </p>
+              {canAct && !input.trim() && (
+                <p className="muted small">Nothing typed to copy.</p>
+              )}
               <div className="btn-row">
                 <button onClick={saveArtifact} disabled={!canAct}>Save Prompt</button>
-                <button onClick={saveHandoff} disabled={!canAct}>Save to Workflow History</button>
-                <button onClick={addOpenLoop} disabled={!canAct}>Create Follow-Up Task</button>
+                <button onClick={saveHandoff} disabled={!canAct || !input.trim()}>Save to Workflow History</button>
+                <button onClick={addOpenLoop} disabled={!canAct || !input.trim()}>Create Follow-Up Task</button>
               </div>
               <p className="muted small">Saved prompts stay on this device only.</p>
+              {canAct && !input.trim() && (
+                <p className="muted small">
+                  Save to Workflow History and Create Follow-Up Task need typed notes — there's nothing
+                  written yet to save as a history entry or follow-up.
+                </p>
+              )}
               {flash && <p className="notice flash">{flash}</p>}
             </>
           )}

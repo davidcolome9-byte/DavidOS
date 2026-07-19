@@ -93,6 +93,7 @@ const COLLECTION_SPECS: Record<string, FieldSpec[]> = {
 
 // Optional scalar fields per collection: validated only when present.
 const OPTIONAL_FIELDS: Record<string, FieldSpec[]> = {
+  openLoops: [isoField('closedAt')],
   prompts: [enumSpec('agentId', AGENT_IDS)],
   handoffs: [
     strField('contentHash'), strField('entryDate'), enumSpec('dateConfidence', DATE_CONFIDENCE),
@@ -198,6 +199,12 @@ function validateArtifactNested(push: Push, item: string, rec: Record<string, un
     numObj('promptSummaryCharCount'), numObj('freeformContextExcerptCharCount'),
     strObj('promptContextHash'), strObj('promptContextFingerprint'),
     numObj('promptContextCharacterCount'), strObj('profileLastUpdatedAt'),
+  ]);
+  // DOS-WF-002A — counts/mode/hash only; never labels or rendered planning text.
+  checkOptionalObject(push, 'artifacts', item, rec, '', 'planningContextPromptMetadata', [
+    boolObj('planningStateIncluded', true), enumObj('mode', ['planning', 'weekly']),
+    numObj('priorityCount'), numObj('openLoopCount'), numObj('reminderCount'), numObj('projectCount'),
+    strObj('promptContextHash'), strObj('promptContextFingerprint'),
   ]);
 }
 

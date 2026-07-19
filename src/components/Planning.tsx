@@ -75,8 +75,8 @@ export default function Planning() {
       <div className="card">
         <h2>Daily brief <span className="badge ok">Draft only</span></h2>
         <div className="btn-row">
-          <button className="primary" onClick={generateBrief}>Generate from current state</button>
-          <Link className="btn" to="/workflows?wf=daily-brief">AI-prompt version</Link>
+          <button className="primary" onClick={generateBrief}>Generate locally (no AI)</button>
+          <Link className="btn" to="/workflows?wf=daily-brief">Build AI prompt (Workflow Runner)</Link>
         </div>
         {brief && (
           <>
@@ -89,8 +89,8 @@ export default function Planning() {
       <div className="card">
         <h2>Weekly review <span className="badge ok">Draft only</span></h2>
         <div className="btn-row">
-          <button className="primary" onClick={generateReview}>Generate scaffold</button>
-          <Link className="btn" to="/workflows?wf=weekly-review">AI-prompt version</Link>
+          <button className="primary" onClick={generateReview}>Generate locally (no AI)</button>
+          <Link className="btn" to="/workflows?wf=weekly-review">Build AI prompt (Workflow Runner)</Link>
         </div>
         {review && (
           <>
@@ -144,7 +144,7 @@ export default function Planning() {
           {openLoops.map((l) => (
             <li key={l.id} className="row">
               <span className="small">{l.label}</span>
-              <button className="chip" onClick={() => update((s) => ({ ...s, openLoops: upsert(s.openLoops, { ...l, status: 'done' }) }))}>
+              <button className="chip" onClick={() => update((s) => ({ ...s, openLoops: upsert(s.openLoops, { ...l, status: 'done', closedAt: nowIso() }) }))}>
                 Close
               </button>
             </li>
@@ -158,7 +158,7 @@ export default function Planning() {
                 <li key={l.id} className="row">
                   <span className="small muted" style={{ textDecoration: 'line-through' }}>{l.label}</span>
                   <span className="btn-row" style={{ margin: 0 }}>
-                    <button className="chip" onClick={() => update((s) => ({ ...s, openLoops: upsert(s.openLoops, { ...l, status: 'open' }) }))}>
+                    <button className="chip" onClick={() => update((s) => ({ ...s, openLoops: upsert(s.openLoops, { ...l, status: 'open', closedAt: undefined }) }))}>
                       Reopen
                     </button>
                     <button className="chip danger" aria-label={`Delete closed loop: ${l.label}`} onClick={() => update((s) => ({ ...s, openLoops: removeById(s.openLoops, l.id) }))}>

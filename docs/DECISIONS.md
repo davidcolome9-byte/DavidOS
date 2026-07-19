@@ -587,3 +587,67 @@ merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, feature candidate
   real-browser containment passed for all six surfaces; the observation
   is recorded here so a future surface with a conditional/hidden control
   adds a regression case and tightens the selector before shipping.
+
+## 2026-07-19 — DOS-WF-002A: Planning Context Unification
+- **One canonical planning-context source** (`src/lib/planning/planningContext.ts`:
+  `buildPlanningContext(state, mode)`, `buildWeeklyReviewContext(state)`,
+  `renderPlanningStateBlock(context)`) now backs all four surfaces: Planning-page
+  Daily Brief, Planning-page Weekly Review, and both Workflow Runner
+  equivalents. The Planning page's `composeDailyBrief`/`composeWeeklyReview`
+  (`src/lib/planning.ts`) were refactored to source their priorities/open
+  loops/reminders/projects from it instead of re-deriving the same filters,
+  with output text unchanged.
+- **Approved-fields allowlist, not a redaction denylist.** The context type
+  only has room for priority label+rank, open-loop label, reminder
+  label+due, and project name/status/nextAction — project notes/area,
+  Context Vault, Health Profile, audit content, artifact content, and
+  handoff content/summaries have no field to leak through, by construction,
+  mirroring the existing Gravl/Readiness allowlist pattern in
+  `profilePrompt.ts` rather than trying to filter them out after the fact.
+- **`mode: 'planning' | 'weekly'` selects the project window**, matching
+  the pre-existing behavioral difference between the two surfaces
+  (`'planning'` → active projects only, as `composeDailyBrief` already did;
+  `'weekly'` → active + paused/not-done, as `composeWeeklyReview` already
+  did) rather than inventing a new selection rule.
+- **`Workflow.stateContext?: 'planning' | 'weekly'`** is the only new
+  workflow-definition field, set solely on `daily-brief` and
+  `weekly-review` in seed data. The Workflow Runner inserts
+  `## Current DavidOS State` between New Entry and Prior Context only when
+  a workflow declares it — `buildPrompt()` itself just inserts whatever
+  block it's given (same caller-gated contract `profileBlock` already
+  uses); it does not re-derive which workflows qualify.
+- **Zero-note building is exempted per-call (`allowEmptyRequest`), not by
+  weakening the default.** `evaluatePromptValidity()` keeps requiring
+  non-empty input unless the caller explicitly opts in; the Workflow
+  Runner opts in only when `workflow.stateContext` is set. The empty-input
+  New Entry placeholder is a workflow-specific locked string ("no
+  additional notes for today/this week"), never the generic "no input
+  provided" marker, so the existing honesty check still catches every
+  other workflow's stale/empty state.
+- **Staleness reuses the existing full-hash config-key pattern.**
+  `buildPromptConfigKey` gained `includePlanningState` +
+  `planningContextFingerprint` fields alongside the pre-existing Health
+  Profile ones; the fingerprint is the block's full SHA-256 (not the
+  shortened display fingerprint) for the same collision-avoidance reason
+  documented on `profileFingerprint`.
+- **`PlanningContextDisclosure.tsx` reuses existing UI primitives**
+  (`.checkrow`, `<details>`/`<summary>`, `.chip`, `.output`, `.notice`) —
+  no new CSS, matching the Health Profile inline disclosure's visual
+  language but factored into its own component per the package spec.
+- **Reverted an initial input-label change.** An early pass relabeled the
+  Workflow Runner's request textarea for planning-context workflows
+  ("Additional notes (optional)…"); this broke the pre-existing smoke test
+  `workflow runner generates a local draft prompt`, which asserts the
+  literal `Input — messy notes are fine` label for `daily-brief`. The
+  label was reverted to unconditional; optionality is communicated via a
+  muted helper line under the textarea instead, so no existing assertion
+  needed to change.
+- **`OpenLoop.closedAt` is stamp-only in this package** — set on close,
+  cleared on reopen, validated as an optional ISO field on import. Per
+  scope, it is deliberately NOT read anywhere yet (no weekly
+  completed-loop reporting); it exists so a later package can build that
+  reporting without a further data migration.
+- **`Planning.tsx` action labels changed, entry points did not.** "Generate
+  from current state" / "AI-prompt version" became "Generate locally (no
+  AI)" / "Build AI prompt (Workflow Runner)" — same `onClick`/`to` targets,
+  clearer about which path calls no AI.

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useStore, upsert } from '../state/store';
 import { AGENTS } from '../lib/agents/agentRegistry';
+import { nowIso } from '../lib/types';
 import CommandPalette from './CommandPalette';
 
 const QUICK_ACTIONS = [
@@ -23,9 +24,14 @@ export default function StatusDashboard() {
     update((s) => {
       const loop = s.openLoops.find((l) => l.id === id);
       if (!loop) return s;
+      const closing = loop.status === 'open';
       return {
         ...s,
-        openLoops: upsert(s.openLoops, { ...loop, status: loop.status === 'open' ? 'done' : 'open' }),
+        openLoops: upsert(s.openLoops, {
+          ...loop,
+          status: closing ? 'done' : 'open',
+          closedAt: closing ? nowIso() : undefined,
+        }),
       };
     });
   }
