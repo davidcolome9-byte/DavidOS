@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup } from '../lib/storage/exportImport';
 import { persistState } from '../lib/storage/localStore';
@@ -10,6 +9,7 @@ import {
 } from '../lib/storage/storageUsage';
 import type { StorageReader } from '../lib/storage/storageUsage';
 import type { AppState } from '../lib/types';
+import { useModalFocus } from './useModalFocus';
 
 /**
  * Settings → Data → Storage: usage meter + explicit, guarded artifact
@@ -43,11 +43,14 @@ export default function StorageManager() {
   const [flash, setFlash] = useState('');
   const cancelRef = useRef<HTMLButtonElement>(null);
 
-  // The safe choice (Cancel) receives focus when the dialog opens, so Enter
-  // can never confirm a delete by accident. (Full focus trapping: OL-015.)
-  useEffect(() => {
-    if (pruneOpen) cancelRef.current?.focus();
-  }, [pruneOpen]);
+  // OL-015 shared focus management. The safe choice (Cancel) receives focus
+  // when the dialog opens, so Enter can never confirm a delete by accident;
+  // Escape is always Cancel.
+  const pruneDialogRef = useModalFocus<HTMLDivElement>({
+    open: pruneOpen,
+    onEscape: cancelPrune,
+    initialFocusRef: cancelRef,
+  });
 
   const usage = useMemo(() => measureStorageUsage(state, safeLocalStorage()), [state]);
   const badge = LEVEL_BADGE[usage.level];
@@ -219,22 +222,22 @@ export default function StorageManager() {
       </p>
       {flash && <p className="notice flash">{flash}</p>}
 
-      {/* Prune modal — type-to-confirm, exact effect shown, export offered first.
-          Escape is Cancel (the safe choice); full focus trapping is OL-015. */}
+      {/* Prune modal — type-to-confirm, exact effect shown, export offered
+          first. Escape is Cancel (the safe choice); focus is trapped inside. */}
       {pruneOpen && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
+        <div className="modal-overlay">
           <div
             className="modal"
+            ref={pruneDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="storage-prune-title"
+            aria-describedby="storage-prune-desc"
+            tabIndex={-1}
             data-testid="storage-prune-dialog"
-            onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
-              if (e.key === 'Escape') {
-                e.stopPropagation();
-                cancelPrune();
-              }
-            }}
           >
-            <h2>⚠️ Prune saved prompts</h2>
-            <p className="muted">
+            <h2 id="storage-prune-title">⚠️ Prune saved prompts</h2>
+            <p className="muted" id="storage-prune-desc">
               You have <strong>{state.artifacts.length}</strong> saved prompt artifact(s) using{' '}
               {formatUnits(usage.collections.find((c) => c.key === 'artifacts')?.units ?? 0)}.
               Pruning permanently deletes the oldest ones from this device. Handoff history and all
