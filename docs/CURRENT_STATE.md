@@ -5,38 +5,48 @@ count changes. (History: see git log and docs/DECISIONS.md.) This file is
 the single authoritative description of the deployed production state;
 the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
-## Documentation closeout status (this branch)
-
-This file is currently being edited on the local branch
-`docs/ol-015-modal-focus-management-closeout` as a **documentation-closeout
-candidate** for OL-015. That is separate from the OL-015 product status:
-the OL-015 product itself (PR #16, merge
-`7077dac7a9e50f84e39b0f58bf7665b358a1e577`) remains implemented, merged to
-`main`, deployed, and independently product-reviewed, exactly as described
-below. What is still open is this documentation candidate's own lifecycle:
-its commit has **not yet** been independently documentation-re-reviewed,
-pushed, opened as a pull request, run through CI, merged into `main`, or
-synchronized. Final documentation closure awaits those steps.
-
-`package.json` and `package-lock.json` were unchanged by OL-015 and remain
-unchanged in this documentation candidate.
+`package.json` and `package-lock.json` were unchanged by DOS-WF-002A and
+remain unchanged in this documentation-closeout candidate.
 
 ## Version
 
-**v0.2 + Modal Focus Management release (PR #16)**, on `main` @
-`7077dac7a9e50f84e39b0f58bf7665b358a1e577` (merge commit of PR #16,
-"fix(a11y): establish OL-015 modal focus management"; feature candidate
-`393839908a9cc9f8bc8a60aa9241b387615fdecb`; merged 2026-07-19) @ GitHub
+**v0.2 + Planning Context Unification release (PR #18, DOS-WF-002A)**, on
+`main` @ `49c71caa7ad8af95afad3adc09893a0388810745` (merge commit of PR #18,
+"feat: unify planning context across brief workflows"; product head
+`73d1306f0c571a84d33f0b06059110f589dc7fcd`; merged 2026-07-19) @ GitHub
 `davidcolome9-byte/DavidOS`, auto-deployed to GitHub Pages
 (https://davidcolome9-byte.github.io/DavidOS/) on every push to `main`.
-PR CI (`ci.yml` run 29667727422, job 88141089268) succeeded. The
-`deploy.yml` run for `7077dac` (run ID 29667970651, job 88141751291,
-deployment ID 5506816489) succeeded on 2026-07-19 (full verify + smoke gate
-on the deployed SHA before publishing), and the release passed independent
-post-merge review the same day (see "OL-015 independent review" below).
-Note: PR #16 used a normal merge commit rather than the squash-merge
-pattern used by prior releases in this history (process deviation, not a
-defect — the merge tree is byte-equivalent to the single feature commit).
+
+Merge-SHA CI (`ci.yml` run `29701986395`) succeeded. The `deploy.yml` run
+for `49c71ca` (run ID `29701986418`) succeeded on 2026-07-19 — the full
+verify + Playwright smoke gate (98 tests, real `playwright install chromium
+--with-deps` on a clean GitHub-hosted runner) runs on the deployed SHA
+before publishing, and only completes the deploy step after that gate
+passes. Pages artifact: ID `8446730578`, digest
+`sha256:505e6e7dbe848d13ad758f806d9da95157a10652649843782310efbf04573d37`
+(GitHub API artifact metadata independently re-queried and confirmed to
+match against `head_sha` `49c71caa7ad8af95afad3adc09893a0388810745`).
+
+**Release-acceptance evidence for this package used a substitution, not
+interactive live-site testing from this session.** This Claude Code session
+runs behind an outbound-HTTPS egress policy that rejects the GitHub Pages
+host (`davidcolome9-byte.github.io`) and the Pages-artifact blob host alike
+at the CONNECT layer — confirmed by two direct attempts, not assumed. That
+means production reachability and deployed-artifact content were **not**
+independently inspected from this session; only the GitHub API metadata
+above (artifact existence, digest, head SHA) was. Acceptance instead rests
+on: exact-SHA CI and deploy-gate success (both of which run the full
+Playwright suite against a properly provisioned browser before anything
+is published), deployment-artifact provenance confirmed via the GitHub
+API, and an independent Fable acceptance review of the identical product
+head (see "DOS-WF-002A Fable acceptance" below). Any direct confirmation
+of live-site reachability or rendered content is Program Control's own,
+performed outside this session — it is not claimed here as something this
+Claude session did.
+
+Prior release: v0.2 + Modal Focus Management (PR #16, merge
+`7077dac7a9e50f84e39b0f58bf7665b358a1e577`, merged 2026-07-19; independent
+review the same day) — see "Release history" below.
 
 ## What works today
 
@@ -121,7 +131,28 @@ defect — the merge tree is byte-equivalent to the single feature commit).
 - **Vaults**: context (5 kinds), projects, prompts (versioned, tagged).
   Empty-name/title saves are visibly disabled with inline feedback
   (OL-012 resolved). Vault audit records are privacy-redacted (PR #5/#6).
-- **Planning**: daily brief, weekly review, reminders, open loops.
+- **Planning** (unified planning context, PR #18 / DOS-WF-002A): daily
+  brief, weekly review, reminders, open loops. The Planning-page local (no
+  AI call) generation and the Workflow Runner AI-prompt path for both Daily
+  Brief and Weekly Review now share one canonical, privacy-bounded
+  planning-context source (`src/lib/planning/planningContext.ts`) — an
+  approved-fields allowlist (priority label+rank, open-loop label, reminder
+  label+due, project name/status/nextAction) with no field for project
+  notes/area, Context Vault, Health Profile, audit content, artifact
+  content, or handoff content/summaries to pass through. The Workflow
+  Runner adds a default-on "Include planning state" toggle, a
+  `PlanningContextDisclosure` showing counts + a short fingerprint with an
+  exact-inserted-text reveal and the explicit exclusion list, and permits
+  zero-note prompt building for these two workflows only (a locked
+  placeholder — never the generic "no input provided" marker — fills New
+  Entry when nothing is typed). Built prompts go stale (Copy/Save/
+  follow-up disabled) when planning state or the inclusion toggle changes,
+  reusing the existing full-hash config-key staleness pattern. Local
+  no-AI generation is now labeled "Generate locally (no AI)" vs. "Build AI
+  prompt (Workflow Runner)" on the Planning page. `OpenLoop.closedAt` is
+  now stamped on close and cleared on reopen (stamp-only in this package;
+  not yet read anywhere — reserved for future weekly closed-loop
+  reporting, still deferred).
 - **Safety**: 6-level risk classifier surfaced in the palette, honest
   no-ops for risky unmatched commands, ApprovalGate (high-risk renders no
   Approve button), audit log capped at 300.
@@ -168,20 +199,68 @@ defect — the merge tree is byte-equivalent to the single feature commit).
   prompts; it never calls an AI provider (planned as v0.6, OL-025).
   **Native packaging: not built** (Capacitor wrapper planned, v0.7).
 
-## Verification status (2026-07-19, `main` @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, post-PR #16)
+## Verification status (2026-07-19, `main` @ `49c71caa7ad8af95afad3adc09893a0388810745`, post-PR #18)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit/component tests: 44 files, **562/562 tests**, all passing
-  (`npm test`), up from the pre-OL-015 538/538 baseline (24 new tests:
-  `useModalFocus.test.tsx` 13, `approvalGate.test.tsx` 6,
-  `settingsModalFocus.test.tsx` 5), including **26 offline unit tests**
-  (21/21 focused unit and integration tests are included within the total).
-- Browser smoke tests: **94/94 passing** (`npm run test:smoke`,
-  Playwright chromium, production build; phone + laptop viewports), up
-  from the pre-OL-015 93/93 baseline (1 new test: `modalKeyboard.spec.ts`),
-  including **8 offline Playwright tests** (11/11 focused smoke tests are
-  included within the total).
+- Unit/component tests: 46 files, **606/606 tests**, all passing
+  (`npm test`), up from the pre-DOS-WF-002A 562/562 baseline (new:
+  `planningContextInclude.test.tsx`, plus additions to `continuity.test.ts`,
+  `importValidation.test.ts`, `promptValidity.test.ts`, and the new
+  `planningContext.test.ts`).
+- Browser smoke tests: **98/98 passing on GitHub Actions** — both the
+  merge-SHA CI run (`29701986395`) and the merge-SHA Pages deploy run
+  (`29701986418`) completed successfully, and both run the full Playwright
+  suite (`npx playwright install chromium --with-deps` then
+  `npx playwright test`) as a blocking gate step on a clean, correctly
+  provisioned runner. Up from the pre-DOS-WF-002A 94/94 baseline (new:
+  `tests/smoke/planningUnification.spec.ts`, 4 tests). **Sandbox
+  re-verification note:** an independent local re-run in a separate,
+  resource-constrained sandbox environment (mismatched pre-installed
+  Chromium revision, shared build artifacts) reproduced 97/98 — the one
+  failure (`tests/smoke/storageRetention.spec.ts`, "near-quota state
+  raises the app-wide protection banner and Settings warning") was
+  investigated and classified **CONFIRMED PRE-EXISTING TEST/HARNESS
+  INTERACTION**, not a DOS-WF-002A regression: it reproduced identically
+  (same failure line, same disabled-button state, same active
+  `⚠️ Updated in another tab` stale-tab-guard dialog) on both merged `main`
+  and the pre-DOS-WF-002A base commit, with the test file, `store.tsx`
+  stale-tab detection, and `StaleTabDialog.tsx` byte-identical across both
+  revisions. The near-quota smoke setup's `seedArtifacts` helper writes
+  directly to `localStorage` and reloads, which can self-trigger the
+  app's genuine cross-tab `storage`-event guard under certain
+  environment timing, blocking the test's own prune interaction. Product
+  storage protection (OL-003) and stale-tab protection (OL-004) remain
+  operational; this is a test-isolation/seeding-hardening item, tracked as
+  OL-029 (see docs/OPEN_LOOPS.md). Not reproduced on GitHub's CI/deploy
+  runners.
+- **DOS-WF-002A Fable acceptance** (independent, read-only UI/UX/mobile/
+  accessibility review of the exact product head `73d1306f0c...`):
+  recommendation **APPROVE WITH NON-BLOCKING FOLLOW-UPS**. Reviewed at
+  375×812, 812×375, 768×1024, and 1440×900 across all four unified
+  planning surfaces (Planning-page Daily Brief/Weekly Review, Workflow
+  Runner Daily Brief/Weekly Review), the inclusion toggle, exact-text
+  reveal, privacy-exclusion disclosure, zero-note behavior, stale-prompt
+  handling, disabled-action behavior, and keyboard/focus behavior. No
+  blocking UI, privacy, staleness, mobile, or accessibility finding. Two
+  non-blocking accessibility observations (reveal-panel focus loss on
+  activation; revealed overflow output not keyboard-scrollable) tracked as
+  OL-028 (see docs/OPEN_LOOPS.md) — same class of finding as OL-015's own
+  future-hardening note, not a regression in the OL-015 focus-management
+  work itself.
+- **Production release-acceptance evidence substitution:** interactive
+  live-site traversal was not performed from this Claude Code session — its
+  outbound-HTTPS egress policy rejects both the GitHub Pages host and the
+  Pages-artifact blob host at the CONNECT layer (confirmed by direct
+  attempt, not assumed). Acceptance instead rests on exact-SHA CI and
+  deploy-gate success (both of which run the full 98-test Playwright suite
+  against a properly provisioned browser before anything publishes),
+  GitHub API–confirmed deployment-artifact provenance (ID `8446730578`,
+  digest `sha256:505e6e7dbe...4573d37`, matching `head_sha`
+  `49c71caa...`), and the independent Fable acceptance review above. See
+  "Version" section for the full distinction. Prior releases in this
+  history (e.g. OL-003, OL-015 below) recorded interactive live-site
+  verification; this package does not claim that for itself.
 - Authoritative visible routing suite: **17/17** (PR #8 verification).
 - Routing acceptance corpus (153 cases, read-only ground truth outside
   the repo; metric definitions locked in
@@ -227,6 +306,21 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Release history (merged & deployed)
 
+- **PR #18 — Planning Context Unification (DOS-WF-002A)** (merged
+  2026-07-19, normal merge commit
+  `49c71caa7ad8af95afad3adc09893a0388810745`; product head
+  `73d1306f0c571a84d33f0b06059110f589dc7fcd`): one canonical,
+  privacy-bounded planning-context source now backs Planning-page Daily
+  Brief/Weekly Review and Workflow Runner Daily Brief/Weekly Review;
+  default-on planning-state inclusion toggle with counts/fingerprint/
+  exact-text disclosure and explicit exclusion list; zero-note prompt
+  building for these two workflows; staleness on inclusion/state change;
+  `OpenLoop.closedAt` stamping (unread, reserved). Merge-SHA CI (run
+  `29701986395`) and Pages deploy (run `29701986418`) both succeeded, each
+  running the full 98-test Playwright suite as a blocking gate. Fable
+  independent review: APPROVE WITH NON-BLOCKING FOLLOW-UPS, no blocking
+  findings. See "DOS-WF-002A: Planning Context Unification" in
+  docs/DECISIONS.md for the technical decision record.
 - **PR #16 — Modal Focus Management** (merged 2026-07-19, normal merge
   commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`; feature candidate
   `393839908a9cc9f8bc8a60aa9241b387615fdecb`): shared `useModalFocus`
@@ -268,7 +362,7 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Repository state (branches & worktrees, 2026-07-19)
 
-Stable production branch: `main` @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` (clean; local == origin).
+Stable production branch: `main` @ `49c71caa7ad8af95afad3adc09893a0388810745` (clean; local == origin).
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove

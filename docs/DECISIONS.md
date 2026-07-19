@@ -651,3 +651,60 @@ merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, feature candidate
   from current state" / "AI-prompt version" became "Generate locally (no
   AI)" / "Build AI prompt (Workflow Runner)" — same `onClick`/`to` targets,
   clearer about which path calls no AI.
+
+## 2026-07-19 — DOS-WF-002A Gate 2: merge, release acceptance, closeout
+- **PR #18 merged** via merge commit (no squash/rebase), merge SHA
+  `49c71caa7ad8af95afad3adc09893a0388810745`, head
+  `73d1306f0c571a84d33f0b06059110f589dc7fcd` unchanged from candidate
+  through merge. Merge-SHA CI (`29701986395`) and Pages deploy
+  (`29701986418`) both succeeded; both run the full 98-test Playwright
+  suite as a blocking gate step before publishing. Pages artifact
+  `8446730578` (digest `sha256:505e6e7dbe...4573d37`) independently
+  re-queried via the GitHub API and confirmed against `head_sha`
+  `49c71caa...`.
+- **Independent Fable acceptance review** of the exact product head
+  (375×812, 812×375, 768×1024, 1440×900; all four unified planning
+  surfaces, inclusion toggle, exact-text reveal, privacy exclusions,
+  zero-note behavior, staleness, disabled-action behavior, keyboard/
+  focus): **APPROVE WITH NON-BLOCKING FOLLOW-UPS**, no blocking finding.
+  Two non-blocking accessibility observations (reveal-panel focus loss;
+  non-keyboard-scrollable revealed overflow, affecting both the new
+  Planning Context reveal and the pre-existing Health Profile reveal it
+  reused) tracked as OL-028.
+- **Production release-acceptance evidence substitution, not interactive
+  live-site testing from this session.** This Claude Code session's
+  outbound-HTTPS egress policy rejects both the GitHub Pages host and the
+  Pages-artifact blob host at the CONNECT layer — confirmed by direct
+  attempt against each (not assumed, not retried/routed around). Release
+  acceptance for this package rests on exact-SHA CI/deploy-gate success,
+  GitHub API–confirmed artifact provenance, and the pre-merge Fable
+  acceptance of the identical product head — not on this session directly
+  observing the deployed site. Any direct live-site confirmation is
+  Program Control's own, performed outside this session.
+- **Storage-retention smoke-test finding classified as pre-existing
+  test/harness interaction, not a DOS-WF-002A regression.**
+  `tests/smoke/storageRetention.spec.ts`'s near-quota test failed
+  identically (same line, same disabled-button state, same active
+  `⚠️ Updated in another tab` stale-tab dialog) on merged `main` and on
+  the pre-DOS-WF-002A base commit in an independent local sandbox, with
+  the test file and both implicated source files
+  (`src/state/store.tsx`, `StaleTabDialog.tsx`) byte-identical across
+  both revisions; it did not reproduce on GitHub's own CI/deploy runners.
+  Root cause under investigation is the test's own `seedArtifacts` helper
+  (raw `localStorage` write + reload) self-triggering the app's genuine
+  cross-tab guard — a test-isolation issue, not a defect in product
+  storage protection (OL-003) or stale-tab protection (OL-004). Tracked
+  as OL-029. Not investigated further and not fixed in this package by
+  design (narrow non-regression classification only).
+- **Documentation closeout stayed within the four-file allowlist**
+  (README.md, docs/CURRENT_STATE.md, docs/DECISIONS.md,
+  docs/OPEN_LOOPS.md) and corrected one unrelated pre-existing staleness
+  found along the way: `docs/CURRENT_STATE.md` and the OL-015 entry in
+  `docs/OPEN_LOOPS.md` still described PR #17's own documentation
+  closeout as an in-progress, unmerged branch, even though PR #17 had
+  already merged (`4fefa3ce4ad25918234a00d2430575da5e5bd4db`) before this
+  package started. Left uncorrected, this DOS-WF-002A closeout would have
+  been layering new "closed" content on top of a document still asserting
+  a stale in-progress state about a different, already-merged release —
+  corrected as part of making this same file honest, not as scope
+  creep. No other document or unrelated content was touched.

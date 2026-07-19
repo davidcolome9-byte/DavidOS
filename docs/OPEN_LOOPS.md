@@ -178,6 +178,76 @@ and docs/DECISIONS.md.
 - **Complexity:** M · **Approval:** YES if it forces a major toolchain
   upgrade
 
+### OL-028 · Planning and profile reveal panels lose keyboard focus and cannot be keyboard-scrolled
+- **Domain:** accessibility · **Kind:** defect / hardening ·
+  **Status:** Verified + Ready
+- **Problem:** in the Workflow Runner, activating "Show Inserted Planning
+  State Text" (`PlanningContextDisclosure.tsx`) or the equivalent Health
+  Profile reveal control unmounts the trigger button and replaces it with
+  a `<pre>` block with no focus management — keyboard/screen-reader focus
+  falls back to `<body>`, losing the user's place immediately after the
+  single most privacy-relevant action on the page. The revealed `<pre>`
+  can also overflow (`max-height` + internal scroll) with no `tabindex`,
+  so a keyboard-only user cannot scroll it.
+- **Evidence (found 2026-07-19, independent Fable acceptance review of
+  DOS-WF-002A, PR #18):** `src/components/PlanningContextDisclosure.tsx`
+  reveal button/`<pre class="output">` swap; the pre-existing Health
+  Profile inline reveal in `src/components/WorkflowRunner.tsx` shares the
+  identical pattern (DOS-WF-002A reused it rather than introducing a new
+  one, so the finding applies to both). Not a DOS-WF-002A regression in
+  behavior — it is the same reveal pattern the Health Profile disclosure
+  already had; DOS-WF-002A's contribution is a second surface using it.
+- **Approach:** keep the reveal control mounted as a Show/Hide toggle
+  instead of unmounting it, or move focus safely onto the revealed panel
+  (`tabIndex={-1}` + `.focus()`) when it appears; give the revealed
+  `<pre>` a `tabIndex` so it is keyboard-scrollable. Cover both the
+  Planning Context and Health Profile reveal paths with the same fix.
+  Reuse existing React and accessibility patterns already in this
+  codebase (e.g. `useModalFocus`'s focus-restoration approach) — no new
+  dependency or component framework.
+- **Acceptance:** after reveal, keyboard focus lands somewhere
+  meaningful (the toggle or the panel itself), never `<body>`; a
+  keyboard-only user can scroll overflowed revealed output; both reveal
+  paths behave identically.
+- **Complexity:** S · **Approval:** no
+
+### OL-029 · Near-quota smoke seeding self-triggers stale-tab guard
+- **Domain:** test reliability / storage safeguards · **Kind:**
+  maintenance / environmental · **Status:** Verified + Ready
+- **Problem:** `tests/smoke/storageRetention.spec.ts`'s "near-quota state
+  raises the app-wide protection banner and Settings warning" test can
+  fail in some environments: its `seedArtifacts` helper writes directly
+  to `localStorage` via `page.evaluate` and reloads, which can self-
+  trigger the app's genuine cross-tab `storage`-event guard
+  (`src/state/store.tsx`, `StaleTabDialog.tsx`) — the test's own tab ends
+  up treated as stale, blocking the prune-dialog interaction the test is
+  trying to exercise.
+- **Evidence (found 2026-07-19, DOS-WF-002A Gate 2 non-regression
+  investigation):** reproduced 4/4 attempts on merged `main`
+  (`49c71caa7ad8af95afad3adc09893a0388810745`) and 1/1 on the
+  pre-DOS-WF-002A base (`4fefa3ce4ad25918234a00d2430575da5e5bd4db`) in an
+  independent local sandbox — identical failure line, identical disabled
+  prune-button state, identical active `⚠️ Updated in another tab` dialog
+  on both revisions; `tests/smoke/storageRetention.spec.ts`,
+  `src/state/store.tsx`, and `src/components/StaleTabDialog.tsx` are
+  byte-identical across both revisions, ruling out a DOS-WF-002A
+  regression. Did not reproduce on GitHub Actions (`ci.yml` run
+  `29701986395`, `deploy.yml` run `29701986418`, both green, both running
+  the full Playwright suite on a clean-provisioned runner) — sandbox/
+  environment-timing-sensitive, not a general failure.
+- **Approach:** evaluate the smallest existing-mechanism correction —
+  seed state before the app's storage-event listener mounts, or isolate
+  the harness's write so it cannot be mistaken for a second tab (e.g. an
+  explicit test-only marker the store already trusts, or seeding before
+  first mount rather than via a raw `localStorage.setItem` + reload).
+  Do not build a new test framework, browser harness, storage subsystem,
+  or stale-tab mechanism.
+- **Acceptance:** the near-quota test passes reliably across environments
+  without weakening its assertions or increasing its timeout; product
+  storage protection (OL-003) and stale-tab protection (OL-004) are
+  unchanged.
+- **Complexity:** S · **Approval:** no
+
 ## Roadmap-scale items (product decisions)
 
 ### OL-023 · v0.2 deferred polish bundle
@@ -221,13 +291,10 @@ without new evidence.
 - **Independent review:** Verdict B. APPROVED WITH NON-BLOCKING OBSERVATIONS (reviewer: GPT-5.6 Sol, High). Non-blocking: (1) the shared focusable selector does not yet filter every hidden/inert/CSS-invisible candidate — future hardening, no current surface affected; (2) reviewer's environment could not re-query remote GitHub metadata — non-blocking, confirmed independently via local refs and deployed-site behavior.
 - **Tests:** 562/562 unit/component tests (44 files, up from 538/538), 94/94 Playwright tests (up from 93/93) — `src/components/__tests__/useModalFocus.test.tsx` (13), `src/components/__tests__/approvalGate.test.tsx` (6), `src/components/__tests__/settingsModalFocus.test.tsx` (5), `tests/smoke/modalKeyboard.spec.ts` (1).
 - **Limitations preserved:** This is a narrow focus-management fix, not a broad accessibility completion pass — no native `<dialog>` conversion, portals, generalized inert framework, backdrop-dismissal change, or Command Palette redesign was introduced; OL-016 through OL-020 remain open a11y/polish items.
-- **Documentation closeout status:** the OL-015 product above is resolved
-  and deployed. The documentation entry recording that resolution is
-  itself part of a local documentation-closeout candidate on branch
-  `docs/ol-015-modal-focus-management-closeout` that has not yet been
-  pushed or merged. Final documentation synchronization awaits
-  independent documentation re-review, push, PR creation, CI, merge into
-  `main`, and post-merge verification.
+- **Documentation closeout status:** resolved. The documentation entry
+  recording this resolution was closed by PR #17
+  (`docs/ol-015-modal-focus-management-closeout`, merged 2026-07-19,
+  merge SHA `4fefa3ce4ad25918234a00d2430575da5e5bd4db`).
 
 ### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion — RESOLVED
 - **Resolved by:** PR #14 (merged 2026-07-18, squash merge/deployed SHA `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c`), recording approved feature SHA `19e303b107c3540639a1a04809b5bd270290dd01`, Pages run `29656188235`, and deployment ID `5504316437`.
