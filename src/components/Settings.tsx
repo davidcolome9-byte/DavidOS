@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import type { KeyboardEvent } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { clearPersistedState } from '../lib/storage/localStore';
@@ -24,6 +23,7 @@ import ApprovalGate from './ApprovalGate';
 import type { ApprovalRequest } from './ApprovalGate';
 import RiskBadge from './RiskBadge';
 import StorageManager from './StorageManager';
+import { useModalFocus } from './useModalFocus';
 
 interface PendingCall {
   adapter: IntegrationAdapter;
@@ -61,13 +61,32 @@ export default function Settings() {
   // Unsaved Health Profile draft vs import: a valid import must never silently
   // wipe an in-progress draft, so we interrupt and make the user choose.
   const [draftConflict, setDraftConflict] = useState<{ state: AppState; fileName: string } | null>(null);
-  const draftDialogRef = useRef<HTMLDivElement>(null);
+
+  // OL-015: shared focus management, one hook instance per dialog. Escape is
+  // always the dialog's SAFE action; the safe control takes initial focus so
+  // Enter can never destroy anything by accident.
+  function cancelImportConflict() {
+    setImportConflict(null);
+    setFlash('Import cancelled.');
+  }
+  const importKeepCurrentRef = useRef<HTMLButtonElement>(null);
+  const importConflictDialogRef = useModalFocus<HTMLDivElement>({
+    open: importConflict !== null,
+    onEscape: cancelImportConflict,
+    initialFocusRef: importKeepCurrentRef,
+  });
+  const resetCancelRef = useRef<HTMLButtonElement>(null);
+  const resetDialogRef = useModalFocus<HTMLDivElement>({
+    open: resetOpen,
+    onEscape: cancelReset,
+    initialFocusRef: resetCancelRef,
+  });
   const draftCancelRef = useRef<HTMLButtonElement>(null);
-  // The safe choice (Cancel) is the default: it receives focus when the
-  // unsaved-draft dialog opens, so Enter can never discard by accident.
-  useEffect(() => {
-    if (draftConflict) draftCancelRef.current?.focus();
-  }, [draftConflict]);
+  const draftDialogRef = useModalFocus<HTMLDivElement>({
+    open: draftConflict !== null,
+    onEscape: cancelDraftConflict,
+    initialFocusRef: draftCancelRef,
+  });
   const driveConfigured = isGoogleDriveConfigured();
   const driveConnected = isDriveSessionFresh(driveSession);
 
@@ -192,30 +211,6 @@ export default function Settings() {
   function cancelDraftConflict() {
     setDraftConflict(null);
     setFlash('Import cancelled — your unsaved Health Profile edits were kept.');
-  }
-
-  /** Escape cancels (the safe choice); Tab is trapped inside the dialog. */
-  function onDraftDialogKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === 'Escape') {
-      e.stopPropagation();
-      cancelDraftConflict();
-      return;
-    }
-    if (e.key !== 'Tab' || !draftDialogRef.current) return;
-    const focusables = [...draftDialogRef.current.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    )];
-    if (focusables.length === 0) return;
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-    if (e.shiftKey && (active === first || active === draftDialogRef.current)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && active === last) {
-      e.preventDefault();
-      first.focus();
-    }
   }
 
   async function connectDrive() {
@@ -539,10 +534,18 @@ export default function Settings() {
 
       {/* Reset modal — type-to-confirm, Health-Profile-aware. */}
       {resetOpen && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal">
-            <h2>⚠️ Reset to seed</h2>
-            <p className="muted">
+        <div className="modal-overlay">
+          <div
+            className="modal"
+            ref={resetDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reset-dialog-title"
+            aria-describedby="reset-dialog-desc"
+            tabIndex={-1}
+          >
+            <h2 id="reset-dialog-title">⚠️ Reset to seed</h2>
+            <p className="muted" id="reset-dialog-desc">
               This wipes your local DavidOS data (priorities, projects, prompts, handoffs, logs)
               and restores the starter seed. Export a backup first if unsure.
             </p>
@@ -573,7 +576,7 @@ export default function Settings() {
               <button className="danger" disabled={resetText !== 'RESET'} onClick={confirmReset}>
                 {alsoDeleteHealth ? 'Reset + delete Health Profile' : 'Reset (keep Health Profile)'}
               </button>
-              <button onClick={cancelReset}>Cancel</button>
+              <button ref={resetCancelRef} onClick={cancelReset}>Cancel</button>
             </div>
           </div>
         </div>
@@ -581,8 +584,17 @@ export default function Settings() {
 
       {/* Unsaved Health Profile draft vs import — never silently discard it. */}
       {draftConflict && (
-        <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="draft-conflict-title" aria-describedby="draft-conflict-desc">
-          <div className="modal" ref={draftDialogRef} tabIndex={-1} onKeyDown={onDraftDialogKeyDown} data-testid="import-draft-guard">
+        <div className="modal-overlay">
+          <div
+            className="modal"
+            ref={draftDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="draft-conflict-title"
+            aria-describedby="draft-conflict-desc"
+            tabIndex={-1}
+            data-testid="import-draft-guard"
+          >
             <h2 id="draft-conflict-title">Unsaved Health Profile edits</h2>
             <p className="muted" id="draft-conflict-desc">
               You have <strong>unsaved Health Profile edits</strong> in progress. Importing this backup
@@ -609,16 +621,25 @@ export default function Settings() {
 
       {/* Import health-profile conflict — never silently overwrite. */}
       {importConflict && (
-        <div className="modal-overlay" role="dialog" aria-modal="true">
-          <div className="modal">
-            <h2>Health Profile conflict</h2>
-            <p className="muted">
+        <div className="modal-overlay">
+          <div
+            className="modal"
+            ref={importConflictDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="import-conflict-title"
+            aria-describedby="import-conflict-desc"
+            tabIndex={-1}
+          >
+            <h2 id="import-conflict-title">Health Profile conflict</h2>
+            <p className="muted" id="import-conflict-desc">
               The backup contains a Health Profile and you already have one. The rest of the backup
               will be imported either way — choose what happens to your Health Profile.
             </p>
             <div className="btn-row">
               <button
                 className="primary"
+                ref={importKeepCurrentRef}
                 onClick={() => applyImport(importConflict.state, 'keep-current', importConflict.fileName, importConflict.discardDraftConfirmed)}
               >
                 Keep current
@@ -626,7 +647,7 @@ export default function Settings() {
               <button onClick={() => applyImport(importConflict.state, 'imported', importConflict.fileName, importConflict.discardDraftConfirmed)}>
                 Replace with imported
               </button>
-              <button className="ghost" onClick={() => { setImportConflict(null); setFlash('Import cancelled.'); }}>
+              <button className="ghost" onClick={cancelImportConflict}>
                 Cancel
               </button>
             </div>

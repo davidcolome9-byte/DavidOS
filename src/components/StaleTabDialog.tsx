@@ -1,9 +1,8 @@
-import { useEffect, useRef } from 'react';
-import type { KeyboardEvent } from 'react';
+import { useModalFocus } from './useModalFocus';
 
 /**
  * Cross-tab stale-state dialog (F-08). Shown when another tab has written
- * newer state. Accessibility contract:
+ * newer state. Accessibility contract (via useModalFocus, OL-015):
  *  - focus moves into the dialog when it opens (and on every reopen);
  *  - the dialog has an accessible name and description;
  *  - keyboard focus is trapped inside while it is open (the background is
@@ -18,36 +17,10 @@ interface Props {
   onDismiss: () => void;
 }
 
-const FOCUSABLE =
-  'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
-
 export default function StaleTabDialog({ onDismiss }: Props) {
-  const dialogRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    dialogRef.current?.focus();
-  }, []);
-
-  function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    if (e.key === 'Escape') {
-      e.stopPropagation();
-      onDismiss();
-      return;
-    }
-    if (e.key !== 'Tab' || !dialogRef.current) return;
-    const focusables = [...dialogRef.current.querySelectorAll<HTMLElement>(FOCUSABLE)];
-    if (focusables.length === 0) return;
-    const first = focusables[0];
-    const last = focusables[focusables.length - 1];
-    const active = document.activeElement;
-    if (e.shiftKey && (active === first || active === dialogRef.current)) {
-      e.preventDefault();
-      last.focus();
-    } else if (!e.shiftKey && active === last) {
-      e.preventDefault();
-      first.focus();
-    }
-  }
+  // Mounted only while shown, so the dialog is always open from the hook's
+  // perspective; Layout owns open/close and the focus hand-off after dismiss.
+  const dialogRef = useModalFocus<HTMLDivElement>({ open: true, onEscape: onDismiss });
 
   return (
     <div className="modal-overlay">
@@ -59,7 +32,6 @@ export default function StaleTabDialog({ onDismiss }: Props) {
         aria-labelledby="stale-dialog-title"
         aria-describedby="stale-dialog-desc"
         tabIndex={-1}
-        onKeyDown={onKeyDown}
         data-testid="crosstab-guard"
       >
         <h2 id="stale-dialog-title">⚠️ Updated in another tab</h2>
