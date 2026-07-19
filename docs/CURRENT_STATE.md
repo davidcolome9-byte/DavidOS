@@ -5,6 +5,22 @@ count changes. (History: see git log and docs/DECISIONS.md.) This file is
 the single authoritative description of the deployed production state;
 the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
+## Documentation closeout status (this branch)
+
+This file is currently being edited on the local branch
+`docs/ol-015-modal-focus-management-closeout` as a **documentation-closeout
+candidate** for OL-015. That is separate from the OL-015 product status:
+the OL-015 product itself (PR #16, merge
+`7077dac7a9e50f84e39b0f58bf7665b358a1e577`) remains implemented, merged to
+`main`, deployed, and independently product-reviewed, exactly as described
+below. What is still open is this documentation candidate's own lifecycle:
+its commit has **not yet** been independently documentation-re-reviewed,
+pushed, opened as a pull request, run through CI, merged into `main`, or
+synchronized. Final documentation closure awaits those steps.
+
+`package.json` and `package-lock.json` were unchanged by OL-015 and remain
+unchanged in this documentation candidate.
+
 ## Version
 
 **v0.2 + Modal Focus Management release (PR #16)**, on `main` @

@@ -221,6 +221,13 @@ without new evidence.
 - **Independent review:** Verdict B. APPROVED WITH NON-BLOCKING OBSERVATIONS (reviewer: GPT-5.6 Sol, High). Non-blocking: (1) the shared focusable selector does not yet filter every hidden/inert/CSS-invisible candidate — future hardening, no current surface affected; (2) reviewer's environment could not re-query remote GitHub metadata — non-blocking, confirmed independently via local refs and deployed-site behavior.
 - **Tests:** 562/562 unit/component tests (44 files, up from 538/538), 94/94 Playwright tests (up from 93/93) — `src/components/__tests__/useModalFocus.test.tsx` (13), `src/components/__tests__/approvalGate.test.tsx` (6), `src/components/__tests__/settingsModalFocus.test.tsx` (5), `tests/smoke/modalKeyboard.spec.ts` (1).
 - **Limitations preserved:** This is a narrow focus-management fix, not a broad accessibility completion pass — no native `<dialog>` conversion, portals, generalized inert framework, backdrop-dismissal change, or Command Palette redesign was introduced; OL-016 through OL-020 remain open a11y/polish items.
+- **Documentation closeout status:** the OL-015 product above is resolved
+  and deployed. The documentation entry recording that resolution is
+  itself part of a local documentation-closeout candidate on branch
+  `docs/ol-015-modal-focus-management-closeout` that has not yet been
+  pushed or merged. Final documentation synchronization awaits
+  independent documentation re-review, push, PR creation, CI, merge into
+  `main`, and post-merge verification.
 
 ### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion — RESOLVED
 - **Resolved by:** PR #14 (merged 2026-07-18, squash merge/deployed SHA `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c`), recording approved feature SHA `19e303b107c3540639a1a04809b5bd270290dd01`, Pages run `29656188235`, and deployment ID `5504316437`.
