@@ -133,7 +133,11 @@ export default function WorkflowRunner() {
   const planningContext = useMemo(() => {
     if (!stateContextMode || !includePlanningState) return null;
     return buildPlanningContext(state, stateContextMode);
-  }, [stateContextMode, includePlanningState, state.priorities, state.openLoops, state.reminders, state.projects]);
+    // buildPlanningContext only reads priorities/openLoops/reminders/projects,
+    // but it takes the whole `state` object, so `state` itself is the honest
+    // dependency (exhaustive-deps requires it since the identifier is used
+    // directly, unlike the sub-field access `state.healthProfile` above).
+  }, [stateContextMode, includePlanningState, state]);
 
   const planningBlock = useMemo(
     () => (planningContext ? renderPlanningStateBlock(planningContext) : null),
