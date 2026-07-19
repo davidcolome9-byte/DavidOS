@@ -69,6 +69,12 @@ export interface Workflow {
   category?: WorkflowCategory;
   historyProfile?: HistoryProfile;
   outputMode?: WorkflowOutputMode;
+  /**
+   * Planning-context intent (DOS-WF-002A). Set only on Daily Brief and Weekly
+   * Review: the Workflow Runner inserts the canonical planning-state block
+   * for these, and permits zero-note prompt building.
+   */
+  stateContext?: 'planning' | 'weekly';
 }
 
 export interface Command {
@@ -131,6 +137,8 @@ export interface OpenLoop {
   label: string;
   status: 'open' | 'done';
   createdAt: string;
+  /** Stamped when the loop transitions to done; cleared when reopened. */
+  closedAt?: string;
 }
 
 export interface Reminder {
@@ -209,6 +217,22 @@ export interface HealthProfilePromptMetadata {
   profileLastUpdatedAt?: string;
 }
 
+/**
+ * Privacy-safe planning-context prompt metadata (DOS-WF-002A). Counts,
+ * inclusion state, mode, and hash/fingerprint only — never planning labels
+ * or rendered planning text.
+ */
+export interface PlanningContextPromptMetadata {
+  planningStateIncluded: boolean;
+  mode?: 'planning' | 'weekly';
+  priorityCount?: number;
+  openLoopCount?: number;
+  reminderCount?: number;
+  projectCount?: number;
+  promptContextHash?: string;
+  promptContextFingerprint?: string;
+}
+
 export interface WorkflowArtifact {
   id: string;
   workflowId: string;
@@ -229,6 +253,7 @@ export interface WorkflowArtifact {
   sourceMode?: 'preview' | 'full_prompt' | 'current_only';
   includedHandoffSnapshots?: IncludedHandoffSnapshot[];
   healthProfilePromptMetadata?: HealthProfilePromptMetadata;
+  planningContextPromptMetadata?: PlanningContextPromptMetadata;
 }
 
 // ---------- Health & Fitness Profile (Phase 8) ----------
