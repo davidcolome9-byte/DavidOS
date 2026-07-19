@@ -520,3 +520,70 @@ before the deferred store effect attempted the durable write, and
 - **Dialog accessibility (local only):** Escape now cancels and Cancel
   receives initial focus. Full focus trapping remains OL-015; no
   modal-system rewrite.
+
+## 2026-07-19 — OL-015 Modal Focus Management (PR #16)
+
+Merge release (PR #16, "fix(a11y): establish OL-015 modal focus management",
+merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, feature candidate
+`393839908a9cc9f8bc8a60aa9241b387615fdecb`), resolving OL-015.
+
+- **One shared `useModalFocus` foundation.** A single hook plus an
+  exported `MODAL_FOCUSABLE_SELECTOR` now backs all six dialog surfaces
+  (Settings import-conflict, Settings reset-confirmation, StorageManager
+  pruning, Settings Health Profile draft-conflict, ApprovalGate,
+  StaleTabDialog), replacing per-component ad hoc focus handling with
+  one tested implementation.
+- **Safe preferred initial focus.** Each surface passes an
+  `initialFocusRef` to the non-destructive/preservation-safe control
+  (e.g. Cancel, "Keep current", "Cancel & keep my edits", Deny); when no
+  ref is supplied the hook falls back to the focusable `tabIndex={-1}`
+  dialog card itself. No surface defaults focus onto a destructive or
+  approving control.
+- **Tab and Shift+Tab containment.** Forward Tab wraps from the last
+  focusable back to the first; Shift+Tab wraps from the first (or the
+  focused dialog card) to the last. The focusable set excludes native
+  `disabled` controls.
+- **Escape mapped only to safe existing actions.** The hook calls only
+  the caller-supplied safe callback (via a latest-callback ref) and
+  contains no approve/import/reset/prune/persistence path of its own —
+  each surface wires Escape to its own pre-existing cancel/deny handler
+  (`cancelImportConflict`, `cancelReset`, `cancelPrune`,
+  `cancelDraftConflict`).
+- **ApprovalGate Escape always resolves to Deny or Close.** Escape calls
+  `onDecision(false)` exclusively; no keyboard path reaches approval,
+  and blocked high-risk requests still render no Approve button at all.
+- **Connected-opener focus restoration.** The open effect captures
+  `document.activeElement` (the real opener) before focus moves into the
+  dialog; cleanup restores focus to it only if `opener.isConnected`,
+  otherwise it safely no-ops rather than focusing a detached node.
+  StaleTabDialog's pre-existing behavior of handing focus to its
+  persistent "Show details" control after dismissal is preserved and
+  supersedes generic restoration for that surface.
+- **Counted body-scroll locking for stacked modals.** A module-level
+  open-modal reference count stores/hides the original inline
+  `overflow` on the first open and restores it only when the count
+  returns to zero, so a modal opened on top of another does not
+  prematurely unlock scrolling.
+- **StaleTabDialog's inert, banner, and write-guard behavior is
+  unchanged.** The persistent stale banner, the `externalChange` store
+  flag, and write-suppression remain outside modal-visibility state;
+  Layout's pre-existing `inert`/`aria-hidden` handling was not touched.
+  Dismissing the dialog cannot clear staleness or authorize writes;
+  reload remains the only path back to a writable state.
+- **Deliberate exclusions.** No native `<dialog>` element conversion, no
+  portals, no generalized inert/background framework, no backdrop-click
+  dismissal behavior changes, no Command Palette redesign, and no
+  OL-016 through OL-020 scope. These remain open, separate items.
+- **PR #16 process deviation.** Unlike several prior OL packages in this
+  history that used squash merges, PR #16 was merged via a normal merge
+  commit (`7077dac`, parents `c21a6cd` and `3938399`). The merge tree is
+  byte-equivalent to the single feature commit; this is a process note,
+  not a behavioral difference.
+- **Independent review's selector-hardening observation is future
+  hardening only, not a blocker.** The reviewer noted
+  `MODAL_FOCUSABLE_SELECTOR` excludes native `disabled` controls but does
+  not yet filter every hidden/inert/CSS-invisible/otherwise-untabbable
+  candidate. No current dialog surface contains such a control, and
+  real-browser containment passed for all six surfaces; the observation
+  is recorded here so a future surface with a conditional/hidden control
+  adds a regression case and tightens the selector before shipping.

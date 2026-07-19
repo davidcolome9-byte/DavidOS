@@ -15,9 +15,9 @@ needed, and a status marker:
   history in the "Resolved & deployed" section at the bottom
 - **Obsolete** — kept for history
 
-**Last full reconciliation: 2026-07-18**, verified item-by-item against
-`main` @ `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c` (PR #14, Storage
-Protection & Retention — the live deployed release). Items fixed in the
+**Last full reconciliation: 2026-07-19**, verified item-by-item against
+`main` @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` (PR #16, Modal Focus
+Management — the live deployed release). Items fixed in the
 2026-07-12 stabilization sprint are not listed; see git history
 and docs/DECISIONS.md.
 
@@ -114,18 +114,6 @@ and docs/DECISIONS.md.
 
 ## P3 — polish, a11y, hardening
 
-### OL-015 · Modals lack focus management (aria-modal without the behavior)
-- **Kind:** defect (a11y) · **Status:** Verified + Ready
-- **Evidence (re-verified 2026-07-17):** `ApprovalGate.tsx`, `Settings.tsx`
-  reset + conflict modals: no initial focus, no trap, no Escape,
-  background tabbable; no shared focus hook exists in the repo. (The
-  stale-state dialog got dedicated focus hardening in PR #6 — `74f3351` —
-  but the shared-hook fix for the remaining modals is still open.)
-- **Approach:** shared `useModalFocus` hook (focus first control, trap
-  Tab, Escape = cancel, `aria-labelledby` the title). ApprovalGate
-  Escape must map to Deny, never Approve.
-- **Complexity:** M · **Approval:** no
-
 ### OL-016 · No top safe-area inset (notched devices, standalone PWA)
 - **Kind:** defect (mobile polish) · **Status:** Verified + Ready
 - **Evidence (re-verified 2026-07-17):** `index.html` `viewport-fit=cover`
@@ -221,11 +209,25 @@ and docs/DECISIONS.md.
 
 ---
 
-## Resolved & deployed (closed 2026-07-18 reconciliation)
+## Resolved & deployed (closed 2026-07-19 reconciliation)
 
 Each item below was independently re-verified as implemented on `main`
-@ `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c` and live on GitHub Pages. Kept for history; do not reopen
+@ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` and live on GitHub Pages. Kept for history; do not reopen
 without new evidence.
+
+### OL-015 · Modals lack focus management (aria-modal without the behavior) — RESOLVED
+- **Resolved by:** PR #16 (merged 2026-07-19, merge SHA `7077dac7a9e50f84e39b0f58bf7665b358a1e577`), recording feature candidate SHA `393839908a9cc9f8bc8a60aa9241b387615fdecb`, Pages run ID `29667970651`, and deployed SHA `7077dac7a9e50f84e39b0f58bf7665b358a1e577`.
+- **Current behavior:** A shared `useModalFocus` hook now covers all six dialog surfaces (Settings import-conflict, Settings reset-confirmation, StorageManager pruning, Settings Health Profile draft-conflict, ApprovalGate, StaleTabDialog): safe initial focus, Tab/Shift+Tab containment, Escape mapped only to each surface's existing safe cancel/deny action, connected-opener focus restoration, and reference-counted body-scroll locking for stacked modals. ApprovalGate's Escape always resolves to Deny/Close, never Approve.
+- **Independent review:** Verdict B. APPROVED WITH NON-BLOCKING OBSERVATIONS (reviewer: GPT-5.6 Sol, High). Non-blocking: (1) the shared focusable selector does not yet filter every hidden/inert/CSS-invisible candidate — future hardening, no current surface affected; (2) reviewer's environment could not re-query remote GitHub metadata — non-blocking, confirmed independently via local refs and deployed-site behavior.
+- **Tests:** 562/562 unit/component tests (44 files, up from 538/538), 94/94 Playwright tests (up from 93/93) — `src/components/__tests__/useModalFocus.test.tsx` (13), `src/components/__tests__/approvalGate.test.tsx` (6), `src/components/__tests__/settingsModalFocus.test.tsx` (5), `tests/smoke/modalKeyboard.spec.ts` (1).
+- **Limitations preserved:** This is a narrow focus-management fix, not a broad accessibility completion pass — no native `<dialog>` conversion, portals, generalized inert framework, backdrop-dismissal change, or Command Palette redesign was introduced; OL-016 through OL-020 remain open a11y/polish items.
+- **Documentation closeout status:** the OL-015 product above is resolved
+  and deployed. The documentation entry recording that resolution is
+  itself part of a local documentation-closeout candidate on branch
+  `docs/ol-015-modal-focus-management-closeout` that has not yet been
+  pushed or merged. Final documentation synchronization awaits
+  independent documentation re-review, push, PR creation, CI, merge into
+  `main`, and post-merge verification.
 
 ### OL-003 · Artifacts and handoffs grow without bound → quota exhaustion — RESOLVED
 - **Resolved by:** PR #14 (merged 2026-07-18, squash merge/deployed SHA `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c`), recording approved feature SHA `19e303b107c3540639a1a04809b5bd270290dd01`, Pages run `29656188235`, and deployment ID `5504316437`.
