@@ -5,12 +5,13 @@
   "category": "general",
   "historyProfile": "default",
   "outputMode": "analysis_recommendations",
-  "description": "Turn current priorities, open loops, and today's context into a short command brief with a single next action.",
+  "stateContext": "planning",
+  "description": "Turn current priorities, open loops, reminders, projects, and today's notes into a short command brief with a single next action.",
   "inputHint": "Optional: today's energy level, schedule constraints, anything weighing on you.",
   "outputStyles": ["Command brief", "AI-ready prompt", "Plain checklist"],
   "risk": "draft_only",
   "assumptions": [
-    "Priorities and open loops come from local DavidOS state",
+    "Priorities, open loops, reminders, and active projects come from local DavidOS state — notes are optional",
     "No calendar access in v1 — schedule items must be typed in"
   ],
   "nextAction": "Pick ONE item from the brief and start it before opening anything else.",

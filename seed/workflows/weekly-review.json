@@ -5,11 +5,13 @@
   "category": "general",
   "historyProfile": "default",
   "outputMode": "analysis_recommendations",
-  "description": "Review the week, close or defer open loops, and set next week's top 3.",
-  "inputHint": "What happened this week? Known events/deadlines next week? Anything nagging at you?",
+  "stateContext": "weekly",
+  "description": "Review the week using current priorities, open loops, reminders, and projects; close or defer open loops and set next week's top 3.",
+  "inputHint": "Optional — current priorities, open loops, reminders, and projects are included automatically. What happened this week? Known events/deadlines next week? Anything nagging at you?",
   "outputStyles": ["Weekly plan", "AI-ready prompt", "Time-block draft"],
   "risk": "draft_only",
   "assumptions": [
+    "Priorities, open loops, reminders, and active/paused projects come from local DavidOS state — notes are optional",
     "Calendar items must be typed in — no Google Calendar access in v1",
     "Any calendar changes it suggests are drafts; nothing is created without approval"
   ],
