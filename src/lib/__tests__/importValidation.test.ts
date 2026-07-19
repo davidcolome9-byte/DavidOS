@@ -337,6 +337,74 @@ describe('parseImport envelope-version consistency (F-02)', () => {
   });
 });
 
+describe('openLoops.closedAt (DOS-WF-002A)', () => {
+  const firstError = (mutate: (s: AppState) => void) => {
+    const s = base();
+    mutate(s);
+    return validateImportedState(s);
+  };
+
+  it('accepts an old backup with openLoops missing closedAt entirely', () => {
+    const s = base();
+    s.openLoops = [{ id: 'l', label: 'x', status: 'open', createdAt: new Date().toISOString() } as never];
+    expect(validateImportedState(s)).toEqual([]);
+  });
+
+  it('accepts a valid closedAt on a done loop', () => {
+    const s = base();
+    s.openLoops = [{ id: 'l', label: 'x', status: 'done', createdAt: new Date().toISOString(), closedAt: new Date().toISOString() } as never];
+    expect(validateImportedState(s)).toEqual([]);
+  });
+
+  it('rejects a malformed closedAt', () => {
+    const errs = firstError((s) => {
+      s.openLoops = [{ id: 'l', label: 'x', status: 'done', createdAt: new Date().toISOString(), closedAt: 'not-a-date' } as never];
+    });
+    expect(errs.some((e) => e.collection === 'openLoops' && e.field === 'closedAt')).toBe(true);
+  });
+});
+
+describe('artifacts.planningContextPromptMetadata (DOS-WF-002A)', () => {
+  it('accepts an artifact without planningContextPromptMetadata (older backups)', () => {
+    const s = base();
+    s.artifacts = [{ id: 'a', workflowId: 'w', artifactType: 'full_prompt', createdAt: new Date().toISOString(), content: 'c' } as never];
+    expect(validateImportedState(s)).toEqual([]);
+  });
+
+  it('accepts valid privacy-safe planning-context metadata (counts/mode/hash only)', () => {
+    const s = base();
+    s.artifacts = [{
+      id: 'a', workflowId: 'daily-brief', artifactType: 'full_prompt', createdAt: new Date().toISOString(), content: 'c',
+      planningContextPromptMetadata: {
+        planningStateIncluded: true, mode: 'planning',
+        priorityCount: 3, openLoopCount: 2, reminderCount: 1, projectCount: 1,
+        promptContextHash: 'abc123', promptContextFingerprint: 'abc123ab · 42 chars',
+      },
+    } as never];
+    expect(validateImportedState(s)).toEqual([]);
+  });
+
+  it('rejects an invalid mode value', () => {
+    const s = base();
+    s.artifacts = [{
+      id: 'a', workflowId: 'w', artifactType: 'full_prompt', createdAt: new Date().toISOString(), content: 'c',
+      planningContextPromptMetadata: { planningStateIncluded: true, mode: 'bogus' },
+    } as never];
+    const errs = validateImportedState(s);
+    expect(errs.some((e) => e.field === 'planningContextPromptMetadata.mode')).toBe(true);
+  });
+
+  it('rejects a non-boolean planningStateIncluded', () => {
+    const s = base();
+    s.artifacts = [{
+      id: 'a', workflowId: 'w', artifactType: 'full_prompt', createdAt: new Date().toISOString(), content: 'c',
+      planningContextPromptMetadata: { planningStateIncluded: 'yes' },
+    } as never];
+    const errs = validateImportedState(s);
+    expect(errs.some((e) => e.field === 'planningContextPromptMetadata.planningStateIncluded')).toBe(true);
+  });
+});
+
 describe('parseImport schema + forward-version guard (Phase 2C)', () => {
   it('imports a valid current backup', () => {
     const out = parseImport(envelope(() => {}));

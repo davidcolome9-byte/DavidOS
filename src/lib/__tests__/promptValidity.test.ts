@@ -29,6 +29,21 @@ describe('evaluatePromptValidity', () => {
     const intake = '## Request\n\nReview my Gravl workout.\n\nNo Gravl workout has been provided yet. Ask David to paste it.';
     expect(evaluatePromptValidity(intake, 'Review my Gravl workout.').valid).toBe(true);
   });
+
+  it('rejects an empty request by default even with real prompt text (DOS-WF-002A guard)', () => {
+    expect(evaluatePromptValidity('## New Entry to Analyze\n\n(no additional notes for today)', '').valid).toBe(false);
+  });
+
+  it('allowEmptyRequest permits a zero-note planning prompt', () => {
+    const r = evaluatePromptValidity('## New Entry to Analyze\n\n(no additional notes for today)', '', { allowEmptyRequest: true });
+    expect(r.valid).toBe(true);
+    expect(r.reasons).toEqual([]);
+  });
+
+  it('allowEmptyRequest does not bypass the no-input-marker / placeholder checks', () => {
+    expect(evaluatePromptValidity('Body: (no input provided)', '', { allowEmptyRequest: true }).valid).toBe(false);
+    expect(evaluatePromptValidity('Hello [[NAME]]', '', { allowEmptyRequest: true }).valid).toBe(false);
+  });
 });
 
 describe('buildPromptConfigKey', () => {
@@ -63,6 +78,22 @@ describe('buildPromptConfigKey', () => {
   it('changes when Gravl workout text or screenshots change', () => {
     expect(buildPromptConfigKey(base)).not.toBe(buildPromptConfigKey({ ...base, workoutText: 'Squat 3x5' }));
     expect(buildPromptConfigKey(base)).not.toBe(buildPromptConfigKey({ ...base, hasScreenshots: true }));
+  });
+
+  it('changes when planning-state inclusion is toggled (DOS-WF-002A)', () => {
+    const withPlanning = { ...base, includePlanningState: true, planningContextFingerprint: 'p1' };
+    expect(buildPromptConfigKey(withPlanning)).not.toBe(buildPromptConfigKey({ ...withPlanning, includePlanningState: false }));
+  });
+
+  it('changes when the included planning-state fingerprint changes', () => {
+    const withPlanning = { ...base, includePlanningState: true, planningContextFingerprint: 'p1' };
+    expect(buildPromptConfigKey(withPlanning)).not.toBe(buildPromptConfigKey({ ...withPlanning, planningContextFingerprint: 'p2' }));
+  });
+
+  it('ignores the planning-state fingerprint when inclusion is off', () => {
+    const excludedA = { ...base, includePlanningState: false, planningContextFingerprint: 'p1' };
+    const excludedB = { ...base, includePlanningState: false, planningContextFingerprint: 'p2' };
+    expect(buildPromptConfigKey(excludedA)).toBe(buildPromptConfigKey(excludedB));
   });
 });
 
