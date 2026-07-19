@@ -19,6 +19,16 @@ export interface PromptValidity {
   reasons: string[];
 }
 
+export interface PromptValidityOptions {
+  /**
+   * Planning-context workflows (Daily Brief / Weekly Review, DOS-WF-002A) may
+   * honestly build a prompt from zero notes — the canonical planning state
+   * substitutes for a typed request, and the New Entry section renders a
+   * locked placeholder instead of the generic "no input provided" marker.
+   */
+  allowEmptyRequest?: boolean;
+}
+
 /**
  * Evaluate whether a built prompt may be copied or saved.
  *
@@ -26,10 +36,10 @@ export interface PromptValidity {
  * request is non-empty and the prompt honestly labels itself — such a prompt
  * contains the request and never the "no input provided" marker.
  */
-export function evaluatePromptValidity(fullPrompt: string, request: string): PromptValidity {
+export function evaluatePromptValidity(fullPrompt: string, request: string, options: PromptValidityOptions = {}): PromptValidity {
   const reasons: string[] = [];
 
-  if (!request.trim()) reasons.push('The request is empty.');
+  if (!options.allowEmptyRequest && !request.trim()) reasons.push('The request is empty.');
   if (!fullPrompt || !fullPrompt.trim()) reasons.push('Prompt construction produced no text.');
   if (NO_INPUT_MARKER.test(fullPrompt)) reasons.push('The prompt still says no input was provided.');
   if (UNRESOLVED_TEMPLATE_TOKEN.test(fullPrompt)) reasons.push('The prompt still contains an unresolved {{template}} token.');
@@ -57,6 +67,16 @@ export interface PromptConfigParts {
   workoutText?: string;
   /** Gravl-only: whether screenshots were flagged. */
   hasScreenshots?: boolean;
+  /** Whether the canonical planning-state context is included (DOS-WF-002A). */
+  includePlanningState?: boolean;
+  /**
+   * FULL identity hash of the rendered planning-state block (NOT the
+   * shortened display fingerprint) — changes whenever priorities, open
+   * loops, reminders, or projects change, or a planning-state workflow is
+   * built with an empty selection. Callers must pass the full hash here for
+   * the same reason `profileFingerprint` does.
+   */
+  planningContextFingerprint?: string;
 }
 
 export interface Actability {
@@ -105,5 +125,7 @@ export function buildPromptConfigKey(parts: PromptConfigParts): string {
     profileFingerprint: parts.includeProfile ? parts.profileFingerprint ?? 'none' : 'excluded',
     workoutText: parts.workoutText ?? '',
     hasScreenshots: Boolean(parts.hasScreenshots),
+    includePlanningState: Boolean(parts.includePlanningState),
+    planningContextFingerprint: parts.includePlanningState ? parts.planningContextFingerprint ?? 'none' : 'excluded',
   });
 }
