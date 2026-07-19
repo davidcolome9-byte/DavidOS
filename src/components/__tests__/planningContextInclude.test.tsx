@@ -142,6 +142,16 @@ describe('Workflow Runner planning-state inclusion (DOS-WF-002A)', () => {
     expect(text()).toContain('Nothing typed to copy.');
   });
 
+  it('Save to Workflow History and Create Follow-Up Task stay disabled when notes are empty', async () => {
+    await mount('/workflows?wf=daily-brief');
+    await click('Build Prompt');
+    expect(button('Save to Workflow History').disabled).toBe(true);
+    expect(button('Create Follow-Up Task').disabled).toBe(true);
+    // Save Prompt saves the full prompt (real planning-state content), so it
+    // stays actionable even with zero typed notes.
+    expect(button('Save Prompt').disabled).toBe(false);
+  });
+
   it('non-planning workflows still require typed input to build', async () => {
     await mount('/workflows?wf=work-teachback');
     expect(container.querySelector('label.checkrow')?.textContent?.includes('Include planning state')).not.toBe(true);

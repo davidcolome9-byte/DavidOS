@@ -373,7 +373,7 @@ export default function WorkflowRunner() {
   }
 
   function addOpenLoop() {
-    if (!guardAction() || !workflow) return;
+    if (!guardAction() || !workflow || !input.trim()) return;
     const label = `Follow up: ${workflow.name} — ${summarizeInput(input)}`;
     update((s) => ({
       ...s,
@@ -653,10 +653,16 @@ export default function WorkflowRunner() {
               )}
               <div className="btn-row">
                 <button onClick={saveArtifact} disabled={!canAct}>Save Prompt</button>
-                <button onClick={saveHandoff} disabled={!canAct}>Save to Workflow History</button>
-                <button onClick={addOpenLoop} disabled={!canAct}>Create Follow-Up Task</button>
+                <button onClick={saveHandoff} disabled={!canAct || !input.trim()}>Save to Workflow History</button>
+                <button onClick={addOpenLoop} disabled={!canAct || !input.trim()}>Create Follow-Up Task</button>
               </div>
               <p className="muted small">Saved prompts stay on this device only.</p>
+              {canAct && !input.trim() && (
+                <p className="muted small">
+                  Save to Workflow History and Create Follow-Up Task need typed notes — there's nothing
+                  written yet to save as a history entry or follow-up.
+                </p>
+              )}
               {flash && <p className="notice flash">{flash}</p>}
             </>
           )}
