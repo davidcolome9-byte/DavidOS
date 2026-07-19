@@ -1,4 +1,4 @@
-# Current State — 2026-07-18
+# Current State — 2026-07-19
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -7,14 +7,20 @@ the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
 ## Version
 
-**v0.2 + Storage Protection & Retention release (PR #14)**, on `main` @
-`a341b5cbe0cab88eed8d8ce43e604b04b6ce999c` (squash merge of PR #14,
-merged 2026-07-18) @ GitHub `davidcolome9-byte/DavidOS`, auto-deployed
-to GitHub Pages (https://davidcolome9-byte.github.io/DavidOS/) on every
-push to `main`. The `deploy.yml` run for `a341b5c` (run ID 29656188235,
-deployment ID 5504316437) succeeded on 2026-07-18 (full verify + smoke gate
-on the deployed SHA before publishing), and the release passed post-merge
-live verification the same day, including manual Android PWA Path B offline verification.
+**v0.2 + Modal Focus Management release (PR #16)**, on `main` @
+`7077dac7a9e50f84e39b0f58bf7665b358a1e577` (merge commit of PR #16,
+"fix(a11y): establish OL-015 modal focus management"; feature candidate
+`393839908a9cc9f8bc8a60aa9241b387615fdecb`; merged 2026-07-19) @ GitHub
+`davidcolome9-byte/DavidOS`, auto-deployed to GitHub Pages
+(https://davidcolome9-byte.github.io/DavidOS/) on every push to `main`.
+PR CI (`ci.yml` run 29667727422, job 88141089268) succeeded. The
+`deploy.yml` run for `7077dac` (run ID 29667970651, job 88141751291,
+deployment ID 5506816489) succeeded on 2026-07-19 (full verify + smoke gate
+on the deployed SHA before publishing), and the release passed independent
+post-merge review the same day (see "OL-015 independent review" below).
+Note: PR #16 used a normal merge commit rather than the squash-merge
+pattern used by prior releases in this history (process deviation, not a
+defect — the merge tree is byte-equivalent to the single feature commit).
 
 ## What works today
 
@@ -103,6 +109,21 @@ live verification the same day, including manual Android PWA Path B offline veri
 - **Safety**: 6-level risk classifier surfaced in the palette, honest
   no-ops for risky unmatched commands, ApprovalGate (high-risk renders no
   Approve button), audit log capped at 300.
+- **Modal focus management** (shared `useModalFocus` hook, PR #16,
+  OL-015 resolved): all six dialog surfaces (Settings import-conflict,
+  Settings reset-confirmation, StorageManager pruning, Settings Health
+  Profile draft-conflict, ApprovalGate, StaleTabDialog) now share one
+  hook for safe initial focus, Tab/Shift+Tab containment, and
+  connected-opener focus restoration. Escape is mapped only to each
+  surface's existing safe cancel/deny action — never to a destructive or
+  approving action; ApprovalGate's Escape always resolves to
+  `onDecision(false)` (deny), matching its Deny/Close-only button set.
+  Body-scroll locking now uses a reference count so stacked modals lock
+  and unlock correctly. StaleTabDialog's persistent banner, `inert`
+  handling, and write-suppression guard are unchanged by this work.
+  Typed `RESET`/`PRUNE` confirmation guards are unchanged. No native
+  `<dialog>` conversion, portals, generalized inert framework, or
+  backdrop-dismissal change was introduced (deliberately out of scope).
 - **Continuity & correction history**: saved handoffs support an in-UI
   correction flow (Logs → Handoffs → "Correct this entry"; OL-007
   resolved, PR #5) — corrections outrank prior entries in prompt
@@ -131,13 +152,20 @@ live verification the same day, including manual Android PWA Path B offline veri
   prompts; it never calls an AI provider (planned as v0.6, OL-025).
   **Native packaging: not built** (Capacitor wrapper planned, v0.7).
 
-## Verification status (2026-07-18, `main` @ `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c`, post-PR #14)
+## Verification status (2026-07-19, `main` @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, post-PR #16)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit tests: 41 files, **538 tests**, all passing (`npm test`), including **26 offline unit tests** (21/21 focused unit and integration tests are included within the 538/538 total unit tests).
-- Browser smoke tests: **93 passing** in 14 files (`npm run test:smoke`,
-  Playwright chromium, production build; phone + laptop viewports), including **8 offline Playwright tests** (11/11 focused smoke tests are included within the 93/93 total Playwright tests).
+- Unit/component tests: 44 files, **562/562 tests**, all passing
+  (`npm test`), up from the pre-OL-015 538/538 baseline (24 new tests:
+  `useModalFocus.test.tsx` 13, `approvalGate.test.tsx` 6,
+  `settingsModalFocus.test.tsx` 5), including **26 offline unit tests**
+  (21/21 focused unit and integration tests are included within the total).
+- Browser smoke tests: **94/94 passing** (`npm run test:smoke`,
+  Playwright chromium, production build; phone + laptop viewports), up
+  from the pre-OL-015 93/93 baseline (1 new test: `modalKeyboard.spec.ts`),
+  including **8 offline Playwright tests** (11/11 focused smoke tests are
+  included within the total).
 - Authoritative visible routing suite: **17/17** (PR #8 verification).
 - Routing acceptance corpus (153 cases, read-only ground truth outside
   the repo; metric definitions locked in
@@ -158,19 +186,38 @@ Exact counts live here ONLY (other docs reference this file):
   request and on pushes to main; Pages deploys (`deploy.yml`) run the
   same full gate — including smoke tests — on the deployed SHA before
   publishing.
-- Deployed to GitHub Pages: the `deploy.yml` run on `a341b5c` (run ID 29656188235,
-  deployment ID 5504316437) succeeded 2026-07-18 (the deploy gate runs the full
-  verify + smoke suite on the deployed SHA before publishing), and post-merge
-  live verification of the deployed release passed the same day.
-- Live production acceptance: Verdict: A. LIVE ACCEPTANCE PASSED. All 40 focused
-  acceptance criteria passed under isolated Playwright browser context, mobile
-  viewport 390 × 844, using synthetic-data prefix `OL003-LIVE-TEST-` (no personal
-  browser profile or real private data used), leaving the repository clean.
-- Archived live-release report: `C:\dev\backups\DavidOS-OL-003-storage-protection-retention-live-release-2026-07-18.md` (9,730 bytes, SHA-256: `587E13309E66AF7DDACA1C6E78B822499E04F4A601D7D00E3563E128E2B1E6C1`).
+- Deployed to GitHub Pages: the `deploy.yml` run on `7077dac` (run ID
+  29667970651, job 88141751291, deployment ID 5506816489) succeeded
+  2026-07-19 (the deploy gate runs the full verify + smoke suite on the
+  deployed SHA before publishing).
+- OL-015 independent review: **Verdict B. APPROVED WITH NON-BLOCKING
+  OBSERVATIONS** (reviewer: GPT-5.6 Sol, High; independent, read-only).
+  Confirmed the shared `useModalFocus` hook and all six migrated
+  surfaces, plus isolated deployed-browser acceptance (Reset dialog,
+  ApprovalGate Deny/Escape-to-Deny, StaleTabDialog) with zero page/
+  console errors. Two non-blocking observations: (1) the shared selector
+  does not yet filter every hidden/inert/CSS-invisible candidate —
+  future hardening, no current surface is affected; (2) the reviewer's
+  environment blocked remote GitHub metadata re-query — non-blocking
+  because local refs/trees and deployed-site behavior were independently
+  confirmed. Artifact: `C:\dev\backups\ol_015_modal_focus_management_independent_review.md`
+  (19,839 bytes, SHA-256: `765C977CEADA6DE24B7968C784534239D1F4A1645F753C8D9D54AC4BA85879F4`).
+- Archived live-release report: `C:\dev\backups\DavidOS-OL-015-modal-focus-management-live-release-2026-07-19.md`
+  (11,972 bytes, SHA-256: `4AE17DB59AB4BCF9A35F2264FE177E9EF858B7E77EE7D2ED6E159BC970C783B7`).
+- Prior release (OL-003) live production acceptance: Verdict A. LIVE
+  ACCEPTANCE PASSED, 40/40 focused criteria, 2026-07-18 — see the
+  "Release history" entry for PR #14 below; unaffected by PR #16.
 - Android Installed-PWA Status: Manual verification on a target Android PWA client via Path B (fresh install) succeeded, proving successful service-worker installation, offline launch, repeated offline launch, local data preservation, and offline routing. *Limitation:* Android Path B does not manually prove an in-place upgrade from a pre-PR #10 installation (Path A was not performed); in-place update capability is verified via automated Build A to Build B E2E tests.
 
 ## Release history (merged & deployed)
 
+- **PR #16 — Modal Focus Management** (merged 2026-07-19, normal merge
+  commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`; feature candidate
+  `393839908a9cc9f8bc8a60aa9241b387615fdecb`): shared `useModalFocus`
+  hook migrates all six dialog surfaces to safe initial focus, Tab/
+  Shift+Tab containment, safe Escape mapping, connected-opener focus
+  restoration, and reference-counted stacked-modal scroll locking;
+  resolved OL-015.
 - **PR #14 — Storage Protection & Retention** (merged 2026-07-18, squash
   `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c`): implements explicit guarded prompt-artifact pruning (keep-newest-N) with export-first prompts; warning/critical storage-usage meters and warning banner; transactional persist-first commit for pruning; health-guarded pruning blocks; resolved OL-003.
 - **PR #12 — Health Profile Import Draft Protection** (merged 2026-07-18, squash
@@ -203,9 +250,9 @@ Exact counts live here ONLY (other docs reference this file):
   2026-07-13); **PR #1 — Universal Operations Core** (merged
   2026-07-12).
 
-## Repository state (branches & worktrees, 2026-07-18)
+## Repository state (branches & worktrees, 2026-07-19)
 
-Stable production branch: `main` @ `a341b5cbe0cab88eed8d8ce43e604b04b6ce999c` (clean; local == origin).
+Stable production branch: `main` @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` (clean; local == origin).
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
@@ -218,6 +265,7 @@ whenever David chooses (removal deliberately NOT performed by agents):
 - `fix/dos-fnd-001-atomic-offline-launch` @ `287445957c92d2c835f9b181024cb210d8145f4c` (PR #10)
 - `fix/health-profile-import-draft-protection` @ `bfa5512d1fad96af6c4bfd56de852f131cdb387e` (PR #12)
 - `fix/ol-003-storage-protection-retention` @ `19e303b107c3540639a1a04809b5bd270290dd01` (PR #14)
+- `fix/ol-015-modal-focus-management` @ `393839908a9cc9f8bc8a60aa9241b387615fdecb` (PR #16, merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`)
 
 Stale local draft branches — NOT merged, NOT reviewed, NOT deployed;
 do not treat their contents as shipped:
