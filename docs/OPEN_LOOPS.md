@@ -250,33 +250,6 @@ and docs/DECISIONS.md.
 
 ## Roadmap-scale items (product decisions)
 
-### OL-030 · DOS-AGT-001A Supervised Coding Coordinator — candidate + deferred follow-ups
-- **Kind:** future capability (first operational execution agent) ·
-  **Status:** Blocked (local candidate on
-  `feat/dos-agt-001a-supervised-coding-agent`, awaiting independent review
-  and David's merge decision — NOT merged, NOT deployed)
-- **Shipped in the candidate:** separate execution-agent registry
-  (`coding-coordinator`, own `ExecutionAgentId` — domain agents untouched);
-  `AppState.executionRecords` with lifecycle
-  draft/ready/in_progress/blocked/awaiting_approval/completed/cancelled;
-  three separate draft fields (objective, scope, stopConditions);
-  restrictive all-false authority defaults (code/tests/docs/push/PR/merge);
-  deterministic execution packet with honesty notice; optional deeply
-  validated import; allowlist-only audit metadata; mobile-first Supervised
-  execution section on the Agents page. DavidOS executes and sends nothing.
-- **Correction pass applied:** the first independent Codex candidate review
-  ("changes required before push") was addressed in full on the same
-  branch — deep boot validation + recovery for stored records, id-free
-  allowlisted audit entries, outcome/authority/timestamp invariants,
-  accessible inline cancel focus, and mobile long-content hardening — see
-  docs/DECISIONS.md 2026-07-19 (correction pass). Awaiting the final
-  independent review and David's merge decision.
-- **Deliberately deferred (future loops, need David):** record↔project
-  linking; packet history as typed artifacts; additional execution profiles;
-  any actual execution automation (v0.6-class decision, see OL-025).
-- **Evidence:** docs/DECISIONS.md 2026-07-19 DOS-AGT-001A entries;
-  `src/lib/agents/executionRecords.ts`, unit/component/Playwright suites.
-
 ### OL-023 · v0.2 deferred polish bundle
 - **Kind:** future capability · **Status:** Requires David (pick what
   still matters) · Router weight tuning, multi-intent detection, "did
@@ -311,6 +284,70 @@ and docs/DECISIONS.md.
 Each item below was independently re-verified as implemented on `main`
 @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` and live on GitHub Pages. Kept for history; do not reopen
 without new evidence.
+
+### OL-030 · DOS-AGT-001A Supervised Coding Coordinator — RESOLVED
+- **Resolved by:** PR #20 (squash-merged 2026-07-20T12:57:18Z, merge SHA
+  `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`), recording approved candidate
+  SHA `382f9f8ac16ac22cf2a233f63deba4121d9899ab`, CI run `29744211947`,
+  Pages deploy run `29744211960`, Pages deployment ID `5522055312`.
+- **Current behavior:** the first operational execution-agent profile —
+  the DavidOS Coding Coordinator (`coding-coordinator`) — a local-only,
+  supervised layer completely separate from the routed domain-agent
+  architecture (own `ExecutionAgentId`; no seed file, no workflow, no
+  routing keywords). Creates and persists `ExecutionRecord`s through a
+  draft/ready/in_progress/blocked/awaiting_approval/completed/cancelled
+  lifecycle with pure-domain transition normalization and terminal
+  immutability; three separate required fields (objective, bounded scope,
+  stop conditions); six-key authority all defaulting to NOT authorized;
+  deterministic, unpersisted execution packets carrying an explicit
+  "nothing was sent or executed" notice; malformed persisted records are
+  deep-validated at boot and routed through the existing preserve-then-
+  repair recovery contract rather than reaching the UI; malformed explicit
+  imports are rejected before replacing current state; new audit entries
+  use fixed allowlisted metadata only (no record ids or user text in any
+  form). DavidOS itself still calls no AI provider, executes no commands,
+  and mutates no Git/GitHub state.
+- **Independent review:** two targeted Codex candidate-review correction
+  passes were applied in full (deep boot validation/recovery; ID-free
+  allowlisted audit entries; outcomeSummary/authority/timestamp
+  invariants; accessible inline-cancel focus management; mobile long-
+  content hardening; then a final regression-coverage strengthening pass).
+  Final independent verdict: **APPROVE WITH NON-BLOCKING NOTES**, no
+  blocking runtime defect. Non-blocking notes (preserved, not opened as
+  separate loops): (1) the Playwright `valueLocator()` helper targets
+  `p`/`span`/`li` prose tags and may need updating after a future markup
+  refactor; (2) the mobile geometry assertions (containment/non-overlap)
+  are representative coverage, not an exhaustive all-elements layout proof.
+- **Post-merge deployment & live acceptance:** merge-SHA CI and Pages
+  deploy both succeeded (103/103 Playwright tests; one pre-existing flaky
+  test in `tests/smoke/navigation.spec.ts`, unrelated to this package,
+  passed on retry). An isolated, freshly-created browser context (no
+  David's browser profile) independently verified the deployed production
+  build at desktop (1440×900) and mobile (375×812) using only synthetic
+  data: **31/31 checks passed**, zero console errors, zero non-production-
+  origin network requests, zero horizontal overflow at either viewport.
+- **Tests:** 786/786 unit/component tests (52 files, up from 606/606),
+  103/103 Playwright tests (up from 98/98) —
+  `src/lib/__tests__/executionAgentRegistry.test.ts`,
+  `executionAudit.test.ts`, `executionPersistence.test.ts`,
+  `executionRecords.test.ts`, `executionRecovery.test.ts`,
+  `src/components/__tests__/supervisedExecution.test.tsx`,
+  `tests/smoke/supervisedExecution.spec.ts`.
+- **Deliberately deferred (future loops, need David):** record↔project
+  linking; packet history as typed artifacts; additional execution
+  profiles; any actual execution automation (v0.6-class decision, see
+  OL-025).
+- **Release evidence:** archived at
+  `D:\DavidOS_Backups\DOS-AGT-001A\release\20260720-130542\` (ZIP
+  `DOS-AGT-001A-release-20260720-130542.zip`, SHA-256
+  `3c218cce3a9c4d1f342ff9ef923821463c651146d0946b31b082d40b32cfff59`).
+- **Documentation closeout status:** the product above is resolved,
+  merged, and deployed. The documentation entry recording this resolution
+  is itself part of a local documentation-closeout candidate on branch
+  `docs/dos-agt-001a-supervised-coding-agent-closeout` that has not yet
+  been pushed, opened as a pull request, merged, or synchronized. Final
+  documentation synchronization awaits those steps and David's explicit
+  merge authorization.
 
 ### OL-015 · Modals lack focus management (aria-modal without the behavior) — RESOLVED
 - **Resolved by:** PR #16 (merged 2026-07-19, merge SHA `7077dac7a9e50f84e39b0f58bf7665b358a1e577`), recording feature candidate SHA `393839908a9cc9f8bc8a60aa9241b387615fdecb`, Pages run ID `29667970651`, and deployed SHA `7077dac7a9e50f84e39b0f58bf7665b358a1e577`.
