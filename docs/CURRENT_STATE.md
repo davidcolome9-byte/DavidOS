@@ -8,6 +8,48 @@ the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 `package.json` and `package-lock.json` were unchanged by DOS-WF-002A and
 remain unchanged in this documentation-closeout candidate.
 
+## DOS-AGT-001A candidate status (this branch)
+
+This file is currently being edited on the local branch
+`feat/dos-agt-001a-supervised-coding-agent` as part of the **DOS-AGT-001A
+Supervised Coding Coordinator foundation candidate**. That candidate adds a
+local-only supervised execution layer (separate execution-agent registry with
+the single `coding-coordinator` profile, `AppState.executionRecords`,
+deterministic execution packets, a mobile-first "Supervised execution"
+section on the Agents page, allowlist-only audit metadata, and optional
+deeply validated import) — see docs/DECISIONS.md 2026-07-19 (DOS-AGT-001A)
+and docs/OPEN_LOOPS.md OL-030. DavidOS itself still calls no AI provider,
+executes no commands, and mutates no Git/GitHub state; the new layer only
+records and copies instructions for work David runs himself externally.
+
+The candidate has additionally been through two targeted correction passes
+from independent Codex candidate review:
+1. Runtime correction pass (deep boot validation of stored execution
+   records under the standard recovery/quarantine contract; audit entries
+   reduced to fixed allowlisted metadata with no record ids; outcomeSummary
+   restricted to completed records; exact six-key boolean authority shape;
+   strict canonical millisecond-UTC ISO timestamps; accessible inline cancel
+   confirmation with managed focus; mobile-safe wrapping of long user
+   content) — see docs/DECISIONS.md 2026-07-19 (correction pass).
+2. Final regression-coverage strengthening pass (Codex verdict: "sound with
+   small required fixes", no runtime defect found) — an explicit
+   draft→ready outcomeSummary-cleanup test plus a full non-completed
+   transition matrix asserting own-property removal; non-vacuous Playwright
+   assertions proving the actual long hostile values render, stay
+   contained, and never overlap nearby controls; a real-browser test
+   confirming native Enter/Space keyboard activation of the inline cancel
+   controls — see docs/DECISIONS.md 2026-07-19 (final regression pass).
+
+**This candidate is NOT merged, NOT independently re-reviewed since the
+final regression pass, NOT deployed.** Everything
+below this section continues to describe the deployed production state at
+PR #18 (`49c71ca`) and deliberately does not count this branch's changes.
+Candidate-local verification at the time of writing: full unit suite and the
+full Playwright smoke suite (including the new `supervisedExecution.spec.ts`)
+pass locally; `package.json`/`package-lock.json` are unchanged by this
+candidate. Final counts and release evidence will be recorded at closeout,
+after independent review, merge, CI, and deploy.
+
 ## Version
 
 **v0.2 + Planning Context Unification release (PR #18, DOS-WF-002A)**, on

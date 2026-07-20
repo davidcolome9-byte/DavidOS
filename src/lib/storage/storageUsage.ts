@@ -63,6 +63,7 @@ export interface StorageReader {
 
 const COLLECTION_LABELS: ReadonlyArray<{ key: keyof AppState; label: string }> = [
   { key: 'artifacts', label: 'Saved prompts (artifacts)' },
+  { key: 'executionRecords', label: 'Execution records' },
   { key: 'handoffs', label: 'Handoff history' },
   { key: 'auditLog', label: 'Audit log' },
   { key: 'prompts', label: 'Prompt vault' },

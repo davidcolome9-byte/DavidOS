@@ -27,6 +27,7 @@ function baseState(overrides: Partial<AppState> = {}): AppState {
     contextItems: [],
     handoffs: [],
     artifacts: [],
+    executionRecords: [],
     healthProfile: null,
     auditLog: [],
     settings: { theme: 'dark' },

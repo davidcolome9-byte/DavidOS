@@ -250,6 +250,33 @@ and docs/DECISIONS.md.
 
 ## Roadmap-scale items (product decisions)
 
+### OL-030 · DOS-AGT-001A Supervised Coding Coordinator — candidate + deferred follow-ups
+- **Kind:** future capability (first operational execution agent) ·
+  **Status:** Blocked (local candidate on
+  `feat/dos-agt-001a-supervised-coding-agent`, awaiting independent review
+  and David's merge decision — NOT merged, NOT deployed)
+- **Shipped in the candidate:** separate execution-agent registry
+  (`coding-coordinator`, own `ExecutionAgentId` — domain agents untouched);
+  `AppState.executionRecords` with lifecycle
+  draft/ready/in_progress/blocked/awaiting_approval/completed/cancelled;
+  three separate draft fields (objective, scope, stopConditions);
+  restrictive all-false authority defaults (code/tests/docs/push/PR/merge);
+  deterministic execution packet with honesty notice; optional deeply
+  validated import; allowlist-only audit metadata; mobile-first Supervised
+  execution section on the Agents page. DavidOS executes and sends nothing.
+- **Correction pass applied:** the first independent Codex candidate review
+  ("changes required before push") was addressed in full on the same
+  branch — deep boot validation + recovery for stored records, id-free
+  allowlisted audit entries, outcome/authority/timestamp invariants,
+  accessible inline cancel focus, and mobile long-content hardening — see
+  docs/DECISIONS.md 2026-07-19 (correction pass). Awaiting the final
+  independent review and David's merge decision.
+- **Deliberately deferred (future loops, need David):** record↔project
+  linking; packet history as typed artifacts; additional execution profiles;
+  any actual execution automation (v0.6-class decision, see OL-025).
+- **Evidence:** docs/DECISIONS.md 2026-07-19 DOS-AGT-001A entries;
+  `src/lib/agents/executionRecords.ts`, unit/component/Playwright suites.
+
 ### OL-023 · v0.2 deferred polish bundle
 - **Kind:** future capability · **Status:** Requires David (pick what
   still matters) · Router weight tuning, multi-intent detection, "did

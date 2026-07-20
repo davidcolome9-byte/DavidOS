@@ -269,6 +269,24 @@ pre.output {
 }
 .checkrow input[type='checkbox'] { width: 18px; height: 18px; margin-top: 1px; }
 
+/* ---------- Supervised execution (DOS-AGT-001A) ---------- */
+/* User-entered execution text can contain long unbroken tokens (Windows
+   paths, URLs, SHAs, branch names) — wrap them inside the card instead of
+   overflowing the phone viewport. Scoped; ordinary prose is unaffected. */
+.exec-record p,
+.exec-record li,
+.exec-record h3,
+.exec-record h4,
+.exec-record summary,
+.exec-record .notice {
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+/* Authority checkboxes: the whole label row is the touch target — keep it
+   at the 44px minimum. */
+.exec-authority .checkrow { min-height: 44px; align-items: center; }
+
 button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Collapsible form cards (Health Profile) */
