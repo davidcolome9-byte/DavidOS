@@ -8,87 +8,76 @@ the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 `package.json` and `package-lock.json` were unchanged by DOS-WF-002A and
 remain unchanged in this documentation-closeout candidate.
 
-## DOS-AGT-001A candidate status (this branch)
+## Documentation closeout status (this branch)
 
 This file is currently being edited on the local branch
-`feat/dos-agt-001a-supervised-coding-agent` as part of the **DOS-AGT-001A
-Supervised Coding Coordinator foundation candidate**. That candidate adds a
-local-only supervised execution layer (separate execution-agent registry with
-the single `coding-coordinator` profile, `AppState.executionRecords`,
-deterministic execution packets, a mobile-first "Supervised execution"
-section on the Agents page, allowlist-only audit metadata, and optional
-deeply validated import) — see docs/DECISIONS.md 2026-07-19 (DOS-AGT-001A)
-and docs/OPEN_LOOPS.md OL-030. DavidOS itself still calls no AI provider,
-executes no commands, and mutates no Git/GitHub state; the new layer only
-records and copies instructions for work David runs himself externally.
-
-The candidate has additionally been through two targeted correction passes
-from independent Codex candidate review:
-1. Runtime correction pass (deep boot validation of stored execution
-   records under the standard recovery/quarantine contract; audit entries
-   reduced to fixed allowlisted metadata with no record ids; outcomeSummary
-   restricted to completed records; exact six-key boolean authority shape;
-   strict canonical millisecond-UTC ISO timestamps; accessible inline cancel
-   confirmation with managed focus; mobile-safe wrapping of long user
-   content) — see docs/DECISIONS.md 2026-07-19 (correction pass).
-2. Final regression-coverage strengthening pass (Codex verdict: "sound with
-   small required fixes", no runtime defect found) — an explicit
-   draft→ready outcomeSummary-cleanup test plus a full non-completed
-   transition matrix asserting own-property removal; non-vacuous Playwright
-   assertions proving the actual long hostile values render, stay
-   contained, and never overlap nearby controls; a real-browser test
-   confirming native Enter/Space keyboard activation of the inline cancel
-   controls — see docs/DECISIONS.md 2026-07-19 (final regression pass).
-
-**This candidate is NOT merged, NOT independently re-reviewed since the
-final regression pass, NOT deployed.** Everything
-below this section continues to describe the deployed production state at
-PR #18 (`49c71ca`) and deliberately does not count this branch's changes.
-Candidate-local verification at the time of writing: full unit suite and the
-full Playwright smoke suite (including the new `supervisedExecution.spec.ts`)
-pass locally; `package.json`/`package-lock.json` are unchanged by this
-candidate. Final counts and release evidence will be recorded at closeout,
-after independent review, merge, CI, and deploy.
+`docs/dos-agt-001a-supervised-coding-agent-closeout` as a
+**documentation-closeout candidate** for DOS-AGT-001A. That is separate
+from the DOS-AGT-001A product status: the product itself (PR #20, squash
+merge `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, merged 2026-07-20T12:57:18Z)
+is implemented, merged to `main`, deployed to GitHub Pages, and
+independently live-verified in an isolated browser context, exactly as
+described below. What is still open is this documentation candidate's own
+lifecycle: its commit has **not yet** been pushed, opened as a pull
+request, run through CI, merged into `main`, or synchronized. Final
+documentation closure awaits those steps and David's explicit merge
+authorization.
 
 ## Version
 
-**v0.2 + Planning Context Unification release (PR #18, DOS-WF-002A)**, on
-`main` @ `49c71caa7ad8af95afad3adc09893a0388810745` (merge commit of PR #18,
-"feat: unify planning context across brief workflows"; product head
-`73d1306f0c571a84d33f0b06059110f589dc7fcd`; merged 2026-07-19) @ GitHub
-`davidcolome9-byte/DavidOS`, auto-deployed to GitHub Pages
-(https://davidcolome9-byte.github.io/DavidOS/) on every push to `main`.
+**v0.2 + Supervised Coding Coordinator release (PR #20, DOS-AGT-001A)**, on
+`main` @ `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836` (squash-merge commit of
+PR #20, "feat: add supervised coding coordinator foundation (DOS-AGT-001A)";
+approved candidate `382f9f8ac16ac22cf2a233f63deba4121d9899ab`; merged
+2026-07-20) @ GitHub `davidcolome9-byte/DavidOS`, auto-deployed to GitHub
+Pages (https://davidcolome9-byte.github.io/DavidOS/) on every push to
+`main`.
 
-Merge-SHA CI (`ci.yml` run `29701986395`) succeeded. The `deploy.yml` run
-for `49c71ca` (run ID `29701986418`) succeeded on 2026-07-19 — the full
-verify + Playwright smoke gate (98 tests, real `playwright install chromium
---with-deps` on a clean GitHub-hosted runner) runs on the deployed SHA
-before publishing, and only completes the deploy step after that gate
-passes. Pages artifact: ID `8446730578`, digest
-`sha256:505e6e7dbe848d13ad758f806d9da95157a10652649843782310efbf04573d37`
-(GitHub API artifact metadata independently re-queried and confirmed to
-match against `head_sha` `49c71caa7ad8af95afad3adc09893a0388810745`).
+Adds the first operational DavidOS execution-agent profile: a local-only,
+supervised **DavidOS Coding Coordinator** (`coding-coordinator`) that
+creates, persists, validates, displays, copies, and tracks bounded
+execution records for coding work performed externally (Claude Code,
+Codex, Gemini, Antigravity, or manual) — see "What works today" below and
+docs/ARCHITECTURE.md / docs/DATA_MODEL.md for the architecture.
+Independent Codex candidate review verdict: **APPROVE WITH NON-BLOCKING
+NOTES** (after two prior targeted correction passes — see
+docs/DECISIONS.md 2026-07-19/2026-07-20 entries for DOS-AGT-001A).
 
-**Release-acceptance evidence for this package used a substitution, not
-interactive live-site testing from this session.** This Claude Code session
-runs behind an outbound-HTTPS egress policy that rejects the GitHub Pages
-host (`davidcolome9-byte.github.io`) and the Pages-artifact blob host alike
-at the CONNECT layer — confirmed by two direct attempts, not assumed. That
-means production reachability and deployed-artifact content were **not**
-independently inspected from this session; only the GitHub API metadata
-above (artifact existence, digest, head SHA) was. Acceptance instead rests
-on: exact-SHA CI and deploy-gate success (both of which run the full
-Playwright suite against a properly provisioned browser before anything
-is published), deployment-artifact provenance confirmed via the GitHub
-API, and an independent Fable acceptance review of the identical product
-head (see "DOS-WF-002A Fable acceptance" below). Any direct confirmation
-of live-site reachability or rendered content is Program Control's own,
-performed outside this session — it is not claimed here as something this
-Claude session did.
+Merge-SHA CI (`ci.yml` run `29744211947`) succeeded. The
+`deploy.yml`/Pages run (`29744211960`) succeeded on 2026-07-20 — the full
+verify + Playwright smoke gate (103 tests; one pre-existing flaky test in
+`tests/smoke/navigation.spec.ts`, unrelated to DOS-AGT-001A, passed on
+retry) runs on the deployed SHA before publishing. Pages deployment ID
+`5522055312` (environment `github-pages`), deployed SHA
+`88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, status `success`.
 
-Prior release: v0.2 + Modal Focus Management (PR #16, merge
-`7077dac7a9e50f84e39b0f58bf7665b358a1e577`, merged 2026-07-19; independent
-review the same day) — see "Release history" below.
+**Live production acceptance passed this release.** An isolated,
+freshly-created browser context (no shared profile, no David's local
+data) verified the deployed build at both desktop (1440×900) and mobile
+(375×812, exact) against https://davidcolome9-byte.github.io/DavidOS/
+using only clearly synthetic data: 31/31 checks passed (app boot, existing
+domain-agent cards/nav unchanged, no new route/nav item, Supervised
+execution section + DavidOS Coding Coordinator visible, independent
+readiness feedback, all six authority values default to NOT authorized,
+locked capabilities visibly unavailable, Ready transition, deterministic
+packet + honesty notice, honest clipboard-copy messaging, evidence-gated
+completion, terminal read-only immutability, reload persistence within the
+isolated context, zero horizontal overflow at 375×812, and native
+Enter/Space keyboard cancellation with correct focus management); zero
+console errors; zero non-production-origin network requests (no provider,
+GitHub API, credential, or background-job traffic observed). Full evidence
+archived at
+`D:\DavidOS_Backups\DOS-AGT-001A\release\20260720-130542\` (ZIP
+`DOS-AGT-001A-release-20260720-130542.zip`, SHA-256
+`3c218cce3a9c4d1f342ff9ef923821463c651146d0946b31b082d40b32cfff59`).
+
+DOS-AGT-001A is: **product merged; deployed; live-verified; release
+evidence archived; product package closed pending documentation-closeout
+merge** (this file's own edit — see the section above).
+
+Prior release: v0.2 + Planning Context Unification (PR #18, merge
+`49c71caa7ad8af95afad3adc09893a0388810745`, merged 2026-07-19) — see
+"Release history" below.
 
 ## What works today
 
@@ -237,26 +226,64 @@ review the same day) — see "Release history" below.
   (see docs/INTEGRATIONS.md for exact status). Known gaps: GIS loads on
   Settings mount (OL-008), "Forget session" does not revoke the token
   (OL-009), duplicate-folder semantics (OL-010).
+- **Supervised execution (DOS-AGT-001A, PR #20)**: a mobile-first
+  "Supervised execution" section on the Agents page hosting the first
+  operational execution-agent profile, the **DavidOS Coding Coordinator**
+  (`coding-coordinator`) — a SEPARATE registry from the routed domain
+  agents (own `ExecutionAgentId`, no workflow, not seed data). It creates
+  and persists local `ExecutionRecord`s (title, target service, manually
+  entered model label, session mode, objective, bounded scope, stop
+  conditions, six-key authority all defaulting to NOT authorized, evidence,
+  approval gates) through a
+  draft/ready/in_progress/blocked/awaiting_approval/completed/cancelled
+  lifecycle enforced by pure domain logic (transition normalization,
+  terminal immutability, evidence/gate integrity). Renders a deterministic,
+  unpersisted execution packet with an explicit "nothing was sent or
+  executed" notice; copy success/failure messaging is honest. Malformed
+  persisted records are deep-validated at boot and routed through the
+  existing preserve-then-repair recovery contract rather than reaching the
+  UI; malformed explicit imports are rejected before replacing current
+  state; new audit entries use fixed allowlisted metadata only (no record
+  ids or user text in any form). DavidOS itself calls no AI provider,
+  executes no commands, and mutates no Git/GitHub state — records describe
+  work David runs himself externally. No new runtime dependency, route,
+  primary-navigation item, backend, or schema-version bump.
 - **Direct AI execution: not supported by design.** DavidOS builds
   prompts; it never calls an AI provider (planned as v0.6, OL-025).
   **Native packaging: not built** (Capacitor wrapper planned, v0.7).
 
-## Verification status (2026-07-19, `main` @ `49c71caa7ad8af95afad3adc09893a0388810745`, post-PR #18)
+## Verification status (2026-07-20, `main` @ `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, post-PR #20)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit/component tests: 46 files, **606/606 tests**, all passing
-  (`npm test`), up from the pre-DOS-WF-002A 562/562 baseline (new:
-  `planningContextInclude.test.tsx`, plus additions to `continuity.test.ts`,
-  `importValidation.test.ts`, `promptValidity.test.ts`, and the new
-  `planningContext.test.ts`).
-- Browser smoke tests: **98/98 passing on GitHub Actions** — both the
-  merge-SHA CI run (`29701986395`) and the merge-SHA Pages deploy run
-  (`29701986418`) completed successfully, and both run the full Playwright
-  suite (`npx playwright install chromium --with-deps` then
-  `npx playwright test`) as a blocking gate step on a clean, correctly
-  provisioned runner. Up from the pre-DOS-WF-002A 94/94 baseline (new:
-  `tests/smoke/planningUnification.spec.ts`, 4 tests). **Sandbox
+- Unit/component tests: 52 files, **786/786 tests**, all passing
+  (`npm test`), up from the pre-DOS-AGT-001A 606/606 baseline (new:
+  `executionAgentRegistry.test.ts`, `executionAudit.test.ts`,
+  `executionPersistence.test.ts`, `executionRecords.test.ts`,
+  `executionRecovery.test.ts`, `supervisedExecution.test.tsx`).
+- Browser smoke tests: **103/103 passing on GitHub Actions** — both the
+  merge-SHA CI run (`29744211947`) and the merge-SHA Pages deploy run
+  (`29744211960`) completed successfully, and both run the full Playwright
+  suite as a blocking gate step. Up from the pre-DOS-AGT-001A 98/98
+  baseline (new: `tests/smoke/supervisedExecution.spec.ts`, 5 tests). The
+  Pages deploy run's Playwright step reported one flaky-then-passed test
+  (`tests/smoke/navigation.spec.ts:94`, unrelated to DOS-AGT-001A).
+- **DOS-AGT-001A independent Codex candidate review**: **APPROVE WITH
+  NON-BLOCKING NOTES**, no blocking runtime defect, after two prior
+  targeted correction passes (see docs/DECISIONS.md 2026-07-19/2026-07-20
+  entries). Non-blocking notes preserved in docs/OPEN_LOOPS.md OL-030.
+- **DOS-AGT-001A isolated live production acceptance** (this session,
+  fresh browser context, no shared profile): **31/31 checks PASSED** at
+  desktop (1440×900) and mobile (375×812, exact) against
+  https://davidcolome9-byte.github.io/DavidOS/, using synthetic data only.
+  Zero console errors; zero non-production-origin network requests; zero
+  horizontal overflow at either viewport. Full report and screenshots
+  archived at `D:\DavidOS_Backups\DOS-AGT-001A\release\20260720-130542\`
+  (ZIP SHA-256
+  `3c218cce3a9c4d1f342ff9ef923821463c651146d0946b31b082d40b32cfff59`).
+  Unlike the PR #18 session below, this session's outbound-HTTPS egress
+  reached the production host directly — no substitution was needed.
+- **Sandbox
   re-verification note:** an independent local re-run in a separate,
   resource-constrained sandbox environment (mismatched pre-installed
   Chromium revision, shared build artifacts) reproduced 97/98 — the one
@@ -348,6 +375,24 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Release history (merged & deployed)
 
+- **PR #20 — Supervised Coding Coordinator (DOS-AGT-001A)** (merged
+  2026-07-20T12:57:18Z, squash-merge commit
+  `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`; approved candidate
+  `382f9f8ac16ac22cf2a233f63deba4121d9899ab`): first operational
+  execution-agent profile — the DavidOS Coding Coordinator — a local-only
+  supervised layer separate from the routed domain-agent architecture (own
+  `ExecutionAgentId`, `AppState.executionRecords`, seven-status lifecycle,
+  restrictive all-false authority defaults, deterministic execution
+  packets, allowlist-only audit metadata, deep boot validation under the
+  existing recovery contract). Merge-SHA CI (run `29744211947`) and Pages
+  deploy (run `29744211960`) both succeeded, running the full 103-test
+  Playwright suite as a blocking gate. Independent Codex candidate review:
+  APPROVE WITH NON-BLOCKING NOTES, no blocking findings, after two prior
+  targeted correction passes. Isolated live production acceptance: 31/31
+  checks passed at desktop (1440×900) and mobile (375×812). See
+  docs/DECISIONS.md 2026-07-19/2026-07-20 DOS-AGT-001A entries for the
+  technical decision record; release evidence archived at
+  `D:\DavidOS_Backups\DOS-AGT-001A\release\20260720-130542\`.
 - **PR #18 — Planning Context Unification (DOS-WF-002A)** (merged
   2026-07-19, normal merge commit
   `49c71caa7ad8af95afad3adc09893a0388810745`; product head
@@ -402,9 +447,9 @@ Exact counts live here ONLY (other docs reference this file):
   2026-07-13); **PR #1 — Universal Operations Core** (merged
   2026-07-12).
 
-## Repository state (branches & worktrees, 2026-07-19)
+## Repository state (branches & worktrees, 2026-07-20)
 
-Stable production branch: `main` @ `49c71caa7ad8af95afad3adc09893a0388810745` (clean; local == origin).
+Stable production branch: `main` @ `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836` (clean; local == origin).
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
@@ -418,6 +463,7 @@ whenever David chooses (removal deliberately NOT performed by agents):
 - `fix/health-profile-import-draft-protection` @ `bfa5512d1fad96af6c4bfd56de852f131cdb387e` (PR #12)
 - `fix/ol-003-storage-protection-retention` @ `19e303b107c3540639a1a04809b5bd270290dd01` (PR #14)
 - `fix/ol-015-modal-focus-management` @ `393839908a9cc9f8bc8a60aa9241b387615fdecb` (PR #16, merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`)
+- `feat/dos-agt-001a-supervised-coding-agent` @ `382f9f8ac16ac22cf2a233f63deba4121d9899ab` (PR #20, squash-merge commit `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`) — remains intact locally and on `origin`, not deleted
 
 Stale local draft branches — NOT merged, NOT reviewed, NOT deployed;
 do not treat their contents as shipped:

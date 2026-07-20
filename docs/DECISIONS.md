@@ -894,3 +894,82 @@ merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, feature candidate
 - **No runtime files changed in this pass** — the diff is entirely test
   files (`executionRecords.test.ts`, `supervisedExecution.spec.ts`) plus
   this documentation.
+
+## 2026-07-20 — DOS-AGT-001A: merge, deployment, and live acceptance (product closed; documentation closeout pending)
+- **Product PR #20 squash-merged.** Approved candidate
+  `382f9f8ac16ac22cf2a233f63deba4121d9899ab` merged into `main` via squash
+  at 2026-07-20T12:57:18Z as commit `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`.
+  No admin bypass, no branch-protection override, normal squash-merge
+  method (the only strategy used; no alternate strategy was needed).
+  Pre-merge verification confirmed: exactly one commit above base
+  `51e6d9d2d6c026ef7034bc38cf19e049e4c68c84`, clean working tree, unchanged
+  `package.json`/`package-lock.json`, PR CI green, mergeable/CLEAN. The
+  feature branch `feat/dos-agt-001a-supervised-coding-agent` was NOT
+  deleted (retained locally and on `origin`, matching this repo's existing
+  practice of preserving merged evidence branches).
+- **Post-merge CI and Pages deployment both succeeded** on the merge SHA:
+  CI run `29744211947` (job `verify`), Pages deploy run `29744211960` (job
+  `build-deploy`), each running the full 103-test Playwright suite as a
+  blocking gate before anything publishes. One flaky-then-passed test
+  (`tests/smoke/navigation.spec.ts:94`) appeared in the Pages run;
+  reproduced as a pre-existing, DOS-AGT-001A-unrelated flake (Playwright's
+  configured CI retry) and not investigated further, per the standing
+  policy of not chasing unrelated pre-existing flakes inside an unrelated
+  package. GitHub Pages deployment ID `5522055312` (environment
+  `github-pages`), deployed SHA matches the merge SHA exactly, deployment
+  status `success`.
+- **Live production acceptance was performed directly from this session**
+  (unlike the PR #18/DOS-WF-002A session, whose outbound-HTTPS egress
+  policy rejected the GitHub Pages host at the CONNECT layer — that
+  constraint did not apply here). A fresh, isolated Playwright/Chromium
+  browser context — no David's browser profile, no shared storage state,
+  destroyed after evidence capture — verified
+  https://davidcolome9-byte.github.io/DavidOS/ at desktop (1440×900) and
+  mobile (375×812, exact) using only clearly synthetic data (title "DOS-
+  AGT-001A LIVE ACCEPTANCE", model "SYNTHETIC-MODEL", objective/scope/
+  stop-conditions explicitly marked synthetic). Result: **31/31 checks
+  PASSED** — app boot, unchanged existing domain-agent cards/nav, no new
+  route/nav item, Supervised execution section + DavidOS Coding
+  Coordinator visible, independent per-field readiness feedback, all six
+  authority values default to NOT authorized, locked capabilities visibly
+  unavailable, Ready transition, deterministic packet render + honesty
+  notice, honest clipboard-copy messaging, evidence-gated completion,
+  terminal read-only immutability, reload persistence within the isolated
+  context, zero horizontal overflow at 375×812, and native Enter/Space
+  keyboard cancellation with correct focus transfer/restoration. Zero
+  console errors on either viewport. Zero non-production-origin network
+  requests observed (only `https://davidcolome9-byte.github.io` — no
+  provider, GitHub API, credential, or background-job traffic),
+  independently confirming the "no prohibited executable capability" claim
+  against the actual deployed build rather than only against source.
+- **One test-authoring lesson from live acceptance, recorded for future
+  sessions writing similar ad-hoc acceptance scripts (not a product
+  finding):** an initial acceptance-script draft mis-verified the
+  clipboard-copy success path two different ways — first by granting
+  clipboard permissions to the browser context AFTER an unrelated sequence
+  of interactions instead of at context creation, then by checking for the
+  success message with a single instantaneous, non-waiting visibility
+  check immediately after the click rather than an auto-retrying wait —
+  racing the app's own `await navigator.clipboard.writeText(...)` inside
+  its click handler. Both were script defects, confirmed by an isolated
+  diagnostic reproducing success once permissions were granted at context
+  creation and the check waited for the flash message. The product's
+  copy-success behavior itself was never in question and needed no change.
+- **Release evidence archived** at
+  `D:\DavidOS_Backups\DOS-AGT-001A\release\20260720-130542\`: PR/CI/
+  deployment metadata, live-acceptance JSON report, four screenshots
+  (desktop Agents page; mobile Agents page; mobile Ready+packet; mobile
+  terminal/Completed state), console-error and network-origin summaries,
+  local git-state verification, a per-file SHA-256 manifest, and a
+  compressed ZIP (`DOS-AGT-001A-release-20260720-130542.zip`, SHA-256
+  `3c218cce3a9c4d1f342ff9ef923821463c651146d0946b31b082d40b32cfff59`,
+  hash independently read back and confirmed). The archive contains no
+  credentials, tokens, GitHub CLI auth output, or personal data — scanned
+  before archiving.
+- **Status: product package closed pending documentation-closeout merge.**
+  DOS-AGT-001A is merged, deployed, and live-verified; this entry and the
+  accompanying docs/CURRENT_STATE.md and docs/OPEN_LOOPS.md OL-030 updates
+  are themselves part of a documentation-only closeout candidate on branch
+  `docs/dos-agt-001a-supervised-coding-agent-closeout` that is NOT yet
+  merged. DOS-AGT-001B or any further execution-agent package is
+  explicitly out of scope for this closeout and was not started.
