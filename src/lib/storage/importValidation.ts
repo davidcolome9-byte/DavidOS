@@ -11,6 +11,7 @@
  * backup cannot leak a sensitive token through a diagnostic.
  */
 import type { AppState } from '../types';
+import { validateExecutionRecordsCollectionUnknown } from '../agents/executionRecords';
 
 export interface ImportError {
   collection: string;
@@ -433,6 +434,18 @@ export function validateImportedState(state: AppState): ImportError[] {
   // collection (duplicates, self-correction, dangling or contradictory states).
   if (Array.isArray(state.handoffs)) {
     validateHandoffRelationships(push, state.handoffs as unknown[]);
+  }
+
+  // executionRecords (DOS-AGT-001A): optional — legacy backups predate it and
+  // normalizeState backfills []. Present-but-malformed is rejected via the
+  // unknown-safe domain validator (single source of truth for lifecycle,
+  // authority, evidence, and gate invariants). Its messages are index/field
+  // based and value-free, matching this module's privacy rule.
+  const executionRecords = (state as unknown as Record<string, unknown>).executionRecords;
+  if (executionRecords !== undefined) {
+    for (const message of validateExecutionRecordsCollectionUnknown(executionRecords)) {
+      push({ collection: 'executionRecords', message });
+    }
   }
 
   // settings (object, not a list).

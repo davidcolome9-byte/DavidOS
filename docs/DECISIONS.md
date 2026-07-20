@@ -708,3 +708,189 @@ merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, feature candidate
   a stale in-progress state about a different, already-merged release —
   corrected as part of making this same file honest, not as scope
   creep. No other document or unrelated content was touched.
+
+## 2026-07-19 — DOS-AGT-001A: Supervised Coding Coordinator foundation (local candidate)
+- **Status honesty: this entry records a LOCAL CANDIDATE.** The package is
+  implemented and verified locally on
+  `feat/dos-agt-001a-supervised-coding-agent`; it is NOT merged, deployed, or
+  released. Nothing below should be read as a production claim.
+- **Execution agents are a separate architecture, not new domain agents.**
+  `ExecutionAgentId` is its own closed type (`'coding-coordinator'`), the
+  profile lives as fixed TS data in `lib/agents/executionAgentRegistry.ts`
+  (precedent: slash commands in `lib/commands.ts`), and nothing touches the
+  `AgentId` union, `seed/agents/`, routing, workflows, or `RouteTarget`.
+  Reason: `scripts/validate-seed.mjs` enforces both-direction seed<->registry
+  parity plus AgentId-union membership and a default workflow for every seed
+  agent — a seed-based profile would have forced exactly the router/workflow
+  scope creep this package forbids. The ARCHITECTURE.md "Adding an agent"
+  checklist deliberately does not apply (it is for routed prompt agents).
+- **Three separate draft fields are a locked product decision**: `objective`,
+  `scope`, `stopConditions` — separately persisted, validated, imported, and
+  rendered as their own packet sections (OBJECTIVE / BOUNDED SCOPE / STOP
+  CONDITIONS); readiness fails independently for each. Never combined.
+- **Authority is a record of David's decision for the EXTERNAL session, not a
+  grant.** Six dimensions (code edits, tests, docs, push, PR creation, merge),
+  all defaulting to false. Construction is restrictive by design:
+  `sanitizeAuthority` copies only recognized keys carrying actual booleans, so
+  strings/numbers/unknown keys/wildcards can never manufacture authorization.
+  Merge additionally states in UI and packet that merging/deploying always
+  requires David. Locked capabilities (provider calls, shell execution by
+  DavidOS, credentials, spending, connections, permission expansion,
+  background jobs, autonomous execution/merge/deploy) are rendered as fixed
+  copy and have no representation that could enable them.
+- **Lifecycle enforcement lives in one pure module** —
+  `lib/agents/executionRecords.ts` (`transitionErrors`/`applyTransition`), not
+  in button visibility. Vocabulary: draft, ready, in_progress, blocked,
+  awaiting_approval, completed, cancelled. Normalization on transition:
+  resuming clears stale blocker/decision summaries; entering blocked/awaiting
+  stores the newly supplied trimmed summary and clears the other; nonterminal
+  records never retain `closedAt`; terminal transitions stamp it. Terminal
+  records reject every mutation helper; an unknown or already-decided approval
+  gate id is a TRUE no-op (same object, `updatedAt` untouched) so no fake
+  update can be presented as success.
+- **Denied-gate completion policy**: pending gates block completion; decided
+  gates — approved AND denied — do not. A denied gate is a resolved decision
+  that the gated action stays out of scope, not an unresolved question.
+  Tested explicitly.
+- **Import validation delegates to the unknown-safe domain validator**
+  (`validateExecutionRecordsCollectionUnknown`) instead of duplicating field
+  tables in `importValidation.ts` — one source of truth for structural and
+  lifecycle invariants; messages stay index/field-based and value-free
+  (F-09). `executionRecords` is optional for legacy backups (NOT added to
+  REQUIRED_ARRAYS); boot recovery keeps the existing objectArray/inspect
+  contract and never fabricates authority or lifecycle values.
+- **Audit policy is stricter than the existing fingerprint pattern.** Vault
+  audits use `redactedCommandLabel` (fingerprint + length). Execution audits
+  do not even fingerprint user text: allowlisted event names, opaque record
+  id, closed status labels, and counts only — per the package's privacy
+  contract that titles/objective/scope/stop conditions/model/evidence/gate
+  labels/summaries/packet text never reach audit output in ANY form.
+  `AuditLogEntry.agentId` stays unset (it is typed as the domain AgentId
+  union; the execution agent must not be forced into it).
+- **Packet rendering is deterministic and unpersisted**: a pure function of
+  (record, profile) with fixed '\n' newlines and stable section order;
+  validates the record first; re-renders are byte-identical; the packet is
+  never cached, persisted, or exported. It carries one canonical honesty
+  notice (DavidOS did not execute commands, modify files, contact a provider,
+  send the packet, or mutate GitHub) plus the profile supervision statement.
+- **Persistence-suppression honesty in the UI**: while boot recovery or the
+  stale-tab guard suppresses persistence, execution-record mutations are
+  disabled with a visible notice instead of pretending to save; when writes
+  are failing (quota), save feedback explicitly says the change is
+  memory-only. Copy failure reports "NOT copied" and creates no audit entry.
+- **No modal was added** — creation/editing is an inline card, cancellation is
+  a two-step inline confirm — keeping this package off the OL-015 modal focus
+  surface entirely.
+- **Deferred by design** (tracked in OPEN_LOOPS OL-030): record↔project
+  linking, packet history artifacts, additional execution profiles, and any
+  future execution automation (which would be a v0.6-class product decision).
+
+## 2026-07-19 — DOS-AGT-001A correction pass (independent Codex review, still a local candidate)
+- **Status honesty: still a LOCAL CANDIDATE** on
+  `feat/dos-agt-001a-supervised-coding-agent` (single amended commit above
+  base `51e6d9d`). Not merged, not deployed, not released.
+- **Deep boot validation now matches the documented recovery contract**
+  (review correction 1). `inspectStructure` runs the same unknown-safe
+  domain validator over every PRESENT stored execution record (plus a
+  duplicate-id check); any rejection classifies `executionRecords` as
+  invalid, so the standard preserve-then-repair quarantine runs and
+  `normalizeState` drops — never repairs — malformed records. The UI can
+  no longer receive a record whose authority, lifecycle, evidence, gates,
+  strings, or timestamps the domain would reject. Missing-collection
+  legacy state still backfills `[]` silently.
+- **Audit output carries NO record ids — durable policy** (correction 2).
+  The audit builders now take no user-controlled input at all: fixed event
+  names as the whole `command`, closed status labels, counts, and the fixed
+  `coding-coordinator` identifier. An imported record id is user-controlled
+  content (it could be a path/URL/token), so it stays out of audit text in
+  raw, hashed, fingerprinted, or partial form. Independently, record ids
+  are constrained to the conservative `uid()` grammar
+  (`/^[a-z0-9]{8,20}$/`) at construction, import, and boot — defense in
+  depth, not the privacy fix itself. Scope: this policy governs NEWLY
+  GENERATED entries and supported released/legacy states; existing audit
+  entries are historical data and are never rewritten, and no migration is
+  provided (or claimed) for snapshots created by unreleased intermediate
+  candidates.
+- **outcomeSummary exists only on completed records** (correction 3): the
+  validator rejects it on every other status, and every transition clears
+  it unless the completed target explicitly stores a newly supplied one
+  (still optional there — the model has no mandatory outcome).
+- **Authority is an EXACT six-key shape** (correction 4): unknown or
+  wildcard-like properties (`all`, `full`, `admin`, …) are rejected at
+  validation (without echoing the attacker-chosen key name), every approved
+  key must be an own-property boolean, and `sanitizeAuthority` reads own
+  properties only so prototype-inherited values can never grant.
+- **Timestamps are strict canonical ISO** (correction 5):
+  shape `YYYY-MM-DDTHH:mm:ss.sssZ` plus round-trip equality with
+  `toISOString()`, rejecting locale dates, date-only strings, offset
+  timezones, missing milliseconds, trailing content, and impossible
+  calendar dates that `Date.parse` would normalize. The repo-wide
+  `nowIso()` convention is unchanged.
+- **Inline cancel confirmation got a focus contract** (correction 6), still
+  with no modal: opening moves focus to the destructive confirm button
+  (described by visible confirmation text via `aria-describedby`), "Keep
+  record" restores focus to the opener, a confirmed cancel lands on the
+  record heading (`tabIndex={-1}`) — focus never falls to `<body>`.
+- **Long unbroken user tokens wrap** (correction 7): scoped
+  `.exec-record` CSS applies `overflow-wrap: anywhere` to record
+  paragraphs/lists/headings/notices only (prose unaffected), and
+  `.exec-authority .checkrow` rows keep a 44px minimum touch target.
+  Verified at 375×812 with hostile path/URL/branch/SHA fixtures.
+- **Canonical cleared-field shape — durable convention** (hardening 2):
+  cleared lifecycle fields (`blockerSummary`, `decisionSummary`,
+  `outcomeSummary`, `closedAt`) are OMITTED own properties, never
+  `undefined`-valued keys, so live records and their JSON round-trips are
+  key-identical. **Registry identity** (hardening 1) is exact: the sole
+  profile must be `coding-coordinator`, not merely a well-formed id.
+
+## 2026-07-20 — DOS-AGT-001A final regression pass (independent Codex review: sound, no runtime defect)
+- **Status honesty: still a LOCAL CANDIDATE** on
+  `feat/dos-agt-001a-supervised-coding-agent` (single amended commit above
+  base `51e6d9d`). Not merged, not deployed, not released. This entry
+  covers a test-only regression-strengthening pass; no runtime behavior
+  changed. The independent Codex verdict found no blocking runtime defect
+  in architecture, lifecycle, persistence, recovery, audit privacy,
+  authority validation, timestamp validation, mobile wrapping, cancellation
+  focus management, packet behavior, or local-only safety boundaries.
+- **Outcome-cleanup coverage completed.** The prior test proved clearing on
+  a handful of transitions but never exercised `draft → ready` explicitly
+  and did not consistently assert own-property removal across every
+  non-completed target. `executionRecords.test.ts` now runs the FULL
+  non-completed transition matrix (all fourteen legal (from, to) pairs
+  whose target isn't `completed`), each starting from a source contaminated
+  with stale `blockerSummary`/`decisionSummary`/`outcomeSummary`/`closedAt`
+  simultaneously — deliberately exercising normalization of data that
+  should never legitimately coexist — and asserts, per field, both the
+  value is `undefined` AND the key is absent from `Object.keys`/
+  `hasOwnProperty`, with the two narrow legitimate exceptions (the summary
+  a transition's own extras just set; `closedAt` being freshly stamped, not
+  cleared, on the one terminal target in this set, `cancelled`). A
+  dedicated `draft → ready` case is included by name, per the review.
+- **Playwright long-content assertions made non-vacuous.** The previous
+  mobile-safety test checked fixed prefixes/labels ("Blocked: ", "Approval
+  gates (1)") which pass even if the actual long value silently failed to
+  render. Every field (title, model, objective, scope, stop conditions,
+  evidence reference, approval-gate label, blocker summary, decision
+  summary, completed outcome, packet content) now gets its own uniquely
+  MARKED long value combining a distinct tag with a hostile token
+  (Windows path / URL / branch / full-SHA shape), and the test asserts the
+  exact value is visible, contained within its card/details region
+  (`assertWithinContainerX`), and does not geometrically overlap the
+  nearest control (`assertNoOverlap`, a standard axis-aligned rectangle
+  intersection that still permits ordinary vertical stacking). A shared
+  `valueLocator()` helper scopes matches to prose tags (`p`/`span`/`li`),
+  which was necessary because the deterministic packet's `<pre>` is always
+  mounted in the DOM (native `<details>` only hides it visually when
+  closed) and contains a copy of every long value — an unscoped
+  `getByText` match was ambiguous by construction, not a real defect.
+- **Keyboard-activation hardening (optional, included).** A concise
+  real-browser Playwright test proves the inline cancel controls work via
+  genuine native `<button>` semantics — Enter activates "Cancel record…"
+  and moves focus into the confirmation, Space activates "Keep record" and
+  restores focus to the opener — deliberately NOT a component/happy-dom
+  test, since default key-to-click translation is a real-browser behavior
+  that a DOM-emulation environment does not reliably reproduce. No UI
+  redesign; this only adds test coverage for behavior already present.
+- **No runtime files changed in this pass** — the diff is entirely test
+  files (`executionRecords.test.ts`, `supervisedExecution.spec.ts`) plus
+  this documentation.

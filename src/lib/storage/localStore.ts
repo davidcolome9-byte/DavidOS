@@ -1,6 +1,7 @@
-import type { AppState, Handoff, Project, Prompt, PromptVersion } from '../types';
+import type { AppState, ExecutionRecord, Handoff, Project, Prompt, PromptVersion } from '../types';
 import { seedHealthProfile } from '../../data/healthProfileSeed';
 import { normalizeHandoffRelationships } from '../workflows/continuity';
+import { validateExecutionRecordUnknown } from '../agents/executionRecords';
 
 export const STORAGE_KEY = 'davidos-state-v1';
 /** Unreadable or lossy-repaired blobs are preserved under unique keys with this prefix. */
@@ -78,6 +79,44 @@ function stringArray(value: unknown): string[] {
 }
 
 /**
+ * DOS-AGT-001A boot repair for execution records. A missing legacy
+ * collection backfills to []. Every PRESENT record must pass the full
+ * unknown-safe domain validation (authority shape, lifecycle invariants,
+ * evidence/gate integrity, id grammar, timestamps) or it is DROPPED —
+ * never "fixed up": fabricating authority or lifecycle values would turn
+ * damage into authorization. Duplicate-id records keep only the first.
+ * Dropping is lossy, so inspectStructure classifies any such record as
+ * invalid FIRST and the standard preserve-then-repair recovery contract
+ * applies before this repair may ever persist.
+ */
+function normalizeExecutionRecords(value: unknown): ExecutionRecord[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const records: ExecutionRecord[] = [];
+  for (const item of value) {
+    if (validateExecutionRecordUnknown(item).length > 0) continue;
+    const record = item as ExecutionRecord;
+    if (seen.has(record.id)) continue;
+    seen.add(record.id);
+    records.push(record);
+  }
+  return records;
+}
+
+/** True when boot repair would drop or alter anything in the collection. */
+function executionRecordsDamaged(value: unknown): boolean {
+  if (!Array.isArray(value)) return true; // non-array is repaired to []
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (validateExecutionRecordUnknown(item).length > 0) return true;
+    const id = (item as ExecutionRecord).id;
+    if (seen.has(id)) return true;
+    seen.add(id);
+  }
+  return false;
+}
+
+/**
  * Backfill and repair state so that older persisted state, older imported
  * backups, and structurally damaged data never crash the app.
  * Non-destructive for valid data: only fills what's missing and drops
@@ -107,6 +146,7 @@ export function normalizeState(state: AppState): AppState {
     // orphaned correction or a stuck-superseded original.
     handoffs: normalizeHandoffRelationships(objectArray<Handoff>(state.handoffs)),
     artifacts: objectArray(state.artifacts),
+    executionRecords: normalizeExecutionRecords(state.executionRecords),
     // Seed-if-missing: `undefined` means the state predates Health Profiles →
     // seed one. `null` means the user explicitly deleted it → respect that.
     // Anything that isn't a plain object is unusable → reseed the generic starter.
@@ -164,6 +204,13 @@ export function inspectStructure(state: AppState): StructuralReport {
   for (const key of ['priorities', 'openLoops', 'reminders', 'contextItems', 'handoffs', 'artifacts', 'auditLog'] as const) {
     checkCollection(report, key, state[key]);
   }
+
+  // executionRecords are deep-validated at boot (DOS-AGT-001A): a record the
+  // domain validator rejects would be DROPPED by normalizeState, so it must
+  // classify as invalid here — triggering preserve-then-repair recovery —
+  // and can never be treated as structurally clean or silently reach the UI.
+  if (state.executionRecords === undefined) report.missing.push('executionRecords');
+  else if (executionRecordsDamaged(state.executionRecords)) report.invalid.push('executionRecords');
   const prompts = checkCollection(report, 'prompts', state.prompts);
   for (const [i, p] of (prompts ?? []).entries()) {
     if (p === null || typeof p !== 'object') continue; // already reported via prompts

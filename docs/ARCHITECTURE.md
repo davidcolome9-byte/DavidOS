@@ -61,6 +61,37 @@ workflows. Private long-term personal source material belongs in Google Drive or
 another private store; public seed files contain only reusable schemas, generic
 workflow instructions, and source aliases.
 
+## Execution-agent registry (supervised execution, DOS-AGT-001A)
+
+`lib/agents/executionAgentRegistry.ts` is a SEPARATE, fixed TS-data registry
+(precedent: slash commands in `lib/commands.ts`) holding exactly one profile:
+the **DavidOS Coding Coordinator** (`coding-coordinator`, its own
+`ExecutionAgentId` type). Execution agents are local coordination profiles for
+coding work David performs himself in an external service (Claude Code, Codex,
+Gemini, Antigravity, or manual). They are deliberately NOT seed agents: they
+are never routing targets, have no workflows, and never enter the `AgentId`
+union (validate-seed's seed<->registry parity applies only to routed agents).
+
+`lib/agents/executionRecords.ts` holds all pure domain logic for
+`ExecutionRecord`s: restrictive authority construction (only real booleans on
+recognized keys; everything else stays "not authorized"), readiness
+(title/objective/scope/stopConditions each required separately), the lifecycle
+state machine with transition normalization, terminal immutability
+(completed/cancelled reject every later mutation), unknown-safe deep
+validation (shared with import), and deterministic execution-packet rendering
+(pure function; byte-identical re-renders; carries a fixed honesty notice that
+DavidOS executed, sent, and mutated nothing). `lib/agents/executionAudit.ts`
+builds allowlisted audit entries from closed inputs only: fixed event names,
+closed status labels, and counts — never user-entered text OR record ids, in
+any form. Stored records are deep-validated at boot by the same unknown-safe
+validator import uses; anything it rejects routes through the standard
+quarantine/recovery contract instead of reaching the UI.
+
+The UI is one thin section on the existing Agents page
+(`components/SupervisedExecutionSection.tsx`) — no new route, nav item,
+dependency, provider path, or background job. DavidOS only records and copies;
+the external service does the work under David's supervision.
+
 ## Continuity engine (v0.2 — the core of the Workflow Runner)
 - `lib/workflows/continuity.ts` — prior-handoff retrieval (3 default /
   7 fitness, overfetch ×2, status filter, correction dedupe) and prompt

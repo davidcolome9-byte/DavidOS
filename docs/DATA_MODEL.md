@@ -18,6 +18,7 @@ AppState {
   contextItems:  ContextItem[]   // stable/priorities/private/workflow/session
   handoffs:      Handoff[]       // CANONICAL continuity history (append-only)
   artifacts:     WorkflowArtifact[]  // full prompts etc., typed, separate
+  executionRecords: ExecutionRecord[] // supervised execution records (DOS-AGT-001A)
   healthProfile: HealthFitnessProfile | null  // null = user deleted it
   auditLog:      AuditLogEntry[] // capped at 300, newest first
   settings:      AppSettings     // { theme }
@@ -123,8 +124,10 @@ is reserved for a genuinely breaking change and needs David's approval.
   number, required arrays present (`priorities, openLoops, reminders,
   projects, prompts, contextItems, handoffs, auditLog`), `settings`
   object present. Then runs `normalizeState`.
-- `artifacts`/`healthProfile` are intentionally NOT required — older
-  backups predate them and are backfilled.
+- `artifacts`/`executionRecords`/`healthProfile` are intentionally NOT
+  required — older backups predate them and are backfilled. A PRESENT
+  `executionRecords` collection is deeply validated (unknown-safe) and a
+  malformed one rejects the import with value-free diagnostics.
 - Settings → Import shows a Health-Profile conflict dialog rather than
   silently overwriting an existing profile.
 
@@ -141,6 +144,63 @@ is reserved for a genuinely breaking change and needs David's approval.
 - Retrieval (`src/lib/workflows/continuity.ts`): 3 prior handoffs for
   default workflows, 7 for fitness; overfetch ×2; filters superseded
   entries; dedupes corrections.
+
+## Supervised execution records (DOS-AGT-001A)
+
+An `ExecutionRecord` is a bounded, LOCAL-ONLY record of coding work performed
+OUTSIDE DavidOS by an external service David operates himself (Claude Code,
+Codex, Gemini, Antigravity, or manual). DavidOS never calls a provider,
+executes commands, or mutates Git/GitHub for these records — it records,
+validates, and renders a copyable packet, nothing more.
+
+- **Three separate draft fields**: `objective` (what the session should
+  accomplish), `scope` (the exact bounded repo area), `stopConditions` (when
+  the external service must stop and return control). Never combined; each is
+  independently required for readiness and rendered as its own packet section.
+- **Authority** (`editCode/runTests/editDocs/push/openPullRequests/merge`)
+  records what David authorized the EXTERNAL session to do. Every value
+  defaults to false; construction copies only recognized keys carrying actual
+  booleans (no wildcard grants). It grants DavidOS itself nothing.
+- **Lifecycle**: draft → ready → in_progress → blocked/awaiting_approval →
+  completed/cancelled. Enforced in `lib/agents/executionRecords.ts` (single
+  source of truth), with transition normalization: resuming clears stale
+  blocker/decision summaries; nonterminal records never carry `closedAt`;
+  terminal transitions stamp it. `blocked` requires a blocker summary,
+  `awaiting_approval` a decision summary; completion (only from in_progress)
+  requires ≥1 valid evidence item and no pending approval gates (denied gates
+  are resolved decisions and do not block). Completed/cancelled are terminal:
+  every later edit, mutation helper, and transition is rejected.
+- **Persistence**: `normalizeState` backfills a missing legacy collection to
+  `[]`. Present records are DEEP-validated at boot with the same unknown-safe
+  domain validator used at import: any record it rejects (or a duplicate id)
+  classifies the collection as `invalid` in `inspectStructure`, so the
+  standard preserve-then-repair recovery contract runs (raw blob quarantined
+  byte-identical before any lossy repair may persist; persistence suppressed
+  if preservation fails) and the repaired state contains only fully valid
+  records — malformed authority/lifecycle values are dropped, never repaired
+  into authorization, and never reach the UI. Derived data (packet text,
+  readiness results, available actions) is never persisted or exported —
+  always re-derived from the record.
+- **Import**: `executionRecords` is OPTIONAL (legacy backups predate it; NOT
+  in REQUIRED_ARRAYS). When present it is deeply validated by the unknown-safe
+  domain validator; malformed records reject the whole import with value-free,
+  index-based messages, leaving current state unchanged.
+- **Retention**: not prunable; small text records. Reset clears them like the
+  other collections.
+- **Audit privacy**: every NEWLY GENERATED execution audit entry is
+  allowlist-only — fixed closed event names
+  (`execution_record_created/_updated`, `execution_status_changed`,
+  `execution_packet_copied`), closed status labels, counts, and the fixed
+  `coding-coordinator` identifier. Record ids are excluded too (an imported
+  id is user-controlled content), and ids are additionally constrained to
+  the conservative `uid()` grammar (`/^[a-z0-9]{8,20}$/`) at every
+  validation boundary. User-entered text (titles, objective/scope/stop
+  conditions, model labels, evidence, gate labels, summaries, packet text)
+  never reaches a new audit entry in any form, including hashes or
+  fingerprints. Pre-existing audit entries in supported released/legacy
+  states are preserved unchanged per the existing audit doctrine (the log
+  is historical data; no rewriting migration exists or is claimed). The
+  domain `AuditLogEntry.agentId` field is never used for execution events.
 
 ## Health & Fitness Profile
 

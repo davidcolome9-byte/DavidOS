@@ -154,6 +154,7 @@ export function buildDefaultState(): AppState {
     contextItems: seedContextItems(),
     handoffs: [],
     artifacts: [],
+    executionRecords: [],
     healthProfile: seedHealthProfile(),
     auditLog: [],
     settings: { theme: 'dark' },

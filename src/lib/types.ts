@@ -387,6 +387,113 @@ export interface IntegrationAdapter {
   futureNotes: string;
 }
 
+// ---------- Supervised execution records (DOS-AGT-001A) ----------
+
+/**
+ * A SEPARATE id space from AgentId. Execution agents are local coordination
+ * profiles for work David runs himself in an external tool — they are never
+ * routing targets and must not be added to the AgentId union, the router,
+ * or seed/agents (validate-seed enforces parity there).
+ */
+export type ExecutionAgentId = 'coding-coordinator';
+
+/** The external tool that actually performs the work. DavidOS never calls it. */
+export type ExecutionService = 'claude_code' | 'codex' | 'gemini' | 'antigravity' | 'manual';
+
+export type ExecutionSessionMode = 'plan_only' | 'supervised_implementation' | 'review_only';
+
+export type ExecutionRecordStatus =
+  | 'draft'
+  | 'ready'
+  | 'in_progress'
+  | 'blocked'
+  | 'awaiting_approval'
+  | 'completed'
+  | 'cancelled';
+
+export type ExecutionEvidenceKind =
+  | 'commit'
+  | 'pull_request'
+  | 'test_run'
+  | 'file_change'
+  | 'external_log'
+  | 'note';
+
+/**
+ * What David has authorized the EXTERNAL coding session to do. Every field
+ * defaults to false ("not authorized"). This is a record of David's decision,
+ * not a grant: DavidOS enforces nothing outside itself and executes nothing
+ * either way. Construction is restrictive — only recognized keys carrying an
+ * actual boolean can ever replace a safe false default (see
+ * lib/agents/executionRecords.ts sanitizeAuthority).
+ */
+export interface ExecutionAuthority {
+  editCode: boolean;
+  runTests: boolean;
+  editDocs: boolean;
+  push: boolean;
+  openPullRequests: boolean;
+  /** Merging/deploying always requires David regardless of this flag. */
+  merge: boolean;
+}
+
+export interface ExecutionEvidenceItem {
+  id: string;
+  kind: ExecutionEvidenceKind;
+  /** Commit SHA, PR number, test summary, file list — free text, local only. */
+  reference: string;
+  addedAt: string;
+}
+
+export interface ExecutionApprovalGateItem {
+  id: string;
+  /** What must be decided before the work may proceed. */
+  label: string;
+  decision: 'pending' | 'approved' | 'denied';
+  decidedAt?: string;
+}
+
+/**
+ * A bounded, local-only record of coding work performed OUTSIDE DavidOS
+ * (Claude Code, Codex, Gemini, Antigravity, or manually). Lifecycle
+ * invariants — enforced by lib/agents/executionRecords.ts and re-checked
+ * unknown-safe at import:
+ * - readiness (draft → ready) requires nonblank trimmed title, objective,
+ *   scope, and stopConditions;
+ * - `blocked` requires a nonblank blockerSummary; `awaiting_approval`
+ *   requires a nonblank decisionSummary; each summary exists ONLY in its
+ *   matching status (transition normalization clears stale summaries);
+ * - `completed` requires ≥1 valid evidence item and no pending approval
+ *   gates, and is reachable only from `in_progress`;
+ * - `completed`/`cancelled` are terminal (no later edits or transitions)
+ *   and stamp closedAt; nonterminal records never carry closedAt.
+ */
+export interface ExecutionRecord {
+  id: string;
+  executionAgentId: ExecutionAgentId;
+  title: string;
+  /** What the supervised coding session is intended to accomplish. */
+  objective: string;
+  /** The exact bounded repository area / files / package the external service may operate in. */
+  scope: string;
+  /** Circumstances requiring the external service to stop and return control to David. */
+  stopConditions: string;
+  targetService: ExecutionService;
+  /** Manually entered model label — free text (may be empty, e.g. for a manual service). */
+  model: string;
+  sessionMode: ExecutionSessionMode;
+  authority: ExecutionAuthority;
+  status: ExecutionRecordStatus;
+  evidence: ExecutionEvidenceItem[];
+  approvalGates: ExecutionApprovalGateItem[];
+  blockerSummary?: string;
+  decisionSummary?: string;
+  outcomeSummary?: string;
+  createdAt: string;
+  updatedAt: string;
+  closedAt?: string;
+}
+
 export interface AppSettings {
   theme: 'dark' | 'light';
 }
@@ -401,6 +508,7 @@ export interface AppState {
   contextItems: ContextItem[];
   handoffs: Handoff[];
   artifacts: WorkflowArtifact[];
+  executionRecords: ExecutionRecord[];
   healthProfile: HealthFitnessProfile | null;
   auditLog: AuditLogEntry[];
   settings: AppSettings;
