@@ -8,7 +8,8 @@ backup export (v0.3 foundation; see docs/INTEGRATIONS.md).
 
 ```
 UI (React components)
-  └─ state/store.tsx        React context + localStorage persistence
+  └─ app/AppErrorBoundary   top-level crash recovery surface (outside everything)
+  └─ state/store.tsx        React context + journal-backed persistence
        ├─ data/defaultState  seeds initial state from /seed files
        └─ lib/…              pure logic modules (router, safety, audit, …)
 ```
@@ -25,7 +26,9 @@ Two kinds of data:
   build time via registries — portable, any AI tool can read them. Slash
   commands are TS data in `src/lib/commands.ts`.
 - **Live state** (`AppState`): projects, prompts, context, loops, reminders,
-  handoffs, audit log, settings. Persisted to localStorage on every change.
+  handoffs, audit log, settings. Persisted on every change as a new immutable
+  journal generation in localStorage, coalesced and serialized per tab and
+  coordinated across tabs by one exclusive Web Lock.
 
 ## Routing system
 `src/lib/router/`:
@@ -136,8 +139,28 @@ approval decision appends an entry (timestamp, command, agent, workflow, action
 type, approval status, result summary). Capped at 300 entries, newest first.
 
 ## Storage strategy
-- `lib/storage/localStore.ts` — load/persist/clear against localStorage. The ONLY
-  file that knows where state lives; swap point for IndexedDB or Drive sync.
+Canonical AppState lives in an immutable **generation journal**, not a single
+mutable key (DOS-STAB-001A). Full format, commit protocol, and failure model:
+[DATA_MODEL.md → Persistence](DATA_MODEL.md#persistence--the-state-journal-dos-stab-001a).
+
+- `lib/storage/stateJournal.ts` — the journal itself: immutable generation
+  records, two alternating verified head slots, and the one exclusive Web
+  Lock (`davidos-app-state-journal-v1`) under which every canonical write and
+  the legacy migration run. Commits verify the generation AND the head by
+  read-back before reporting success; there is deliberately no rollback path.
+- `lib/storage/journalPersistence.ts` — one `JournalPersistenceController`
+  per StoreProvider: serializes and coalesces this tab's queued saves,
+  tracks committed authority, exposes the shared destructive commit boundary,
+  and suppresses saving after an external head change or an uncertain
+  outcome. Persistence health lives OUTSIDE AppState so recording it cannot
+  recurse into another save.
+- `lib/storage/localStore.ts` — journal-aware boot: selects verified
+  authority, then runs the preservation / quarantine / normalization
+  pipeline. Still the only file that knows the LEGACY key, which is now
+  migration input and read-fallback only. Remains the swap point for
+  IndexedDB or Drive sync.
+- `lib/storage/bootValidation.ts` — deep per-record integrity and the
+  allowlisted, counts-only damage vocabulary for warnings and logs.
 - `lib/storage/exportImport.ts` — versioned JSON envelope
   (`{app: "davidos", schemaVersion, state}`); import validates the
   envelope and top-level structure (required arrays + settings), then

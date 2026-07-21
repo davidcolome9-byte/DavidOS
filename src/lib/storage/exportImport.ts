@@ -112,13 +112,22 @@ export function parseImport(json: string): AppState {
   return normalized;
 }
 
-/** Trigger a browser download of the backup file. */
-export function downloadBackup(state: AppState): void {
-  const blob = new Blob([serializeState(state)], { type: 'application/json' });
+/**
+ * Trigger a browser download of exact text content. Also used by the crash
+ * recovery surface (AppErrorBoundary) to export the raw stored blob and
+ * preserved recovery copies byte-for-byte — no parsing, no store required.
+ */
+export function downloadTextFile(text: string, filename: string): void {
+  const blob = new Blob([text], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `davidos-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+/** Trigger a browser download of the backup file. */
+export function downloadBackup(state: AppState): void {
+  downloadTextFile(serializeState(state), `davidos-backup-${new Date().toISOString().slice(0, 10)}.json`);
 }

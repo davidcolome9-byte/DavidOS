@@ -11,47 +11,13 @@ import {
   commitJournalState,
   JOURNAL_GENERATION_PREFIX,
   JOURNAL_HEAD_KEYS,
-  journalGenerationKey,
   selectJournalAuthority,
 } from '../../lib/storage/stateJournal';
 import { buildDefaultState } from '../../data/defaultState';
-import type { AppState, Handoff, WorkflowArtifact } from '../../lib/types';
+import { HEALTH_DRAFT_KEY, saveHealthDraft } from '../../lib/health/profileDraft';
+import type { AppState, HealthFitnessProfile } from '../../lib/types';
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
-
-function artifact(id: string, createdAt: string): WorkflowArtifact {
-  return {
-    id,
-    workflowId: 'syn-workflow',
-    artifactType: 'full_prompt',
-    createdAt,
-    title: `SYN-ARTIFACT-${id}`,
-    content: `SYN-PROMPT-CONTENT-${id}`,
-  };
-}
-
-function handoff(id: string): Handoff {
-  return {
-    id,
-    agentId: 'universal-operations',
-    workflowId: 'syn-workflow',
-    workflowName: 'SYN Workflow',
-    inputSummary: `SYN-HANDOFF-${id}`,
-    outputStyle: 'concise',
-    content: `SYN-HANDOFF-CONTENT-${id}`,
-    risk: 'read_only',
-    createdAt: '2026-01-01T00:00:00.000Z',
-    status: 'active',
-  };
-}
-
-const ARTIFACTS = [
-  artifact('a4', '2026-04-01T00:00:00.000Z'),
-  artifact('a3', '2026-03-01T00:00:00.000Z'),
-  artifact('a2', '2026-02-01T00:00:00.000Z'),
-  artifact('a1', '2026-01-01T00:00:00.000Z'),
-];
-const HANDOFFS = [handoff('h1'), handoff('h2')];
 
 type Op = ['set' | 'remove', string, string?];
 
@@ -121,6 +87,13 @@ class LockHarness {
   }
 }
 
+const DRAFT: HealthFitnessProfile = {
+  id: 'syn-reset-draft-profile',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  nutritionTargets: { calories: 6262, notes: 'SYN-RESET-DRAFT-NOTE-B2' },
+};
+
 let container: HTMLElement;
 let root: Root | null = null;
 let storage: ReturnType<typeof fakeLocalStorage>;
@@ -136,7 +109,8 @@ function StateProbe() {
 
 beforeEach(() => {
   storage = fakeLocalStorage();
-  baseline = { ...buildDefaultState(), artifacts: ARTIFACTS, handoffs: HANDOFFS };
+  baseline = buildDefaultState();
+  baseline.settings.theme = 'light';
   storage.store.set(STORAGE_KEY, JSON.stringify(baseline));
   locks = new LockHarness();
   Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
@@ -181,8 +155,12 @@ async function mountSettings() {
   await flush();
 }
 
-const byTestId = <T extends HTMLElement = HTMLElement>(id: string): T | null =>
-  container.querySelector<T>(`[data-testid="${id}"]`);
+function pageButton(pattern: RegExp): HTMLButtonElement {
+  const button = [...container.querySelectorAll('button')]
+    .find((item) => pattern.test(item.textContent ?? ''));
+  if (!button) throw new Error(`button ${pattern} not found`);
+  return button as HTMLButtonElement;
+}
 
 async function click(element: HTMLElement) {
   await act(async () => {
@@ -199,13 +177,13 @@ async function setInput(element: HTMLInputElement, value: string) {
   });
 }
 
-async function openAndArmPrune() {
-  await click(byTestId('storage-prune-open')!);
-  await setInput(byTestId<HTMLInputElement>('storage-prune-keep')!, '2');
-  await setInput(byTestId<HTMLInputElement>('storage-prune-confirm-text')!, 'PRUNE');
+async function openResetAndType() {
+  await click(pageButton(/^Reset to seed$/));
+  await setInput(container.querySelector<HTMLInputElement>('#reset-confirm')!, 'RESET');
   await flush();
 }
 
+const confirmButton = () => pageButton(/^Reset (\(keep Health Profile\)|\+ delete Health Profile)$/);
 const generationWrites = () => storage.ops.filter(
   ([op, key]) => op === 'set' && key.startsWith(JOURNAL_GENERATION_PREFIX),
 );
@@ -218,123 +196,118 @@ const committedState = (): AppState => {
   return JSON.parse(raw) as AppState;
 };
 
-describe('storage retention UI', () => {
-  it('shows usage and requires the exact typed confirmation', async () => {
-    await mountSettings();
-    expect(byTestId('storage-breakdown')!.textContent).toContain('Saved prompts (artifacts) (4)');
-    await click(byTestId('storage-prune-open')!);
-    await setInput(byTestId<HTMLInputElement>('storage-prune-keep')!, '2');
-    expect(byTestId('storage-prune-effect')!.textContent).toContain('deletes the 2 oldest');
-    expect(byTestId<HTMLButtonElement>('storage-prune-confirm')!.disabled).toBe(true);
-    await setInput(byTestId<HTMLInputElement>('storage-prune-confirm-text')!, 'prune');
-    expect(byTestId<HTMLButtonElement>('storage-prune-confirm')!.disabled).toBe(true);
-    await setInput(byTestId<HTMLInputElement>('storage-prune-confirm-text')!, 'PRUNE');
-    expect(byTestId<HTMLButtonElement>('storage-prune-confirm')!.disabled).toBe(false);
-  });
+function seedDraft() {
+  expect(saveHealthDraft(DRAFT, null, '2026-01-02T00:00:00.000Z', storage as unknown as Storage).ok).toBe(true);
+}
 
-  it('cancel leaves artifacts unchanged', async () => {
+describe('journal-backed reset transaction', () => {
+  it('writes one generation and one head; the actual first payload has reset state and completion audit', async () => {
     await mountSettings();
-    await openAndArmPrune();
-    await click(byTestId('storage-prune-cancel')!);
-    expect(probedState!.artifacts.map((item) => item.id)).toEqual(['a4', 'a3', 'a2', 'a1']);
-  });
-});
-
-describe('journal-backed prune transaction', () => {
-  it('writes one generation and one head; the actual first payload has deletions and completion audit', async () => {
-    await mountSettings();
-    await openAndArmPrune();
+    await openResetAndType();
     storage.ops.length = 0;
-    await click(byTestId('storage-prune-confirm')!);
+    await click(confirmButton());
 
     expect(generationWrites()).toHaveLength(1);
     expect(headWrites()).toHaveLength(1);
     const first = JSON.parse(generationWrites()[0][2]!) as AppState;
-    expect(first.artifacts.map((item) => item.id)).toEqual(['a4', 'a3']);
-    expect(first.handoffs).toEqual(HANDOFFS);
-    expect(first.auditLog.find((entry) => entry.command.includes('Prune saved prompts') && entry.command.includes('completed')))
+    expect(first.settings.theme).toBe('dark');
+    expect(first.auditLog.find((entry) => entry.command.includes('Reset to seed') && entry.command.includes('completed')))
       .toMatchObject({ actionTaken: true, approvalStatus: 'approved' });
     expect(committedState()).toEqual(first);
     expect(probedState).toEqual(first);
     expect(generationWrites()).toHaveLength(1);
-
-    const authority = selectJournalAuthority(storage as unknown as Storage).authority!;
-    expect(storage.store.has(journalGenerationKey(authority.generationId))).toBe(true);
-    expect(authority.head.previousGenerationId).not.toBeNull();
-    expect(storage.store.has(journalGenerationKey(authority.head.previousGenerationId!))).toBe(true);
   });
 
-  it('keeps active state unchanged while the exclusive lock is waiting', async () => {
+  it('does not clear auxiliary draft data until after the verified head write', async () => {
+    seedDraft();
     await mountSettings();
-    await openAndArmPrune();
+    await openResetAndType();
+    storage.ops.length = 0;
+    await click(confirmButton());
+
+    const generationIndex = storage.ops.findIndex(([, key]) => key.startsWith(JOURNAL_GENERATION_PREFIX));
+    const headIndex = storage.ops.findIndex(([, key]) => JOURNAL_HEAD_KEYS.includes(key as never));
+    const draftIndex = storage.ops.findIndex(([op, key]) => op === 'remove' && key === HEALTH_DRAFT_KEY);
+    expect(generationIndex).toBeGreaterThanOrEqual(0);
+    expect(headIndex).toBeGreaterThan(generationIndex);
+    expect(draftIndex).toBeGreaterThan(headIndex);
+    expect(storage.store.has(HEALTH_DRAFT_KEY)).toBe(false);
+  });
+
+  it('keeps active state and auxiliary data unchanged while the exclusive lock is waiting', async () => {
+    seedDraft();
+    await mountSettings();
+    await openResetAndType();
     const before = JSON.stringify(probedState);
     storage.ops.length = 0;
     locks.pauseNext();
-    await click(byTestId('storage-prune-confirm')!);
+    await click(confirmButton());
     await locks.waiting;
 
     expect(JSON.stringify(probedState)).toBe(before);
+    expect(storage.store.has(HEALTH_DRAFT_KEY)).toBe(true);
     expect(generationWrites()).toHaveLength(0);
-    expect(headWrites()).toHaveLength(0);
     locks.release();
     await flush();
-    expect(probedState!.artifacts.map((item) => item.id)).toEqual(['a4', 'a3']);
+    expect(JSON.stringify(probedState)).not.toBe(before);
   });
 
-  it('safe candidate-write failure leaves full active state unchanged with no failure audit or second write', async () => {
+  it('safe candidate-write failure leaves full active state and draft unchanged with no failure audit', async () => {
+    seedDraft();
     await mountSettings();
-    await openAndArmPrune();
+    await openResetAndType();
     const before = JSON.stringify(probedState);
+    const draftBefore = storage.store.get(HEALTH_DRAFT_KEY);
     storage.ops.length = 0;
     storage.setFailGenerationWrites(true);
-    await click(byTestId('storage-prune-confirm')!);
+    await click(confirmButton());
 
     expect(JSON.stringify(probedState)).toBe(before);
+    expect(storage.store.get(HEALTH_DRAFT_KEY)).toBe(draftBefore);
     expect(generationWrites()).toHaveLength(0);
     expect(headWrites()).toHaveLength(0);
-    expect(probedState!.auditLog.some((entry) => entry.command.includes('Prune') && entry.command.includes('failed'))).toBe(false);
-    expect(container.textContent).toContain('Prune failed');
+    expect(container.textContent).toContain('Reset failed');
+    expect(probedState!.auditLog.some((entry) => entry.command.includes('Reset') && entry.command.includes('failed'))).toBe(false);
   });
 
-  it('uncertain landed-head outcome leaves full active state unchanged and suppresses future persistence', async () => {
+  it('uncertain landed-head outcome leaves active state unchanged and suppresses later saving', async () => {
     await mountSettings();
-    await openAndArmPrune();
+    await openResetAndType();
     const before = JSON.stringify(probedState);
     storage.ops.length = 0;
     storage.setThrowAfterHeadWrite(true);
-    await click(byTestId('storage-prune-confirm')!);
+    await click(confirmButton());
 
     expect(JSON.stringify(probedState)).toBe(before);
     expect(generationWrites()).toHaveLength(1);
     expect(headWrites()).toHaveLength(1);
     expect(container.textContent).toContain('could not be confirmed as saved');
     storage.ops.length = 0;
-    const themeButton = [...container.querySelectorAll('button')]
-      .find((button) => /Switch to (light|dark) mode/.test(button.textContent ?? ''))!;
-    await click(themeButton);
+    await click(pageButton(/^Switch to dark mode$/));
     expect(generationWrites()).toHaveLength(0);
     expect(headWrites()).toHaveLength(0);
-    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(true);
+    await openResetAndType();
+    expect(confirmButton().disabled).toBe(true);
   });
 
-  it('stale expected generation is rejected before any prune generation or head write', async () => {
+  it('stale expected generation is rejected inside the lock before any reset generation or head write', async () => {
     await mountSettings();
-    await openAndArmPrune();
+    await openResetAndType();
     const current = selectJournalAuthority(storage as unknown as Storage).authority!;
     let id = 0;
     const external = await commitJournalState(
-      { ...committedState(), priorities: [{ id: 'syn-new', label: 'SYN NEW', rank: 1 }] },
+      { ...committedState(), settings: { ...committedState().settings, theme: 'dark' } },
       {
         storage: storage as unknown as Storage,
         expectedGeneration: current.generationId,
-        idFactory: () => `external-prune-${++id}`,
+        idFactory: () => `external-reset-${++id}`,
       },
     );
     expect(external.ok).toBe(true);
     const externalRaw = selectJournalAuthority(storage as unknown as Storage).authority!.raw;
     const before = JSON.stringify(probedState);
     storage.ops.length = 0;
-    await click(byTestId('storage-prune-confirm')!);
+    await click(confirmButton());
 
     expect(generationWrites()).toHaveLength(0);
     expect(headWrites()).toHaveLength(0);
@@ -343,22 +316,40 @@ describe('journal-backed prune transaction', () => {
     expect(container.textContent).toContain('another tab');
   });
 
-  it('unsupported Web Locks disables prune before creating a generation or head', async () => {
+  it('unsupported Web Locks blocks reset before creating a generation or head', async () => {
     Reflect.deleteProperty(navigator, 'locks');
     await mountSettings();
+    await openResetAndType();
 
-    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(true);
+    expect(confirmButton().disabled).toBe(true);
     expect(generationWrites()).toHaveLength(0);
     expect(headWrites()).toHaveLength(0);
     expect(storage.store.get(STORAGE_KEY)).toBe(JSON.stringify(baseline));
   });
 
-  it('preservation failure blocks before mutation', async () => {
-    storage.store.set(STORAGE_KEY, JSON.stringify({ ...baseline, settings: 'damaged' }));
+  it('preservation failure blocks reset without journal mutation', async () => {
+    storage.store.set(STORAGE_KEY, JSON.stringify({ ...baseline, prompts: 'damaged' }));
     storage.setFailRecoveryWrites(true);
     await mountSettings();
-    expect(byTestId<HTMLButtonElement>('storage-prune-open')!.disabled).toBe(true);
+    await openResetAndType();
+
+    expect(confirmButton().disabled).toBe(true);
     expect(generationWrites()).toHaveLength(0);
     expect(headWrites()).toHaveLength(0);
+  });
+
+  it('does not expose draft values in UI, journal metadata, or logs on failure', async () => {
+    const lines: string[] = [];
+    for (const method of ['log', 'info', 'warn', 'error'] as const) {
+      vi.spyOn(console, method).mockImplementation((...args: unknown[]) => lines.push(args.join(' ')));
+    }
+    seedDraft();
+    await mountSettings();
+    await openResetAndType();
+    storage.setFailGenerationWrites(true);
+    await click(confirmButton());
+    const visible = `${container.textContent ?? ''}\n${lines.join('\n')}\n${headWrites().map((op) => op[2]).join('\n')}`;
+    expect(visible).not.toContain('6262');
+    expect(visible).not.toContain('SYN-RESET-DRAFT-NOTE-B2');
   });
 });

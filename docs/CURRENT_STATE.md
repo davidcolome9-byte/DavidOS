@@ -1,4 +1,4 @@
-# Current State — 2026-07-19
+# Current State — 2026-07-20
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -22,6 +22,27 @@ lifecycle: its commit has **not yet** been pushed, opened as a pull
 request, run through CI, merged into `main`, or synchronized. Final
 documentation closure awaits those steps and David's explicit merge
 authorization.
+
+## In-flight candidate — DOS-STAB-001A (NOT deployed)
+
+Everything below this section describes the **deployed** production state.
+DOS-STAB-001A is a separate, currently **uncommitted** candidate on the local
+branch `feat/dos-stab-001a-durable-destructive-flows` (base `main` @
+`eb43f678a686bb984350699256eae6b2d9c00aca`). It replaces single-key canonical
+AppState persistence with an immutable generation journal (two alternating
+hash-verified heads, one exclusive Web Lock, boot reconciliation, no
+destructive rollback), routes Import/Reset/Prune through one shared
+destructive commit boundary, adds deep boot record quarantine, and adds a
+top-level crash recovery boundary. Architecture:
+[DATA_MODEL.md](DATA_MODEL.md) and the 2026-07-20 [DECISIONS.md](DECISIONS.md)
+entry; status and remaining gates: [OPEN_LOOPS.md](OPEN_LOOPS.md) OL-031.
+
+**None of it is live.** It has not been committed, pushed, opened as a PR,
+run through CI, merged, or deployed, and it has had no independent review or
+live verification. The "Data" and storage descriptions below remain the
+accurate account of production until that release sequence completes and
+David explicitly authorizes the merge. `package.json` and `package-lock.json`
+are unchanged by this candidate.
 
 ## Version
 

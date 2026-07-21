@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { canonicalStateRaw } from './helpers/journalState';
 
 // POST-H-PRIV-01 / POST-M-PRIV-01 — privacy of audit records and schema
 // diagnostics, exercised through the real UI against the production build.
@@ -6,12 +7,13 @@ import { test, expect } from '@playwright/test';
 
 const STORAGE_KEY = 'davidos-state-v1';
 
-const auditLogSerialized = (page: import('@playwright/test').Page) =>
-  page.evaluate(([key]) => {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return '';
-    return JSON.stringify(JSON.parse(raw).auditLog ?? []);
-  }, [STORAGE_KEY]);
+// DOS-STAB-001A: read what the app actually committed (the journal
+// generation), not the legacy key.
+const auditLogSerialized = async (page: import('@playwright/test').Page) => {
+  const raw = await canonicalStateRaw(page);
+  if (!raw) return '';
+  return JSON.stringify(JSON.parse(raw).auditLog ?? []);
+};
 
 test('project create/delete audit records never carry the project name (POST-H-PRIV-01)', async ({ page }) => {
   const SECRET = 'ZZPRIV-browser-project-custody-hearing';
@@ -60,7 +62,7 @@ test('prompt create audit records never carry the title or body (POST-H-PRIV-01)
 
   // The prompt itself is stored (that is the vault's purpose) — only the
   // audit records must be clean.
-  const stored = await page.evaluate(([key]) => window.localStorage.getItem(key) ?? '', [STORAGE_KEY]);
+  const stored = (await canonicalStateRaw(page)) ?? '';
   expect(stored).toContain(SECRET_BODY);
 });
 
@@ -88,7 +90,7 @@ test('context save audit records never carry the title or body (POST-H-PRIV-01)'
 
   // The context body itself is stored (that is the vault's purpose) — only
   // the audit records must be clean.
-  const stored = await page.evaluate(([key]) => window.localStorage.getItem(key) ?? '', [STORAGE_KEY]);
+  const stored = (await canonicalStateRaw(page)) ?? '';
   expect(stored).toContain(SECRET_BODY);
 });
 
@@ -120,6 +122,6 @@ test('import of a future-schema backup fails without echoing the version (POST-M
   await expect(flash).toContainText(/newer/i);
   await expect(flash).not.toContainText(String(SYNTH_VERSION));
   // Nothing about the rejected file may be persisted.
-  const stored = await page.evaluate(([key]) => window.localStorage.getItem(key) ?? '', [STORAGE_KEY]);
+  const stored = (await canonicalStateRaw(page)) ?? '';
   expect(stored).not.toContain(String(SYNTH_VERSION));
 });

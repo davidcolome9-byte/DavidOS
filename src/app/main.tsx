@@ -1,11 +1,17 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import AppErrorBoundary from './AppErrorBoundary';
 import '../styles/index.css';
 
+// The crash boundary wraps EVERYTHING (StoreProvider, router, layout): any
+// render crash lands on a recovery surface with reload + export instead of a
+// permanent blank page (DOS-STAB-001A).
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <AppErrorBoundary>
+      <App />
+    </AppErrorBoundary>
   </StrictMode>,
 );
 

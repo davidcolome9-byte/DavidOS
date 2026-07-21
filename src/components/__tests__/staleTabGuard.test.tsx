@@ -7,11 +7,18 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { StoreProvider, useStore } from '../../state/store';
 import Layout from '../Layout';
 import { STORAGE_KEY } from '../../lib/storage/localStore';
+import { buildDefaultState } from '../../data/defaultState';
+import { commitJournalState, selectJournalAuthority } from '../../lib/storage/stateJournal';
 
 // F-08 — the cross-tab stale-state dialog must be fully keyboard-accessible
 // (focus moves in, focus is trapped, Escape dismisses, background is inert)
 // WITHOUT weakening the data-loss guard: dismissing the dialog never clears
 // the stale condition and never lets this tab overwrite newer state.
+//
+// DOS-STAB-001A: "another tab wrote" now means another tab ADVANCED THE
+// JOURNAL HEAD. A legacy-key event is deliberately ignored (it must never
+// override valid journal authority — covered in state/__tests__/store.test.tsx),
+// so these tests drive the guard with a real external head commit.
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -23,11 +30,27 @@ function fakeLocalStorage() {
     setItem: (k: string, v: string) => void store.set(k, String(v)),
     removeItem: (k: string) => void store.delete(k),
     clear: () => store.clear(),
-    key: () => null,
+    key: (index: number) => [...store.keys()][index] ?? null,
     get length() {
       return store.size;
     },
   };
+}
+
+/** Serialized AppState of the current verified journal head, if any. */
+const committedRaw = (): string | undefined =>
+  selectJournalAuthority(storage as unknown as Storage).authority?.raw;
+
+function ids(prefix: string) {
+  let n = 0;
+  return () => `${prefix}-${String(++n).padStart(8, '0')}`;
+}
+
+/** Let the controller's async initialize/drain settle. */
+async function settle() {
+  await act(async () => {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  });
 }
 
 /** A minimal page that can force a real state change from inside the app. */
@@ -55,7 +78,14 @@ let storage: ReturnType<typeof fakeLocalStorage>;
 
 beforeEach(() => {
   storage = fakeLocalStorage();
+  // A valid legacy blob so the provider migrates to an initial journal
+  // generation and this tab starts with real committed authority.
+  storage.store.set(STORAGE_KEY, JSON.stringify(buildDefaultState()));
   Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+  Object.defineProperty(navigator, 'locks', {
+    configurable: true,
+    value: { request: async (_name: string, _options: LockOptions, callback: () => Promise<unknown>) => callback() },
+  });
   container = document.createElement('div');
   document.body.appendChild(container);
 });
@@ -64,6 +94,7 @@ afterEach(async () => {
   if (root) await act(async () => root!.unmount());
   root = null;
   container.remove();
+  Reflect.deleteProperty(navigator, 'locks');
 });
 
 async function mountApp() {
@@ -81,15 +112,29 @@ async function mountApp() {
       </StoreProvider>,
     );
   });
+  await settle();
 }
 
-/** Simulate another tab writing our storage key (fires only in OTHER tabs). */
+/**
+ * Simulate ANOTHER TAB committing newer state: a real journal commit against
+ * the current authority, followed by the head-key storage event that a real
+ * browser would deliver. Nothing here writes the legacy key.
+ */
 async function fireExternalWrite() {
-  const ev = new Event('storage');
-  Object.defineProperty(ev, 'key', { value: STORAGE_KEY });
+  const current = selectJournalAuthority(storage as unknown as Storage).authority;
+  const external = await commitJournalState(
+    { ...buildDefaultState(), settings: { theme: 'light' } },
+    {
+      storage: storage as unknown as Storage,
+      expectedGeneration: current?.generationId ?? null,
+      idFactory: ids('stale-guard-external'),
+    },
+  );
+  if (!external.ok) throw new Error('synthetic external commit failed');
   await act(async () => {
-    window.dispatchEvent(ev);
+    window.dispatchEvent(new StorageEvent('storage', { key: external.authority.headKey }));
   });
+  await settle();
 }
 
 const dialog = () => container.querySelector<HTMLElement>('[data-testid="crosstab-guard"]');
@@ -156,13 +201,17 @@ describe('stale-tab dialog accessibility (F-08)', () => {
   it('Escape dismisses the dialog to a persistent warning without clearing the stale state', async () => {
     await mountApp();
 
-    // Baseline: this tab persists its own writes while healthy.
+    // Baseline: this tab persists its own writes while healthy — committed as
+    // a verified journal generation, never back to the legacy key.
+    const legacyBefore = storage.store.get(STORAGE_KEY);
     await act(async () => {
       [...container.querySelectorAll('button')]
         .find((b) => b.textContent === 'Probe Write')!
         .click();
     });
-    expect(storage.store.get(STORAGE_KEY)).toContain('probe_write');
+    await settle();
+    expect(committedRaw()).toContain('probe_write');
+    expect(storage.store.get(STORAGE_KEY)).toBe(legacyBefore); // legacy bytes untouched
 
     await fireExternalWrite();
     await pressKey(document.activeElement!, 'Escape');
@@ -183,14 +232,20 @@ describe('stale-tab dialog accessibility (F-08)', () => {
       expect(el.hasAttribute('aria-hidden')).toBe(false);
     }
 
-    // THE GUARD STILL HOLDS: a state change after dismissal is NOT persisted.
-    const before = storage.store.get(STORAGE_KEY);
+    // THE GUARD STILL HOLDS: a state change after dismissal is NOT persisted —
+    // the committed journal head does not advance, and the legacy key is
+    // likewise never written.
+    const before = committedRaw();
+    const legacyBefore2 = storage.store.get(STORAGE_KEY);
     await act(async () => {
       [...container.querySelectorAll('button')]
         .find((b) => b.textContent === 'Probe Write')!
         .click();
     });
-    expect(storage.store.get(STORAGE_KEY)).toBe(before);
+    await settle();
+    expect(committedRaw()).toBe(before);
+    expect(committedRaw()).not.toContain('probe_write');
+    expect(storage.store.get(STORAGE_KEY)).toBe(legacyBefore2);
   });
 
   it('the persistent warning can reopen the dialog, which is dismissible again', async () => {

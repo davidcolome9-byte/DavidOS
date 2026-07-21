@@ -1,17 +1,19 @@
 import { test, expect, type Page } from '@playwright/test';
+import { canonicalStateRaw, waitForCanonicalState } from './helpers/journalState';
 
 // DOS-WF-001R Phase 2B — a stale tab must not clobber newer state from another
-// tab. Two pages in one context share localStorage and receive `storage` events.
+// tab. Two pages in one context share localStorage and receive `storage`
+// events. DOS-STAB-001A: canonical state is the committed journal generation,
+// and only a HEAD change makes a tab stale.
 
 // A routed command is persisted with a privacy-safe label (never the raw text).
-const hasRoutedCmd = (page: Page) =>
-  page.evaluate(() => {
-    const raw = localStorage.getItem('davidos-state-v1');
-    if (!raw) return false;
-    if (raw.includes('Review this workout')) return false; // raw text must never be stored
-    const log = (JSON.parse(raw).auditLog ?? []) as Array<{ command?: string }>;
-    return log.some((e) => typeof e.command === 'string' && e.command.startsWith('Routed command'));
-  });
+const hasRoutedCmd = async (page: Page) => {
+  const raw = await canonicalStateRaw(page);
+  if (raw === null) return false;
+  if (raw.includes('Review this workout')) return false; // raw text must never be stored
+  const log = (JSON.parse(raw).auditLog ?? []) as Array<{ command?: string }>;
+  return log.some((e) => typeof e.command === 'string' && e.command.startsWith('Routed command'));
+};
 
 test('a stale tab cannot silently clobber newer state from another tab', async ({ context }) => {
   const a = await context.newPage();
@@ -19,7 +21,7 @@ test('a stale tab cannot silently clobber newer state from another tab', async (
   await expect(a.getByRole('heading', { name: /OS Status/ })).toBeVisible();
   // Establish a shared persisted baseline before opening the second tab (real
   // usage: both tabs load the SAME stored state; the later one skips its write).
-  await expect.poll(() => a.evaluate(() => !!localStorage.getItem('davidos-state-v1'))).toBe(true);
+  await waitForCanonicalState(a);
 
   const b = await context.newPage();
   await b.goto('/');

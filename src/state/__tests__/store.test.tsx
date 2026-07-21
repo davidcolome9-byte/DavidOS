@@ -4,9 +4,16 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import type { Root } from 'react-dom/client';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { buildDefaultState } from '../../data/defaultState';
 import { StoreProvider, useStore } from '../store';
 import Layout from '../../components/Layout';
 import { RECOVERY_KEY_PREFIX, STORAGE_KEY } from '../../lib/storage/localStore';
+import {
+  JOURNAL_GENERATION_PREFIX,
+  JOURNAL_HEAD_KEYS,
+  commitJournalState,
+  selectJournalAuthority,
+} from '../../lib/storage/stateJournal';
 
 // DAV-001: prove the mounted app honors the recovery contract — a lossy
 // repair never replaces the only stored copy unless the exact original was
@@ -25,7 +32,7 @@ function fakeLocalStorage(initial: Record<string, string>, quarantineFails: bool
     },
     removeItem: (k: string) => void store.delete(k),
     clear: () => store.clear(),
-    key: () => null,
+    key: (index: number) => [...store.keys()][index] ?? null,
     get length() {
       return store.size;
     },
@@ -38,12 +45,17 @@ let root: Root | null = null;
 beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
+  Object.defineProperty(navigator, 'locks', {
+    configurable: true,
+    value: { request: async (_name: string, _options: LockOptions, callback: () => Promise<unknown>) => callback() },
+  });
 });
 
 afterEach(async () => {
   if (root) await act(async () => root!.unmount());
   root = null;
   container.remove();
+  Reflect.deleteProperty(navigator, 'locks');
 });
 
 /** Test-only page exposing a button that performs a real user state update. */
@@ -83,6 +95,11 @@ async function mountApp() {
 
 const DAMAGED = JSON.stringify({ schemaVersion: 1, prompts: 'junk' });
 
+function ids(prefix: string) {
+  let n = 0;
+  return () => `${prefix}-${String(++n).padStart(8, '0')}`;
+}
+
 describe('StoreProvider recovery behavior', () => {
   it('repairs damaged state, shows a visible warning, and keeps the original recoverable', async () => {
     const storage = fakeLocalStorage({ [STORAGE_KEY]: DAMAGED }, false);
@@ -93,7 +110,7 @@ describe('StoreProvider recovery behavior', () => {
     const banner = container.querySelector('[data-testid="recovery-banner"]');
     expect(banner?.textContent).toContain('preserved');
     // The repaired state was persisted (quarantine succeeded)…
-    const persisted = JSON.parse(storage.store.get(STORAGE_KEY)!);
+    const persisted = JSON.parse(selectJournalAuthority(storage as unknown as Storage).authority!.raw);
     expect(persisted.prompts).toEqual([]);
     // …and the exact original remains recoverable under a recovery key.
     const recoveryKey = [...storage.store.keys()].find((k) => k.startsWith(RECOVERY_KEY_PREFIX));
@@ -108,7 +125,7 @@ describe('StoreProvider recovery behavior', () => {
     await mountApp();
 
     const banner = container.querySelector('[data-testid="recovery-banner"]');
-    expect(banner?.textContent).toContain('Saving is paused');
+    expect(banner?.textContent).toMatch(/saving is paused/i);
     // The damaged blob is still the ONLY stored copy — untouched.
     expect(storage.store.get(STORAGE_KEY)).toBe(DAMAGED);
     expect([...storage.store.keys()]).toEqual([STORAGE_KEY]);
@@ -139,7 +156,7 @@ describe('StoreProvider recovery behavior', () => {
     expect(container.querySelector('[data-testid="recovery-banner"]')?.textContent).toContain('preserved');
     const recoveryKey = [...storage.store.keys()].find((k) => k.startsWith(RECOVERY_KEY_PREFIX));
     expect(storage.store.get(recoveryKey!)).toBe(arraySettings);
-    expect(JSON.parse(storage.store.get(STORAGE_KEY)!).settings).toEqual({ theme: 'dark' });
+    expect(JSON.parse(selectJournalAuthority(storage as unknown as Storage).authority!.raw).settings).toEqual({ theme: 'dark' });
   });
 
   it('an existing empty-string blob is preserved, warned about, and not treated as a fresh install', async () => {
@@ -149,7 +166,7 @@ describe('StoreProvider recovery behavior', () => {
     await mountApp();
 
     const banner = container.querySelector('[data-testid="recovery-banner"]');
-    expect(banner?.textContent).toContain('Saving is paused');
+    expect(banner?.textContent).toMatch(/saving is paused/i);
     expect(storage.store.get(STORAGE_KEY)).toBe(''); // untouched
     expect([...storage.store.keys()]).toEqual([STORAGE_KEY]);
   });
@@ -168,9 +185,68 @@ describe('StoreProvider recovery behavior', () => {
     await mountApp();
 
     expect(container.querySelector('[data-testid="recovery-banner"]')).toBeNull();
-    const persisted = JSON.parse(storage.store.get(STORAGE_KEY)!);
+    const persisted = JSON.parse(selectJournalAuthority(storage as unknown as Storage).authority!.raw);
     expect(persisted.artifacts).toEqual([]);
     expect(persisted.healthProfile).not.toBeUndefined();
-    expect([...storage.store.keys()]).toEqual([STORAGE_KEY]); // no quarantine record
+    expect(storage.store.get(STORAGE_KEY)).toBe(old); // migration never alters legacy bytes
+  });
+
+  it('ignores unrelated and legacy-key events, then suppresses saving for a valid external head', async () => {
+    const initial = JSON.stringify(buildDefaultState());
+    const storage = fakeLocalStorage({ [STORAGE_KEY]: initial }, false);
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+    await mountApp();
+
+    await act(async () => {
+      window.dispatchEvent(new StorageEvent('storage', { key: 'synthetic-unrelated' }));
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY }));
+    });
+    expect(container.querySelector('[data-testid="crosstab-guard"]')).toBeNull();
+
+    const current = selectJournalAuthority(storage as unknown as Storage).authority!;
+    const external = await commitJournalState(
+      { ...buildDefaultState(), settings: { theme: 'light' } },
+      {
+        storage: storage as unknown as Storage,
+        expectedGeneration: current.generationId,
+        idFactory: ids('provider-external'),
+      },
+    );
+    if (!external.ok) throw new Error('synthetic setup failed');
+    await act(async () => {
+      window.dispatchEvent(new StorageEvent('storage', { key: external.authority.headKey }));
+    });
+    expect(container.querySelector('[data-testid="crosstab-guard"]')).not.toBeNull();
+  });
+
+  it('treats malformed external head evidence as stale reconciliation evidence', async () => {
+    const storage = fakeLocalStorage({ [STORAGE_KEY]: JSON.stringify(buildDefaultState()) }, false);
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+    await mountApp();
+    const active = selectJournalAuthority(storage as unknown as Storage).authority!;
+    const malformedKey = JOURNAL_HEAD_KEYS.find((key) => key !== active.headKey)!;
+    storage.store.set(malformedKey, '{malformed');
+
+    await act(async () => {
+      window.dispatchEvent(new StorageEvent('storage', { key: malformedKey }));
+    });
+
+    expect(container.querySelector('[data-testid="crosstab-guard"]')).not.toBeNull();
+  });
+
+  it('keeps provider persistence read-only without Web Locks and creates no journal records', async () => {
+    Reflect.deleteProperty(navigator, 'locks');
+    const legacy = JSON.stringify(buildDefaultState());
+    const storage = fakeLocalStorage({ [STORAGE_KEY]: legacy }, false);
+    Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+
+    await mountApp();
+    await act(async () => {
+      (container.querySelector('[data-testid="mutate"]') as HTMLButtonElement).click();
+    });
+
+    expect(storage.store.get(STORAGE_KEY)).toBe(legacy);
+    expect([...storage.store.keys()].some((key) => key.startsWith(JOURNAL_GENERATION_PREFIX))).toBe(false);
+    expect([...storage.store.keys()].some((key) => JOURNAL_HEAD_KEYS.includes(key as never))).toBe(false);
   });
 });

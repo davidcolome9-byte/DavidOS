@@ -7,6 +7,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { StoreProvider } from '../../state/store';
 import Settings from '../Settings';
 import { STORAGE_KEY } from '../../lib/storage/localStore';
+import { selectJournalAuthority } from '../../lib/storage/stateJournal';
 import { serializeState } from '../../lib/storage/exportImport';
 import { buildDefaultState } from '../../data/defaultState';
 import type { AppState, WorkflowArtifact } from '../../lib/types';
@@ -53,6 +54,14 @@ let confirmSpy: ReturnType<typeof vi.spyOn>;
 beforeEach(() => {
   storage = fakeLocalStorage();
   Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+  // The journal persistence layer requires an exclusive Web Lock — grant it inline.
+  Object.defineProperty(navigator, 'locks', {
+    value: {
+      request: async (_name: string, _options: LockOptions, callback: () => Promise<unknown>) =>
+        callback(),
+    },
+    configurable: true,
+  });
   baseline = {
     ...buildDefaultState(),
     artifacts: [
@@ -70,8 +79,18 @@ afterEach(async () => {
   if (root) await act(async () => root!.unmount());
   root = null;
   container.remove();
+  Reflect.deleteProperty(navigator, 'locks');
   vi.restoreAllMocks();
 });
+
+async function flush() {
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
 
 async function mountSettings() {
   root = createRoot(container);
@@ -84,6 +103,7 @@ async function mountSettings() {
       </StoreProvider>,
     );
   });
+  await flush();
 }
 
 const byTestId = <T extends HTMLElement = HTMLElement>(id: string): T | null =>
@@ -143,7 +163,12 @@ async function importBackup(json: string, name = 'backup.json') {
   });
 }
 
-const storedState = (): AppState => JSON.parse(storage.store.get(STORAGE_KEY)!) as AppState;
+/** Committed state = the journal authority (the legacy key is read-only). */
+const storedState = (): AppState => {
+  const raw = selectJournalAuthority(storage as unknown as Storage).authority?.raw;
+  if (!raw) throw new Error('journal authority missing');
+  return JSON.parse(raw) as AppState;
+};
 
 describe('reset dialog (OL-015 focus contract)', () => {
   it('opens with initial focus on Cancel; Escape cancels and restores focus to the opener', async () => {
@@ -160,6 +185,7 @@ describe('reset dialog (OL-015 focus contract)', () => {
 
     await pressKey(document.activeElement!, 'Escape');
     expect(dialogWithText('Reset to seed')).toBeNull();
+    await flush();
     // Nothing was reset; the cancellation was audited as denied.
     const cancelled = storedState().auditLog.find((e) => e.command === 'Reset to seed — cancelled');
     expect(cancelled?.approvalStatus).toBe('denied');

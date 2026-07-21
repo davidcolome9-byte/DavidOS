@@ -126,7 +126,7 @@ const boolObj = (key: string, required = false) => f(key, isBool, 'boolean', req
 const strArrObj = (key: string) => f(key, isStrArr, 'string[]');
 const enumObj = (key: string, values: readonly string[], required = false) => f(key, isEnum(values), `one of ${values.join(' | ')}`, required);
 
-type Push = (e: ImportError) => void;
+export type Push = (e: ImportError) => void;
 
 /** Join a nested field path without a leading dot when the prefix is empty. */
 const join = (a: string, b: string): string => (a ? `${a}.${b}` : b);
@@ -352,7 +352,12 @@ function validateHandoffRelationships(push: Push, handoffs: unknown[]): void {
   }
 }
 
-function validateHealthProfile(push: Push, hp: unknown): void {
+/**
+ * Deep-validate a Health Profile value. Shared by explicit import (reject the
+ * backup) and boot-time integrity inspection (quarantine the profile). Only
+ * value-free field/type diagnostics are ever pushed.
+ */
+export function validateHealthProfile(push: Push, hp: unknown): void {
   const item = ''; // healthProfile is a singleton, not a list item
   if (!isObj(hp)) {
     push({ collection: 'healthProfile', expected: 'object or null', message: 'healthProfile must be an object or null.' });
@@ -386,6 +391,52 @@ function validateHealthProfile(push: Push, hp: unknown): void {
 
 // ---- top-level validation ---------------------------------------------------
 
+/** The list collections covered by per-item deep validation. */
+export const VALIDATED_COLLECTIONS: readonly string[] = Object.keys(COLLECTION_SPECS);
+
+/**
+ * Deep-validate ONE list item of `collection` (required fields, optional
+ * fields when present, and collection-specific nested structures). Shared by
+ * explicit import (reject the backup) and boot-time integrity inspection
+ * (quarantine the record). Diagnostics are value-free: numeric index only,
+ * never ids or field values.
+ */
+export function validateCollectionItem(push: Push, collection: string, index: number, item: unknown): void {
+  const specs = COLLECTION_SPECS[collection] ?? [];
+  const ref = `[${index}]`;
+  if (!isObj(item)) {
+    push({ collection, item: ref, expected: 'object', message: `${collection}${ref} must be an object.` });
+    return;
+  }
+  const rec = item as Record<string, unknown>;
+  if (!isStr(rec.id)) {
+    push({ collection, item: ref, field: 'id', expected: 'string', message: `${collection}${ref}: missing or non-string "id".` });
+  }
+  // Historical v1 Handoffs (original release) stored the entry text in a
+  // required `output` with NO `content` field. The runtime reads
+  // `content ?? output`, so a string `output` satisfies the content
+  // requirement for a record where `content` is entirely absent — the legacy
+  // value stays in place (never copied into `content` to appease validation).
+  // A PRESENT but non-string `content` is still corruption.
+  const legacyOutputOnly = collection === 'handoffs' && rec.content === undefined && isStr(rec.output);
+  for (const spec of specs) {
+    if (spec.name === 'id') continue; // already reported precisely above
+    if (spec.name === 'content' && legacyOutputOnly) continue;
+    if (!spec.ok(rec[spec.name])) {
+      push({ collection, item: ref, field: spec.name, expected: spec.expected, message: `${collection}${ref}: field "${spec.name}" must be ${spec.expected}.` });
+    }
+  }
+  for (const spec of OPTIONAL_FIELDS[collection] ?? []) {
+    if (rec[spec.name] === undefined || rec[spec.name] === null) continue;
+    if (!spec.ok(rec[spec.name])) {
+      push({ collection, item: ref, field: spec.name, expected: spec.expected, message: `${collection}${ref}: field "${spec.name}" must be ${spec.expected}.` });
+    }
+  }
+  // Collection-specific nested structures.
+  if (collection === 'prompts') validatePromptNested(push, ref, rec);
+  if (collection === 'artifacts') validateArtifactNested(push, ref, rec);
+}
+
 /** Validate an imported AppState deeply. Returns [] when it is safe to accept. */
 export function validateImportedState(state: AppState): ImportError[] {
   const errors: ImportError[] = [];
@@ -395,39 +446,14 @@ export function validateImportedState(state: AppState): ImportError[] {
   // normalize time — absent is fine; present-but-malformed is not.
   const OPTIONAL_COLLECTIONS = new Set(['artifacts']);
 
-  for (const [collection, specs] of Object.entries(COLLECTION_SPECS)) {
+  for (const collection of VALIDATED_COLLECTIONS) {
     const list = (state as unknown as Record<string, unknown>)[collection];
     if (list === undefined && OPTIONAL_COLLECTIONS.has(collection)) continue;
     if (!Array.isArray(list)) {
       push({ collection, expected: 'array', message: `Section "${collection}" must be an array.` });
       continue;
     }
-    list.forEach((item, index) => {
-      const ref = `[${index}]`;
-      if (!isObj(item)) {
-        push({ collection, item: ref, expected: 'object', message: `${collection}${ref} must be an object.` });
-        return;
-      }
-      const rec = item as Record<string, unknown>;
-      if (!isStr(rec.id)) {
-        push({ collection, item: ref, field: 'id', expected: 'string', message: `${collection}${ref}: missing or non-string "id".` });
-      }
-      for (const spec of specs) {
-        if (spec.name === 'id') continue; // already reported precisely above
-        if (!spec.ok(rec[spec.name])) {
-          push({ collection, item: ref, field: spec.name, expected: spec.expected, message: `${collection}${ref}: field "${spec.name}" must be ${spec.expected}.` });
-        }
-      }
-      for (const spec of OPTIONAL_FIELDS[collection] ?? []) {
-        if (rec[spec.name] === undefined || rec[spec.name] === null) continue;
-        if (!spec.ok(rec[spec.name])) {
-          push({ collection, item: ref, field: spec.name, expected: spec.expected, message: `${collection}${ref}: field "${spec.name}" must be ${spec.expected}.` });
-        }
-      }
-      // Collection-specific nested structures.
-      if (collection === 'prompts') validatePromptNested(push, ref, rec);
-      if (collection === 'artifacts') validateArtifactNested(push, ref, rec);
-    });
+    list.forEach((item, index) => validateCollectionItem(push, collection, index, item));
   }
 
   // Handoff correction/supersession relationships are validated across the whole

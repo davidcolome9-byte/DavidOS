@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { canonicalStateRaw, waitForCanonicalState } from './helpers/journalState';
 
 // DOS-WF-001R Phase 2A — unsaved Health Profile edits survive navigation and
 // unmount/remount via a dedicated draft key, and are clearly distinguished.
@@ -40,10 +41,13 @@ test('importing a backup does not silently discard an unsaved Health draft', asy
 
   // Build a valid backup from the CURRENT persisted state (guaranteed to pass
   // deep import validation) and feed it to the Settings import input.
-  const backup = await page.evaluate(() => {
-    const raw = localStorage.getItem('davidos-state-v1');
-    const state = JSON.parse(raw as string);
-    return JSON.stringify({ app: 'davidos', exportedAt: new Date().toISOString(), schemaVersion: state.schemaVersion, state });
+  await waitForCanonicalState(page);
+  const state = JSON.parse((await canonicalStateRaw(page)) as string);
+  const backup = JSON.stringify({
+    app: 'davidos',
+    exportedAt: new Date().toISOString(),
+    schemaVersion: state.schemaVersion,
+    state,
   });
 
   await page.goto('/#/settings');

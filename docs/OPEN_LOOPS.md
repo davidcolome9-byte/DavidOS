@@ -25,7 +25,86 @@ and docs/DECISIONS.md.
 
 ## P1 — data safety & core promises
 
-*(No open items)*
+### OL-031 · DOS-STAB-001A · Durable destructive flows / state journal — IMPLEMENTED, NOT YET RELEASED
+- **Domain:** storage/data-safety · **Kind:** defect (durability) ·
+  **Status:** Implementation complete + locally verified; **OPEN pending
+  release gates**. Package identifier DOS-STAB-001A is provisional.
+- **Problem:** canonical AppState was one mutable localStorage key. It was
+  the only copy, so an interrupted destructive replacement (Import, Reset,
+  Prune) had no recoverable predecessor; concurrent tabs could clobber each
+  other; and the failure path depended on a rollback-capable single-key
+  transaction that could not report outcomes honestly.
+- **Resolution implemented (candidate, uncommitted):** AppState is persisted
+  as an immutable generation journal with two alternating hash-verified head
+  slots, all cooperating writes serialized by one exclusive Web Lock, stale
+  authority rejected inside the lock, and boot reconciliation selecting the
+  highest valid head with a valid referenced generation. Destructive rollback
+  and `persistState()` were removed rather than repaired. Import, Reset, and
+  Prune each commit one complete candidate (completion audit included) as one
+  generation and one head advancement, and update active state only after a
+  verified head advancement. Also lands deep boot record quarantine, an
+  allowlisted counts-only warning/log vocabulary, and a top-level crash
+  recovery boundary. Full detail: docs/DATA_MODEL.md and the 2026-07-20
+  docs/DECISIONS.md entry.
+- **Limitations preserved (must stay stated honestly):** browser storage
+  offers no native multi-key transaction — durability comes from immutable
+  generations, verified heads, coordination, and boot reconciliation, not
+  atomicity; outcomes at or after the head write are UNCERTAIN and suppress
+  saving rather than claiming storage is unchanged; legacy
+  `davidos-state-v1` bytes are left byte-identical and may be retained
+  indefinitely; unsupported Web Locks yield read-only persistence, never an
+  unsafe fallback write; Web Locks coordinate cooperating tabs of this app
+  only; React error boundaries do not catch module-evaluation, `createRoot`,
+  event-handler, or arbitrary async errors, nor anything thrown before the
+  boundary mounts.
+- **Tests:** `src/lib/__tests__/stateJournal.test.ts`,
+  `journalPersistence.test.ts`, `bootJournal.test.ts`,
+  `bootQuarantine.test.ts`, `localStore.test.ts`, `importCommit.test.ts`;
+  `src/components/__tests__/importTransaction.test.tsx`,
+  `resetTransaction.test.tsx`, `storageRetention.test.tsx`,
+  `importDraftProtection.test.tsx`, `appErrorBoundary.test.tsx`;
+  `src/state/__tests__/store.test.tsx`; Playwright
+  `tests/smoke/durableDestructive.spec.ts`, `crashRecovery.spec.ts`,
+  `bootQuarantine.spec.ts`.
+- **Remaining to close (STOP-BEFORE-MERGE GATE PRESERVED):** independent
+  Codex read-only adversarial review → commit → push → PR → CI → pre-merge
+  report → **David's explicit merge authorization** → merge → deployment →
+  live verification → evidence archival → documentation closeout → package
+  closure. This item must NOT be moved to "Resolved & deployed" merely
+  because implementation and local verification pass.
+- **Complexity:** L · **Approval:** yes (merge authorization)
+
+### OL-032 · Journal generations roughly double the effective storage ceiling
+- **Domain:** storage/capacity · **Kind:** defect (capacity trade-off) ·
+  **Status:** Verified · **Requires David** (product decision)
+- **Problem:** committing a state requires room for a SECOND complete copy
+  (the new immutable generation) alongside the current one, and the current +
+  previous generations are both retained. A state large enough to reach the
+  warning/critical storage level therefore can no longer be committed at all:
+  the commit fails safely, persistence is suppressed, and the app escalates to
+  the "Saving to this device is failing" banner. Nothing is lost or deleted —
+  but the in-app recovery path is narrowed, because pruning also needs a
+  commit and is blocked in that state.
+- **Evidence (found 2026-07-20, DOS-STAB-001A Phase 2B browser acceptance):**
+  `tests/smoke/storageRetention.spec.ts` near-quota case — a ~4.8M-char state
+  seeds and loads fine, the meter reads "nearly full", but no journal
+  generation can be written. Confirmed in Chromium against the production
+  build: only the legacy key was present afterwards.
+- **Relationship to prior work:** OL-003 already accepted "at hard quota
+  exhaustion pruning is blocked too — the recovery path is export + reset".
+  DOS-STAB-001A does not introduce that behavior; it makes it start at
+  roughly HALF the previous state size. That threshold change is what needs
+  David's decision.
+- **Options (not implemented — out of DOS-STAB-001A scope):** drop the
+  retained previous generation once a head is verified (weakens single-step
+  fallback); allow a prune-only commit while persistence is otherwise
+  suppressed (needs a careful safety argument); lower the warning/critical
+  thresholds so users are told earlier; or move canonical state to IndexedDB
+  (much larger quota — but that is a separate package).
+- **Interim behavior (safe, and what ships today):** nothing is deleted or
+  repaired automatically, an app-wide protection banner is always shown,
+  export and recovery downloads remain available, and no data is lost.
+- **Complexity:** M · **Approval:** yes
 
 
 ## P2 — correctness & robustness

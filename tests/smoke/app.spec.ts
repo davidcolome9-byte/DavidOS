@@ -121,7 +121,9 @@ test('recovers when stored state is valid JSON but structurally wrong', async ({
     [STORAGE_KEY],
   );
   await gotoHome(page);
-  await expect(page.getByTestId('recovery-banner')).toContainText('repaired');
+  // DOS-STAB-001A: the warning explicitly says damaged data was quarantined /
+  // excluded from active state — "repaired" alone would be misleading.
+  await expect(page.getByTestId('recovery-banner')).toContainText('quarantined');
   await page.goto('/#/prompts'); // state.prompts.map would crash pre-repair
   await expect(page.getByRole('heading', { name: /Prompt Vault/ })).toBeVisible();
 });

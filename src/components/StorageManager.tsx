@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup } from '../lib/storage/exportImport';
-import { persistState } from '../lib/storage/localStore';
+import { appendAudit, makeAuditEntry } from '../lib/audit/auditLog';
 import {
   formatUnits,
   measureStorageUsage,
@@ -36,7 +36,17 @@ const LEVEL_BADGE = {
 } as const;
 
 export default function StorageManager() {
-  const { state, update, audit, recovery, externalChange, persistFailed } = useStore();
+  const {
+    state,
+    update,
+    audit,
+    recovery,
+    externalChange,
+    persistFailed,
+    commitUncertain,
+    getAuthority,
+    commitDestructiveState,
+  } = useStore();
   const [pruneOpen, setPruneOpen] = useState(false);
   const [keepText, setKeepText] = useState(String(DEFAULT_KEEP));
   const [confirmText, setConfirmText] = useState('');
@@ -56,9 +66,14 @@ export default function StorageManager() {
   const badge = LEVEL_BADGE[usage.level];
 
   // Destructive pruning requires HEALTHY persistence. While it is suppressed
-  // (unpreserved recovery boot, stale tab) or already failing (quota /
-  // unavailable), a prune could not commit durably — so it is disabled.
-  const canPrune = recovery.canPersist && !externalChange && !persistFailed;
+  // (unpreserved recovery boot, stale tab, unconfirmed earlier commit) or
+  // already failing (quota / unavailable), a prune could not commit durably —
+  // so it is disabled.
+  const liveAuthority = getAuthority();
+  const canPrune = recovery.canPersist && !externalChange && !persistFailed && !commitUncertain &&
+    liveAuthority.persistenceAvailable && !liveAuthority.reconciliationRequired &&
+    !liveAuthority.outcomeUncertain && !liveAuthority.preservationFailed &&
+    !liveAuthority.writeQueued && !liveAuthority.writeRunning;
 
   const keepCount = Math.max(0, Math.floor(Number(keepText) || 0));
   const plan = useMemo(
@@ -103,53 +118,68 @@ export default function StorageManager() {
     setFlash('Backup downloaded — it contains every saved prompt, including the ones a prune would delete.');
   }
 
-  function confirmPrune() {
+  async function confirmPrune() {
     if (confirmText !== 'PRUNE' || !canPrune) return;
-    // Plan from the live state WITHOUT mutating anything yet.
-    const current = planArtifactPrune(state.artifacts, keepCount);
-    if (current.prune.length === 0) return;
-    const next: AppState = { ...state, artifacts: current.keep };
-    // Transactional delete: the complete pruned state must be durably written
-    // through the canonical persistence boundary BEFORE the active state is
-    // replaced or success is reported. localStorage writes are atomic per key,
-    // so a failed write leaves the stored original exactly as it was.
-    let committed: boolean;
-    try {
-      committed = persistState(next);
-    } catch {
-      committed = false;
+    // Authority is re-checked at EXECUTION time from the store's synchronous
+    // snapshot, and the plan is drawn from that same authoritative state.
+    const authority = getAuthority();
+    if (
+      !authority.canPersist ||
+      authority.externalChange ||
+      authority.persistFailed ||
+      authority.commitUncertain ||
+      !authority.persistenceAvailable ||
+      authority.reconciliationRequired ||
+      authority.outcomeUncertain ||
+      authority.preservationFailed ||
+      authority.writeQueued ||
+      authority.writeRunning
+    ) {
+      return;
     }
-    if (!committed) {
-      setPruneOpen(false);
-      // This audit append changes state, so the store's normal persistence
-      // effect re-probes the device: persistFailed then reflects real health
-      // (keeping pruning disabled and raising the app-wide warning) or clears
-      // if the failure was transient.
-      audit({
-        command: 'Prune saved prompts — failed',
+    const current = planArtifactPrune(authority.state.artifacts, keepCount);
+    if (current.prune.length === 0) return;
+    // ONE durable state per prune transaction: the FIRST durable candidate
+    // already contains the intended deletions AND the completed success
+    // audit — no second audit-triggered persistence write is ever needed.
+    const candidate: AppState = appendAudit(
+      { ...authority.state, artifacts: current.keep },
+      makeAuditEntry({
+        command: 'Prune saved prompts — completed',
         actionType: 'local_write',
         approvalStatus: 'approved',
-        actionTaken: false,
+        actionTaken: true,
         resultSummary:
-          'Durable write of the pruned state failed. Nothing was deleted; stored and in-memory data are unchanged.',
-      });
+          `Deleted the ${current.prune.length} oldest saved prompt artifact(s), keeping the newest ` +
+          `${current.keep.length} (~${formatUnits(current.freedUnits)} freed). Handoff history untouched.`,
+      }),
+    );
+    // Transactional delete through the shared persist-first boundary
+    // (DOS-STAB-001A): the complete pruned state must be durably written AND
+    // read back confirmed BEFORE the active state is replaced or success is
+    // reported. A failed commit leaves the stored original exactly as it was.
+    const commit = await commitDestructiveState(candidate, authority.committedGeneration);
+    if (!commit.ok) {
+      setPruneOpen(false);
+      // A failed prune leaves active AppState deeply unchanged: NO audit
+      // append (that would itself change state and trigger another
+      // StoreProvider persistence attempt). Persistence health/uncertainty
+      // is reported to the store, which keeps it OUTSIDE AppState.
       setFlash(
-        'Prune failed: the pruned state could not be saved on this device, so nothing was deleted. ' +
-        'Free up storage or export a backup, then try again.',
+        commit.outcome === 'uncertain'
+          ? 'Prune failed: the pruned state could not be confirmed as saved. Nothing was reported as ' +
+            'deleted, and saving is paused to protect your data. Reload before trying again.'
+          : commit.reason === 'external_change' || commit.reason === 'stale_authority'
+            ? 'Prune failed: DavidOS was changed in another tab, so nothing was deleted. ' +
+              'Reload to continue with the latest saved data.'
+            : 'Prune failed: the pruned state could not be saved on this device, so nothing was deleted. ' +
+              'Free up storage or export a backup, then try again.',
       );
       return;
     }
-    update(() => next);
+    // One React state update: the already-committed candidate becomes active.
+    update(() => candidate);
     setPruneOpen(false);
-    audit({
-      command: 'Prune saved prompts — completed',
-      actionType: 'local_write',
-      approvalStatus: 'approved',
-      actionTaken: true,
-      resultSummary:
-        `Deleted the ${current.prune.length} oldest saved prompt artifact(s), keeping the newest ` +
-        `${current.keep.length} (~${formatUnits(current.freedUnits)} freed). Handoff history untouched.`,
-    });
     setFlash(
       `Deleted ${current.prune.length} saved prompt(s); kept the newest ${current.keep.length}. ` +
       'Handoff history was not touched.',

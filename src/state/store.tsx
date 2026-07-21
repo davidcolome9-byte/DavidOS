@@ -1,12 +1,41 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { AppState, AuditLogEntry } from '../lib/types';
 import { buildDefaultState } from '../data/defaultState';
-import { loadPersistedState, persistState, STORAGE_KEY } from '../lib/storage/localStore';
+import { loadPersistedState } from '../lib/storage/localStore';
 import type { RecoveryInfo } from '../lib/storage/localStore';
+import { JournalPersistenceController } from '../lib/storage/journalPersistence';
+import type {
+  DestructiveCommitResult,
+  JournalPersistenceAuthority,
+} from '../lib/storage/journalPersistence';
+import { JOURNAL_HEAD_KEYS } from '../lib/storage/stateJournal';
 import { appendAudit, makeAuditEntry } from '../lib/audit/auditLog';
 
 type Updater = (fn: (state: AppState) => AppState) => void;
+
+/**
+ * Synchronous snapshot of everything a destructive commit needs at the exact
+ * moment it executes: the current state and the live persistence-authority
+ * flags. Read through refs, so it is correct even when an async flow (e.g.
+ * awaiting File.text()) resumes after events that React has not re-rendered
+ * yet — pre-await closures must never be used to authorize a commit.
+ */
+export interface AuthoritySnapshot {
+  state: AppState;
+  canPersist: boolean;
+  externalChange: boolean;
+  persistFailed: boolean;
+  commitUncertain: boolean;
+  committedGeneration: string | null;
+  committedSequence: number;
+  persistenceAvailable: boolean;
+  reconciliationRequired: boolean;
+  outcomeUncertain: boolean;
+  preservationFailed: boolean;
+  writeQueued: boolean;
+  writeRunning: boolean;
+}
 
 interface StoreValue {
   state: AppState;
@@ -23,6 +52,19 @@ interface StoreValue {
    * the UI shows a blocking reload prompt. No automatic merge is attempted.
    */
   externalChange: boolean;
+  /**
+   * True once a durable commit this session ended with an unconfirmed outcome
+   * (verification failure or uncertain rollback). Automatic persistence stays
+   * suppressed until a reload re-establishes authority — a follow-up write
+   * could destroy data whose current stored form is unknown.
+   */
+  commitUncertain: boolean;
+  /** Synchronous current-authority snapshot — see AuthoritySnapshot. */
+  getAuthority: () => AuthoritySnapshot;
+  commitDestructiveState: (
+    candidate: AppState,
+    expectedGeneration: string | null,
+  ) => Promise<DestructiveCommitResult>;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -30,38 +72,97 @@ const StoreContext = createContext<StoreValue | null>(null);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [boot] = useState(() => {
     const loaded = loadPersistedState();
-    return { initial: loaded.state ?? buildDefaultState(), recovery: loaded.recovery };
+    let storage: Storage | null = null;
+    try { storage = localStorage; } catch { /* unavailable */ }
+    return { initial: loaded.state ?? buildDefaultState(), recovery: loaded.recovery, loaded, storage };
   });
+  // Lazy useState initializer, not a ref written during render: the controller
+  // is created exactly once per provider and is stable across renders, without
+  // reading or mutating a ref mid-render.
+  const [controller] = useState<JournalPersistenceController | null>(() =>
+    boot.storage
+      ? new JournalPersistenceController({
+          storage: boot.storage,
+          committedGeneration: boot.loaded.committedGeneration,
+          sequence: boot.loaded.committedSequence,
+          reconciliationRequired: boot.loaded.journalReconciliationNeeded,
+          preservationFailed: !boot.recovery.canPersist,
+        })
+      : null,
+  );
+  const initialJournalAuthority: JournalPersistenceAuthority = controller?.getAuthority() ?? {
+    committedGeneration: boot.loaded.committedGeneration,
+    sequence: boot.loaded.committedSequence,
+    persistenceAvailable: false,
+    reconciliationRequired: boot.loaded.journalReconciliationNeeded,
+    outcomeUncertain: false,
+    externalChange: false,
+    preservationFailed: !boot.recovery.canPersist,
+    writeQueued: false,
+    writeRunning: false,
+    lastFailure: 'storage_unavailable',
+  };
   const [state, setState] = useState<AppState>(boot.initial);
   const [persistFailed, setPersistFailed] = useState(false);
   const [externalChange, setExternalChange] = useState(false);
+  const [commitUncertain, setCommitUncertain] = useState(false);
+  const [journalAuthority, setJournalAuthority] = useState(initialJournalAuthority);
   const { recovery } = boot;
 
-  // Detect writes from OTHER tabs. The `storage` event fires only in tabs that
-  // did NOT make the change, so any event for our key is inherently external —
-  // this tab is now stale and must stop persisting.
+  // Live mirrors for getAuthority(): refs are updated synchronously (event
+  // handlers, state updaters, effects) so an async flow that resumes
+  // mid-render-cycle still sees the truth, not a stale render's values.
+  const stateRef = useRef(state);
+  const persistFailedRef = useRef(false);
+  const externalChangeRef = useRef(false);
+  const commitUncertainRef = useRef(false);
+  const journalAuthorityRef = useRef(initialJournalAuthority);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
+  useEffect(() => {
+    if (!controller) {
+      persistFailedRef.current = true;
+      setPersistFailed(true);
+      return;
+    }
+    return controller.subscribe((authority) => {
+      journalAuthorityRef.current = authority;
+      setJournalAuthority(authority);
+      if (authority.externalChange) {
+        externalChangeRef.current = true;
+        setExternalChange(true);
+      }
+      if (authority.outcomeUncertain) {
+        commitUncertainRef.current = true;
+        setCommitUncertain(true);
+      }
+      if (authority.lastFailure && !authority.externalChange && !authority.reconciliationRequired) {
+        persistFailedRef.current = true;
+        setPersistFailed(true);
+      }
+    });
+  }, [controller]);
+
+  useEffect(() => {
+    void controller?.initialize();
+  }, [controller]);
+
+  // Only the two controlled journal heads can change canonical authority.
+  // Legacy-key and unrelated events cannot override an active journal.
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY) setExternalChange(true);
+      if (!JOURNAL_HEAD_KEYS.includes(e.key as (typeof JOURNAL_HEAD_KEYS)[number])) return;
+      controller?.handleExternalHeadChange();
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, []);
+  }, [controller]);
 
   useEffect(() => {
-    // When the loader could not preserve the original blob, persisting would
-    // overwrite the only stored copy — suppressed for the whole session.
-    if (!recovery.canPersist) return;
-    // A stale tab must NEVER overwrite newer state written by another tab.
-    if (externalChange) return;
-    // Skip a redundant write when the serialized state already matches storage.
-    // This avoids a no-op setItem on mount (loading the same state), which would
-    // otherwise fire a `storage` event in OTHER tabs and falsely mark them stale.
-    let stored: string | null = null;
-    try { stored = localStorage.getItem(STORAGE_KEY); } catch { /* unavailable */ }
-    if (JSON.stringify(state) === stored) return;
-    setPersistFailed(!persistState(state));
-  }, [state, recovery.canPersist, externalChange]);
+    controller?.enqueue(state);
+  }, [controller, state]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = state.settings.theme;
@@ -74,13 +175,55 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreValue>(
     () => ({
       state,
-      update: (fn) => setState(fn),
-      audit: (entry) => setState((s) => appendAudit(s, makeAuditEntry(entry))),
+      // The ref is synced inside the updater so a getAuthority() call later in
+      // the SAME event handler already sees the queued state (idempotent
+      // assignment — safe under StrictMode double-invocation).
+      update: (fn) =>
+        setState((prev) => {
+          const next = fn(prev);
+          stateRef.current = next;
+          return next;
+        }),
+      audit: (entry) =>
+        setState((s) => {
+          const next = appendAudit(s, makeAuditEntry(entry));
+          stateRef.current = next;
+          return next;
+        }),
       persistFailed,
       recovery,
       externalChange,
+      commitUncertain,
+      getAuthority: () => ({
+        state: stateRef.current,
+        canPersist: recovery.canPersist && journalAuthorityRef.current.persistenceAvailable &&
+          !externalChangeRef.current && !commitUncertainRef.current &&
+          !journalAuthorityRef.current.reconciliationRequired,
+        externalChange: externalChangeRef.current,
+        persistFailed: persistFailedRef.current,
+        commitUncertain: commitUncertainRef.current,
+        committedGeneration: journalAuthorityRef.current.committedGeneration,
+        committedSequence: journalAuthorityRef.current.sequence,
+        persistenceAvailable: journalAuthorityRef.current.persistenceAvailable,
+        reconciliationRequired: journalAuthorityRef.current.reconciliationRequired,
+        outcomeUncertain: journalAuthorityRef.current.outcomeUncertain,
+        preservationFailed: journalAuthorityRef.current.preservationFailed,
+        writeQueued: journalAuthorityRef.current.writeQueued,
+        writeRunning: journalAuthorityRef.current.writeRunning,
+      }),
+      commitDestructiveState: async (candidate, expectedGeneration) => {
+        if (!controller) {
+          return { ok: false, reason: 'persistence_suppressed', outcome: 'safe_failure' };
+        }
+        return controller.commitDestructive(candidate, expectedGeneration);
+      },
     }),
-    [state, persistFailed, recovery, externalChange],
+    // `journalAuthority` is deliberately retained: the memo body reads
+    // persistence health through refs (so getAuthority() is always current),
+    // but consumers must still receive a fresh context value when committed
+    // authority changes. It is intentionally not "unnecessary".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [controller, state, persistFailed, recovery, externalChange, commitUncertain, journalAuthority],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

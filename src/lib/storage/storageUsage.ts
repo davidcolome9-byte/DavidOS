@@ -87,7 +87,7 @@ export function usageLevel(usedFraction: number): StorageUsageLevel {
 
 /**
  * Measure how much localStorage the app is using: the live state (serialized
- * the same way persistState stores it) plus the other DavidOS-owned keys
+ * the same way the journal stores a generation) plus the other DavidOS-owned keys
  * (recovery blobs, health draft) read from `storage`. Read-only.
  */
 export function measureStorageUsage(state: AppState, storage: StorageReader | null): StorageUsage {

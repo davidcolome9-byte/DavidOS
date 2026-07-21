@@ -1,72 +1,101 @@
 /**
- * Centralized draft-aware commit for backup imports.
+ * Centralized draft-aware commit for backup imports (DOS-STAB-001A).
  *
- * The unsaved Health Profile draft lives in its own localStorage key
- * (src/lib/health/profileDraft.ts) and must never be destroyed by an import
- * except as part of an import that (a) the user explicitly confirmed after
- * being warned, and (b) actually committed durably. This module is the single
- * place that enforces both rules, so every import path shares them:
+ * EVERY accepted import — with or without an unsaved Health Profile draft —
+ * goes through the SAME journal-backed destructive persistence boundary that
+ * StoreProvider, Reset, and Prune use (commitDestructiveState): the complete
+ * imported candidate becomes exactly one new journal generation whose head
+ * advancement is verified before the caller may replace active state or
+ * report success. There is no rollback path and no legacy-key write here.
+ *
+ * Draft rules:
  *
  *  - The draft check happens HERE, at the moment of apply — not only at
  *    file-select time. A draft that came into existence after an earlier
  *    check (another tab, a dialog left open) blocks the commit instead of
  *    being silently erased.
  *  - When a confirmed import discards a draft, the imported state is written
- *    durably FIRST and the draft is cleared only after that write succeeded.
- *    A failed write aborts the whole import: stored state and draft are both
- *    left exactly as they were — never a partial mixture.
+ *    durably FIRST and the draft is cleared only after the verified head
+ *    advancement. A failed commit aborts the whole import: committed journal
+ *    authority and draft are both left exactly as they were.
  *
  * Results carry only value-free reason codes; no draft or imported values
  * ever appear in them (nothing here logs, either).
  */
 import type { AppState } from '../types';
 import { hasHealthDraft, clearHealthDraft } from '../health/profileDraft';
-import { persistState } from './localStore';
+import type {
+  DestructiveCommitFailureReason,
+  DestructiveCommitResult,
+} from './journalPersistence';
 
 export type ImportCommitResult =
   | { ok: true }
   /**
    * draft_blocked — an unsaved Health Profile draft exists and its discard was
    *   not explicitly confirmed; nothing was changed. Re-raise the choice.
-   * commit_failed — the durable write of the imported state failed (or writes
-   *   are suppressed this session); nothing was changed and the draft is intact.
+   * commit_failed — the journal transaction was refused by a persistence
+   *   guard or failed; `cause` carries the value-free reason and `outcome`
+   *   whether the stored result is proven safe or honestly uncertain.
+   *   Active state and any draft are untouched either way.
    */
-  | { ok: false; reason: 'draft_blocked' | 'commit_failed' };
+  | { ok: false; reason: 'draft_blocked' }
+  | {
+      ok: false;
+      reason: 'commit_failed';
+      cause: DestructiveCommitFailureReason;
+      outcome: 'safe_failure' | 'uncertain';
+    };
 
 export interface ImportCommitOptions {
   /** True only when the user explicitly chose "discard draft and import". */
   discardDraftConfirmed: boolean;
   /**
-   * False when this session must not write persisted state (boot recovery
-   * suppressed persistence, or another tab holds newer state). A draft is
-   * never destroyed without a durable commit, so this blocks the discard.
+   * The committed journal generation the caller's CURRENT synchronous
+   * authority snapshot reported — captured at commit time, never from a
+   * closure taken before an await. The journal transaction re-reads
+   * authority inside the exclusive lock and refuses a stale expectation
+   * before any candidate generation is created.
    */
-  persistAllowed: boolean;
+  expectedGeneration: string | null;
+  /** The store's shared destructive journal transaction (commitDestructiveState). */
+  commit: (
+    candidate: AppState,
+    expectedGeneration: string | null,
+  ) => Promise<DestructiveCommitResult>;
   /** Injectable for tests; defaults to the app's real draft storage. */
   storage?: Storage | null;
-  /** Injectable for tests; defaults to the app's real persistence. */
-  persist?: (state: AppState) => boolean;
 }
 
 /**
- * Commit an already-validated imported state with draft protection.
- * When no draft exists this is a pass-through `ok` — the caller applies the
- * import exactly as before (in-memory update + normal persistence effect).
+ * Durably commit an already-validated imported candidate with draft
+ * protection. `ok: true` means the candidate is the verified journal head —
+ * only then may the caller replace active React state and report success.
  */
-export function commitImport(next: AppState, opts: ImportCommitOptions): ImportCommitResult {
-  const { storage, persist = persistState } = opts;
-  if (!hasHealthDraft(storage)) return { ok: true };
-  if (!opts.discardDraftConfirmed) return { ok: false, reason: 'draft_blocked' };
-  let committed = false;
-  if (opts.persistAllowed) {
-    try {
-      committed = persist(next);
-    } catch {
-      committed = false;
-    }
+export async function commitImport(
+  next: AppState,
+  opts: ImportCommitOptions,
+): Promise<ImportCommitResult> {
+  const draftExists =
+    opts.storage === undefined ? hasHealthDraft() : hasHealthDraft(opts.storage);
+  if (draftExists && !opts.discardDraftConfirmed) return { ok: false, reason: 'draft_blocked' };
+
+  let result: DestructiveCommitResult;
+  try {
+    result = await opts.commit(next, opts.expectedGeneration);
+  } catch {
+    // The transaction boundary itself blew up mid-flight — what the journal
+    // now holds is unknown, so the outcome is honestly UNCERTAIN.
+    result = { ok: false, reason: 'lock_callback_failed', outcome: 'uncertain' };
   }
-  if (!committed) return { ok: false, reason: 'commit_failed' };
-  // Only now — after the imported state is durably stored — may the draft go.
-  clearHealthDraft(storage);
+  if (!result.ok) {
+    return { ok: false, reason: 'commit_failed', cause: result.reason, outcome: result.outcome };
+  }
+
+  // Only now — after the verified head advancement — may the draft go.
+  if (draftExists) {
+    if (opts.storage === undefined) clearHealthDraft();
+    else clearHealthDraft(opts.storage);
+  }
   return { ok: true };
 }
