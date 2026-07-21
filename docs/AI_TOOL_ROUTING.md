@@ -443,28 +443,32 @@ doctrine in the other sections.*
 
 Continue DavidOS development while prioritizing governance and stabilization over new integrations.
 
-### Current next package
+### Current active package
 
-**DOS-GOV-002A — Authoritative State Reconciliation and OL-032 Decision Packet**
+**None.** DOS-GOV-002A (Authoritative State Reconciliation and OL-032
+Decision Packet) is fully merged, deployed, documented, and closed (PR
+#24 and its documentation closeout, PR #25 — see docs/DECISIONS.md and
+docs/CURRENT_STATE.md). There is currently no active implementation
+package.
 
-| Stage | Assigned tool/model |
-|---|---|
-| Program Control and package prompt | GPT-5.6 Thinking |
-| Primary implementation | Claude Code, Sonnet 5 High |
-| Independent read-only review | Antigravity, Gemini 3.1 Pro |
-| Correction pass | Claude Code, Sonnet 5 High |
-| Narrow re-review | Gemini 3.1 Pro |
-| Commit, push, PR, CI, pre-merge report | Claude Code, Sonnet 5 High |
-| Merge and release execution | Sonnet 5 High only after David authorization |
-| Codex | Preserve for surgical disputes or post-reset review |
-| Fable 5 | Preserve for DOS-STAB-002A or another high-risk architecture package |
-| Gemini 3.5 Flash | Supporting inventory only |
+### Next required action
 
-### Next likely runtime package
+**David's decision on OL-032** (journal generations roughly double the
+effective storage ceiling — see docs/OPEN_LOOPS.md OL-032 and
+docs/OL-032_STORAGE_CAPACITY_DECISION.md for the five-option comparison
+and reasoned recommendation). No further implementation package should
+start ahead of that decision.
+
+### Next likely runtime package (prospective — blocked on OL-032)
 
 **DOS-STAB-002A — Storage Capacity and Recovery Resilience**
 
-Expected routing:
+This package is prospective only and **cannot begin until David selects
+or approves an OL-032 direction** — its scope and risk class (bounded
+refactor vs. high-risk storage-layer architecture) depend entirely on
+which OL-032 option David chooses.
+
+Expected routing once authorized:
 
 - Program Control: GPT-5.6 Thinking
 - Primary implementation: Fable 5 or Sonnet 5 High, depending on the approved OL-032 design

@@ -16,8 +16,8 @@ needed, and a status marker:
 - **Obsolete** — kept for history
 
 **Last full reconciliation: 2026-07-21**, verified item-by-item against
-`main` @ `e7b13731ebe997d267a3e341fa4e1ff5206dacf4` (PR #24, DOS-GOV-002A
-- the live deployed release). Items fixed in
+`main` @ `b9eb45cba693b7bc96157752ca382667c6fcc34b` (PR #24 and PR #25,
+DOS-GOV-002A - merged, deployed, documented, and closed). Items fixed in
 the 2026-07-12 stabilization sprint are not listed; see git history
 and docs/DECISIONS.md.
 
@@ -59,6 +59,10 @@ and docs/DECISIONS.md.
   (DOS-GOV-002A) — verified current behavior, a full comparison of five
   options, and a reasoned recommendation. This is a decision packet, not
   an implementation; no option has been selected. This entry stays open.
+  With DOS-GOV-002A fully closed and no active implementation package,
+  **David's decision here is the next required action** — DOS-STAB-002A
+  and any further storage-capacity implementation package remain
+  prospective until an OL-032 direction is selected or approved.
 - **Complexity:** M · **Approval:** yes
 
 

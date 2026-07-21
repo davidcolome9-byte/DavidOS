@@ -487,10 +487,12 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Repository state (branches & worktrees, 2026-07-21)
 
-Stable production branch: `main` @ `e7b13731ebe997d267a3e341fa4e1ff5206dacf4`
-(clean; local == origin) — merged DOS-GOV-002A (PR #24), establishing the
-AI Tool Routing Doctrine. No runtime source, tests, package manifests,
-GitHub workflows, or seed files were touched by this commit.
+Stable production branch: `main` @ `b9eb45cba693b7bc96157752ca382667c6fcc34b`
+(clean; local == origin) — merged DOS-GOV-002A (PR #24, establishing the
+AI Tool Routing Doctrine) and its documentation closeout (PR #25,
+recording DOS-GOV-002A as merged, deployed, documented, and closed). No
+runtime source, tests, package manifests, GitHub workflows, or seed
+files were touched by either commit.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
@@ -539,14 +541,20 @@ The authoritative list with priorities lives in
 - Dating Wingman, Cooking & Meal Prep, and Daily Log surfaces exist as
   domains in David's life system but have no dedicated agents yet —
   they currently route to the closest existing agent.
-- **AI Tool Routing Doctrine (DOS-GOV-002A).** `docs/AI_TOOL_ROUTING.md`
-  establishes the authoritative
-  model/tool routing, independence, quota-fallback, and two-gate policy
-  for every AI session working on DavidOS; see docs/DECISIONS.md for the
-  adoption entry and docs/OPEN_LOOPS.md OL-032 for the linked
-  storage-capacity decision packet — no storage-capacity option has been
-  selected, and Google Drive pointer synchronization is not yet
-  complete (Program Control performs it after this repository PR merges).
+- **AI Tool Routing Doctrine (DOS-GOV-002A) — closed.**
+  `docs/AI_TOOL_ROUTING.md` establishes the authoritative model/tool
+  routing, independence, quota-fallback, and two-gate policy for every AI
+  session working on DavidOS. DOS-GOV-002A itself is fully merged (PR
+  #24), deployed, documented, and closed (PR #25); see docs/DECISIONS.md
+  for both entries. The Google Drive routing pointer was created
+  successfully; the repository copy of `docs/AI_TOOL_ROUTING.md` remains
+  authoritative over it. There is currently no active implementation
+  package. The next required action is **David's decision on OL-032**
+  (see docs/OPEN_LOOPS.md OL-032 and
+  docs/OL-032_STORAGE_CAPACITY_DECISION.md for the five-option comparison
+  and recommendation) — no storage-capacity option has been selected yet,
+  and DOS-STAB-002A remains a prospective package that cannot begin until
+  David selects or approves an OL-032 direction.
 
 ## Environment facts (David's machine)
 

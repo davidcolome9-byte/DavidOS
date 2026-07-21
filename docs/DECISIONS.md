@@ -1262,7 +1262,55 @@ identifier remains provisional while OPEN_LOOPS.md treats it as such.
   authorization/independent-review/gate concepts — guarding against
   accidental deletion or replacement with an empty placeholder without
   pinning exact prose.
-- **Stops before push, PR, merge, deployment, branch/worktree deletion,
-  or any Google Drive modification**, per this package's Gate 1
-  implementation-substage authorization. Independent review (Antigravity,
-  Gemini 3.1 Pro) is the next step.
+- **Status update: this package proceeded through push, PR, CI, merge,
+  deployment, evidence archival, Google Drive pointer creation, and
+  documentation closeout.** The "stops before push, PR, merge,
+  deployment, branch/worktree deletion, or any Google Drive modification"
+  language that previously stood here described only this entry's
+  original Gate 1 implementation substage and is stale now that the
+  package has completed its full release sequence — see the
+  "DOS-GOV-002A: merge, deployment, Google Drive pointer, and final
+  package closure" entry below for the accurate closure record.
+
+## 2026-07-21 — DOS-GOV-002A: merge, deployment, Google Drive pointer, and final package closure
+
+- **PR #24 merged.** "DOS-GOV-002A: establish AI tool routing governance
+  and reconcile authoritative state" (branch
+  `docs/dos-gov-002a-authoritative-state-reconciliation`) merged into
+  `main` 2026-07-21T18:47:41Z as merge commit
+  `e7b13731ebe997d267a3e341fa4e1ff5206dacf4`. Merge-SHA CI (`verify`, run
+  `29858742312`) and the Pages deploy run (`29858742314`) both succeeded.
+- **Independent read-only review performed by Antigravity, Gemini 3.1
+  Pro** prior to this merge, per this package's Gate 1 authorization
+  (see the "adoption of the AI Tool Routing Doctrine" entry above for the
+  substance of what was reviewed).
+- **Documentation-closeout PR #25 merged.** "docs: closeout DOS-GOV-002A
+  as merged and deployed" merged into `main` 2026-07-21T19:17:17Z as
+  merge commit `b9eb45cba693b7bc96157752ca382667c6fcc34b`, correcting the
+  prior entry's status language and this file's, docs/CURRENT_STATE.md's,
+  and docs/OPEN_LOOPS.md's stale claims to reflect the merged/deployed
+  state. Merge-SHA CI (`verify`, run `29860875158`) and the Pages deploy
+  run (`29860875713`) both succeeded.
+- **Google Drive routing pointer created successfully.** A Drive copy of
+  the doctrine (`DavidOS_AI_Tool_Routing_Doctrine_v1.0.md`, created
+  2026-07-21T17:17 UTC in David's DavidOS Drive folder) exists as the
+  Drive-side pointer/mirror contemplated by `docs/AI_TOOL_ROUTING.md` §14
+  item 4. Per that same doctrine section, **the repository copy of
+  `docs/AI_TOOL_ROUTING.md` remains authoritative** over the Drive copy;
+  the Drive copy may lag behind repository edits (e.g. this correction
+  pass) without requiring a synchronized update before the repository can
+  be relied on as the source of truth.
+- **Evidence record for this documentation-only package.** Unlike the
+  product packages above (DOS-AGT-001A, DOS-STAB-001A), DOS-GOV-002A
+  changed no runtime behavior and required no isolated live-browser
+  acceptance run or archived evidence ZIP; its evidence record is the
+  GitHub-confirmed PR merges, CI runs, and Pages deploy runs cited above,
+  independently re-queried via the GitHub API and `gh` CLI while
+  preparing this entry.
+- **Status: DOS-GOV-002A is fully merged, deployed, documented, and
+  closed.** No implementation package is currently active. Per this same
+  correction pass's authorization, the next required action is David's
+  decision on OL-032 (docs/OPEN_LOOPS.md OL-032); DOS-STAB-002A remains a
+  prospective package that cannot begin until David selects or approves
+  an OL-032 direction. OL-032 itself is untouched by this entry and stays
+  **Requires David**.
