@@ -16,8 +16,8 @@ needed, and a status marker:
 - **Obsolete** — kept for history
 
 **Last full reconciliation: 2026-07-21**, verified item-by-item against
-`main` @ `d744e7d018d1c6c22ffcfdcf885cb568604f997c` (PR #22, Durable
-Journaled State Transactions — the live deployed release). Items fixed in
+`main` @ `e7b13731ebe997d267a3e341fa4e1ff5206dacf4` (PR #24, DOS-GOV-002A
+- the live deployed release). Items fixed in
 the 2026-07-12 stabilization sprint are not listed; see git history
 and docs/DECISIONS.md.
 

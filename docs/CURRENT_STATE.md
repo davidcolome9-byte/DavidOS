@@ -487,12 +487,10 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Repository state (branches & worktrees, 2026-07-21)
 
-Stable production branch: `main` @ `23fed08be7b4241f5d5e2663c91ea8d4c0ec1e3d`
-(clean; local == origin) — one documentation-only commit (`23fed08`,
-"docs: close DOS-STAB-001A durable destructive flows", PR #23) ahead of
-the product-release commit `d744e7d018d1c6c22ffcfdcf885cb568604f997c`
-referenced in "Version" above; no runtime source, tests, package
-manifests, GitHub workflows, or seed files were touched by PR #23.
+Stable production branch: `main` @ `e7b13731ebe997d267a3e341fa4e1ff5206dacf4`
+(clean; local == origin) — merged DOS-GOV-002A (PR #24), establishing the
+AI Tool Routing Doctrine. No runtime source, tests, package manifests,
+GitHub workflows, or seed files were touched by this commit.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
@@ -541,8 +539,8 @@ The authoritative list with priorities lives in
 - Dating Wingman, Cooking & Meal Prep, and Daily Log surfaces exist as
   domains in David's life system but have no dedicated agents yet —
   they currently route to the closest existing agent.
-- **AI Tool Routing Doctrine (DOS-GOV-002A, local candidate, not yet
-  merged).** `docs/AI_TOOL_ROUTING.md` establishes the authoritative
+- **AI Tool Routing Doctrine (DOS-GOV-002A).** `docs/AI_TOOL_ROUTING.md`
+  establishes the authoritative
   model/tool routing, independence, quota-fallback, and two-gate policy
   for every AI session working on DavidOS; see docs/DECISIONS.md for the
   adoption entry and docs/OPEN_LOOPS.md OL-032 for the linked

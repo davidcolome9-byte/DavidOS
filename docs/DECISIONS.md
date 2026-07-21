@@ -1182,13 +1182,11 @@ identifier remains provisional while OPEN_LOOPS.md treats it as such.
   David-authorized Gate 2 sequence. OL-032 remains open. No further
   DOS-STAB-001B or related package was started.
 
-## 2026-07-21 — DOS-GOV-002A: adoption of the AI Tool Routing Doctrine (local candidate)
+## 2026-07-21 — DOS-GOV-002A: adoption of the AI Tool Routing Doctrine
 
-- **Status honesty: this entry records a LOCAL CANDIDATE**, implementation
-  substage of Gate 1, on branch
-  `docs/dos-gov-002a-authoritative-state-reconciliation`. Not pushed, not
-  opened as a pull request, not merged, not deployed. Nothing below is a
-  production claim.
+- **Status honesty: this entry records a MERGED and DEPLOYED package**,
+  on branch `docs/dos-gov-002a-authoritative-state-reconciliation`
+  (merged via PR #24).
 - **Adopted `docs/AI_TOOL_ROUTING.md` as the authoritative AI model and
   coding-tool routing policy** for DavidOS: it defines Program Control,
   primary implementation, independent review, arbitration, high-risk
