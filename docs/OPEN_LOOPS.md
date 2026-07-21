@@ -25,55 +25,6 @@ and docs/DECISIONS.md.
 
 ## P1 — data safety & core promises
 
-### OL-031 · DOS-STAB-001A · Durable destructive flows / state journal — IMPLEMENTED, NOT YET RELEASED
-- **Domain:** storage/data-safety · **Kind:** defect (durability) ·
-  **Status:** Implementation complete + locally verified; **OPEN pending
-  release gates**. Package identifier DOS-STAB-001A is provisional.
-- **Problem:** canonical AppState was one mutable localStorage key. It was
-  the only copy, so an interrupted destructive replacement (Import, Reset,
-  Prune) had no recoverable predecessor; concurrent tabs could clobber each
-  other; and the failure path depended on a rollback-capable single-key
-  transaction that could not report outcomes honestly.
-- **Resolution implemented (candidate, uncommitted):** AppState is persisted
-  as an immutable generation journal with two alternating hash-verified head
-  slots, all cooperating writes serialized by one exclusive Web Lock, stale
-  authority rejected inside the lock, and boot reconciliation selecting the
-  highest valid head with a valid referenced generation. Destructive rollback
-  and `persistState()` were removed rather than repaired. Import, Reset, and
-  Prune each commit one complete candidate (completion audit included) as one
-  generation and one head advancement, and update active state only after a
-  verified head advancement. Also lands deep boot record quarantine, an
-  allowlisted counts-only warning/log vocabulary, and a top-level crash
-  recovery boundary. Full detail: docs/DATA_MODEL.md and the 2026-07-20
-  docs/DECISIONS.md entry.
-- **Limitations preserved (must stay stated honestly):** browser storage
-  offers no native multi-key transaction — durability comes from immutable
-  generations, verified heads, coordination, and boot reconciliation, not
-  atomicity; outcomes at or after the head write are UNCERTAIN and suppress
-  saving rather than claiming storage is unchanged; legacy
-  `davidos-state-v1` bytes are left byte-identical and may be retained
-  indefinitely; unsupported Web Locks yield read-only persistence, never an
-  unsafe fallback write; Web Locks coordinate cooperating tabs of this app
-  only; React error boundaries do not catch module-evaluation, `createRoot`,
-  event-handler, or arbitrary async errors, nor anything thrown before the
-  boundary mounts.
-- **Tests:** `src/lib/__tests__/stateJournal.test.ts`,
-  `journalPersistence.test.ts`, `bootJournal.test.ts`,
-  `bootQuarantine.test.ts`, `localStore.test.ts`, `importCommit.test.ts`;
-  `src/components/__tests__/importTransaction.test.tsx`,
-  `resetTransaction.test.tsx`, `storageRetention.test.tsx`,
-  `importDraftProtection.test.tsx`, `appErrorBoundary.test.tsx`;
-  `src/state/__tests__/store.test.tsx`; Playwright
-  `tests/smoke/durableDestructive.spec.ts`, `crashRecovery.spec.ts`,
-  `bootQuarantine.spec.ts`.
-- **Remaining to close (STOP-BEFORE-MERGE GATE PRESERVED):** independent
-  Codex read-only adversarial review → commit → push → PR → CI → pre-merge
-  report → **David's explicit merge authorization** → merge → deployment →
-  live verification → evidence archival → documentation closeout → package
-  closure. This item must NOT be moved to "Resolved & deployed" merely
-  because implementation and local verification pass.
-- **Complexity:** L · **Approval:** yes (merge authorization)
-
 ### OL-032 · Journal generations roughly double the effective storage ceiling
 - **Domain:** storage/capacity · **Kind:** defect (capacity trade-off) ·
   **Status:** Verified · **Requires David** (product decision)
@@ -363,6 +314,73 @@ and docs/DECISIONS.md.
 Each item below was independently re-verified as implemented on `main`
 @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` and live on GitHub Pages. Kept for history; do not reopen
 without new evidence.
+
+### OL-031 · DOS-STAB-001A Durable Destructive Flows / State Journal — RESOLVED
+- **Resolved by:** PR #22 (squash-merged 2026-07-21T14:23:59Z, merge SHA
+  `d744e7d018d1c6c22ffcfdcf885cb568604f997c`), recording approved candidate
+  SHA `2a946d7dede868cc678f4062ca67c7baaf90e7bd`, CI run `29838916072`,
+  Pages deploy run `29838916344`, Pages deployment ID `5540025217`.
+- **Current behavior:** canonical AppState is persisted as an immutable
+  generation journal with two alternating hash-verified head slots, all
+  cooperating writes serialized by one exclusive Web Lock, stale authority
+  rejected inside the lock, and boot reconciliation selecting the highest
+  valid head with a valid referenced generation. Destructive rollback and
+  the old `persistState()` were removed rather than repaired. Import,
+  Reset, and Prune each commit one complete candidate (completion audit
+  included) as one generation and one head advancement, and active state
+  updates only after a verified head advancement. Also ships deep boot
+  record quarantine (malformed records are quarantined only after
+  byte-exact preservation of the original blob; the stored copy is never
+  overwritten when preservation itself fails), an allowlisted counts-only
+  warning/log vocabulary, and a top-level crash recovery boundary
+  (`AppErrorBoundary`) with working export and reload. Full detail:
+  docs/DATA_MODEL.md and the 2026-07-20 docs/DECISIONS.md entry.
+- **Limitations preserved (stay stated honestly):** browser storage offers
+  no native multi-key transaction — durability comes from immutable
+  generations, verified heads, coordination, and boot reconciliation, not
+  atomicity; outcomes at or after the head write are UNCERTAIN and
+  suppress saving rather than claiming storage is unchanged; legacy
+  `davidos-state-v1` bytes are left byte-identical and may be retained
+  indefinitely; unsupported Web Locks yield read-only persistence, never
+  an unsafe fallback write; Web Locks coordinate cooperating tabs of this
+  app only; React error boundaries do not catch module-evaluation,
+  `createRoot`, event-handler, or arbitrary async errors, nor anything
+  thrown before the boundary mounts.
+- **Independent review:** an independent Gemini 3.1 Pro adversarial review
+  of the candidate returned **READY FOR CANDIDATE COMMIT**, no blocking
+  defect.
+- **Post-merge deployment & live acceptance:** merge-SHA CI and Pages
+  deploy both succeeded (108/108 Playwright tests; the deploy job re-runs
+  the full verify + Playwright gate on the exact deployed SHA before
+  publishing). A fresh, isolated Playwright/Chromium browser context per
+  viewport (no shared profile, no shared storage state — distinct from
+  David's actual browser/device data) independently verified the deployed
+  production build at desktop (1440×900) and mobile (375×812) using only
+  synthetic data generated by the acceptance script itself: **16/16
+  checks passed**, including a live Reset transaction and a live Import
+  transaction against production, zero console errors, zero
+  non-production-origin network requests, zero horizontal overflow at
+  either viewport.
+- **Tests:** 901/901 unit/component tests (59 files, up from 786/786),
+  108/108 Playwright tests (up from 103/103) —
+  `src/lib/__tests__/stateJournal.test.ts`, `journalPersistence.test.ts`,
+  `bootJournal.test.ts`, `bootQuarantine.test.ts`,
+  `src/components/__tests__/importTransaction.test.tsx`,
+  `resetTransaction.test.tsx`, `appErrorBoundary.test.tsx`; Playwright
+  `tests/smoke/durableDestructive.spec.ts`, `crashRecovery.spec.ts`,
+  `bootQuarantine.spec.ts`.
+- **Deliberately not part of this resolution:** OL-032 (journal
+  generations roughly double the effective storage ceiling) remains OPEN
+  as a documented product decision for David — it is NOT closed by this
+  resolution; see OL-032 above.
+- **Release evidence:** archived at
+  `D:\DavidOS_Backups\DOS-STAB-001A\release\20260721-151748\` (ZIP
+  `DOS-STAB-001A-release-20260721-151748.zip`, SHA-256
+  `d21fef697158ddadf16523005b56897a3c45807247a4dd34a558e582d326f7ce`).
+- **Documentation closeout status:** resolved. This entry itself was
+  committed, pushed, opened as a pull request, run through CI, and merged
+  in the same continuous, David-authorized sequence that completed the
+  product release above.
 
 ### OL-030 · DOS-AGT-001A Supervised Coding Coordinator — RESOLVED
 - **Resolved by:** PR #20 (squash-merged 2026-07-20T12:57:18Z, merge SHA
