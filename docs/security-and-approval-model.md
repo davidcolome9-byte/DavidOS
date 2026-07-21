@@ -70,8 +70,10 @@ Local-only, capped at 300 entries, user-clearable.
 ## Backup / export cautions
 - The export JSON contains all vaults including private context. Treat it like a
   password file. The UI says so at export time.
-- Import checks the envelope and top-level structure and confirms before
-  replacing state (deep per-item validation pending — OL-005/OL-006).
+- Import checks the envelope and top-level structure, runs deep per-item
+  field/enum validation, and rejects backups with a newer schema version
+  than the app understands, before replacing state (OL-005/OL-006,
+  resolved).
 
 ## Google Drive sync cautions (v0.3)
 - Sync only the DavidOS folder; `drive.file` scope caps blast radius.

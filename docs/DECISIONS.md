@@ -1181,3 +1181,90 @@ identifier remains provisional while OPEN_LOOPS.md treats it as such.
   pull request, run through CI, and merged in the same continuous,
   David-authorized Gate 2 sequence. OL-032 remains open. No further
   DOS-STAB-001B or related package was started.
+
+## 2026-07-21 — DOS-GOV-002A: adoption of the AI Tool Routing Doctrine (local candidate)
+
+- **Status honesty: this entry records a LOCAL CANDIDATE**, implementation
+  substage of Gate 1, on branch
+  `docs/dos-gov-002a-authoritative-state-reconciliation`. Not pushed, not
+  opened as a pull request, not merged, not deployed. Nothing below is a
+  production claim.
+- **Adopted `docs/AI_TOOL_ROUTING.md` as the authoritative AI model and
+  coding-tool routing policy** for DavidOS: it defines Program Control,
+  primary implementation, independent review, arbitration, high-risk
+  architecture escalation, and mechanical-support roles; quota-aware
+  fallback rules that treat availability percentages from different
+  providers as non-comparable signals, never as directly comparable
+  numbers; the Gate 1 / Gate 2 execution boundary; and the set of actions
+  only David may authorize (merge, deployment when separately gated,
+  destructive cleanup, model/policy changes, new off-device data flows,
+  new dependencies, storage-layer replacement, autonomous execution).
+- **Why role separation and model-family independence are required.**
+  A single model or tool acting as implementer, reviewer, approver, and
+  releaser of its own work removes the adversarial check that has caught
+  real defects in this repository's history (e.g. the independent Codex
+  and Gemini review passes recorded for DOS-AGT-001A and DOS-STAB-001A
+  above). Requiring a different model family for independent review, and
+  reserving merge/deploy/destructive authorization to David alone,
+  preserves that check regardless of which specific tool is doing the
+  building in a given session.
+- **The repository copy is authoritative.** `docs/AI_TOOL_ROUTING.md` in
+  this tracked tree outranks conversational memory, prior handoffs, and
+  any temporary chat-session instruction (see AGENTS.md and
+  docs/SOURCE_OF_TRUTH.md, both updated by this package to say so).
+- **Google Drive should contain only a pointer or a clearly labeled
+  mirror**, never a second independently maintained policy. This package
+  does not modify Google Drive; the exact pointer text for Program
+  Control to place there after this repository's PR merges is recorded in
+  this package's implementation report (not committed to the repo, since
+  Drive edits are out of scope for this Claude Code session).
+- **Material routing changes require David's approval.** Individual
+  package prompts may narrow a role or scope for a specific package, but
+  may not weaken the doctrine's safeguards (independence, gates,
+  authorization boundaries) without David's explicit sign-off — stated
+  directly in `docs/AI_TOOL_ROUTING.md` §1 and preserved by this package.
+- **This package does not authorize autonomous execution or new
+  integrations.** DOS-GOV-002A is documentation/governance only: no
+  runtime product behavior, `src/`, seed data, dependencies, schemas, CI,
+  or deployment workflows were changed. It also creates a decision-only
+  packet for OL-032 (`docs/OL-032_STORAGE_CAPACITY_DECISION.md`) comparing
+  five storage-capacity options with a reasoned recommendation, but
+  selects none of them — OL-032 remains **Requires David**.
+- **Stale documentation reconciled in the same change** (AGENTS.md §11):
+  AGENTS.md's offline-launch hard rule (§2.4) still described OL-001 as
+  only partially delivered although OPEN_LOOPS.md and CURRENT_STATE.md
+  have recorded it Resolved since PR #10; docs/OPEN_LOOPS.md's "Last full
+  reconciliation" line still cited the pre-DOS-AGT-001A/pre-DOS-STAB-001A
+  SHA `7077dac7a9e50f84e39b0f58bf7665b358a1e577`; the OL-030 resolved
+  entry's "documentation closeout status" bullet still claimed PR #21 was
+  an unmerged branch although `git log` shows it merged as
+  `eb43f678a686bb984350699256eae6b2d9c00aca`; docs/ARCHITECTURE.md and
+  docs/security-and-approval-model.md still described deep import
+  validation and the forward-schemaVersion guard as pending although
+  OL-005/OL-006 are Resolved and `exportImport.ts`/`importValidation.ts`
+  implement both; docs/SOURCE_OF_TRUTH.md still named the legacy
+  `davidos-state-v1` key as the live canonical store although
+  DOS-STAB-001A made the generation journal canonical and the legacy key
+  migration-input/read-fallback only; docs/product-spec.md's "Target
+  user" section carried unnecessary personal assertions (employer field,
+  a named personal program, pet ownership) in this public repository,
+  generalized while preserving the single-user, mobile-first,
+  multi-domain product intent; README.md's "Data" bullet implied a single
+  mutable localStorage record rather than the journal; and
+  docs/CURRENT_STATE.md's "Repository state" section still cited the
+  pre-PR-#23 SHA `d744e7d018d1c6c22ffcfdcf885cb568604f997c` as the current
+  branch tip although `origin/main` had advanced one documentation-only
+  commit to `23fed08be7b4241f5d5e2663c91ea8d4c0ec1e3d`. Each correction is
+  the minimum text needed for consistency, not a broader prose rewrite.
+- **Mechanical drift protection added.** `scripts/validate-docs.mjs`
+  gains narrow, semantic-marker checks (not a brittle full-document
+  snapshot) that fail the build if `docs/AI_TOOL_ROUTING.md` is missing,
+  if AGENTS.md no longer references it near the top or in its docs index,
+  or if the routing doctrine no longer contains its core
+  authorization/independent-review/gate concepts — guarding against
+  accidental deletion or replacement with an empty placeholder without
+  pinning exact prose.
+- **Stops before push, PR, merge, deployment, branch/worktree deletion,
+  or any Google Drive modification**, per this package's Gate 1
+  implementation-substage authorization. Independent review (Antigravity,
+  Gemini 3.1 Pro) is the next step.

@@ -94,6 +94,41 @@ if (verifyAt === -1 || uploadAt === -1 || verifyAt > uploadAt) {
   errors.push('.github/workflows/deploy.yml must run "npm run verify" BEFORE upload-pages-artifact (full gate before deploy)');
 }
 
+// 8. AI Tool Routing doctrine must exist, be referenced from AGENTS.md
+//    (near the top AND in the docs index), and still contain the core
+//    authorization/independent-review/gate concepts that make it a real
+//    governance doctrine rather than an empty or gutted placeholder.
+//    Narrow semantic markers, not a full-document snapshot, so ordinary
+//    prose edits and rewording do not trip this check.
+const ROUTING_DOC = 'docs/AI_TOOL_ROUTING.md';
+const routingDocPath = join(root, ROUTING_DOC);
+if (!existsSync(routingDocPath)) {
+  errors.push(`${ROUTING_DOC} is missing — it is the authoritative AI model/tool routing policy (see AGENTS.md)`);
+} else {
+  const agentsText = readFileSync(join(root, 'AGENTS.md'), 'utf8');
+  if (!agentsText.includes('docs/AI_TOOL_ROUTING.md')) {
+    errors.push('AGENTS.md no longer references docs/AI_TOOL_ROUTING.md — the mandatory-reading pointer is missing');
+  }
+  if (!/^- \[docs\/AI_TOOL_ROUTING\.md\]/m.test(agentsText)) {
+    errors.push('AGENTS.md docs index no longer lists docs/AI_TOOL_ROUTING.md');
+  }
+
+  const routingText = readFileSync(routingDocPath, 'utf8');
+  const ROUTING_DOCTRINE_MARKERS = [
+    ['Only David may authorize', 'authorization-boundaries section (§9)'],
+    ['Independence rules', 'model-family independence section (§6)'],
+    ['Gate 1', 'two-gate execution model (§8)'],
+    ['Gate 2', 'two-gate execution model (§8)'],
+    ['Mandatory stop conditions', 'mandatory stop-condition list (§8)'],
+    ['Package assignment record template', 'package-assignment template (§16)'],
+  ];
+  for (const [marker, why] of ROUTING_DOCTRINE_MARKERS) {
+    if (!routingText.includes(marker)) {
+      errors.push(`${ROUTING_DOC} is missing "${marker}" (${why}) — looks gutted or replaced with a placeholder`);
+    }
+  }
+}
+
 if (errors.length) {
   console.error('Docs/metadata consistency FAILED:');
   for (const e of errors) console.error(`  - ${e}`);
@@ -101,5 +136,6 @@ if (errors.length) {
 }
 console.log(
   `Docs/metadata consistency OK — ${jsonCount} JSON files, ${linkCount} relative links, version ${pkg.version} in sync, ` +
-    `${cmdCount} documented npm commands exist, recovery section present, no obsolete phrases, workflow gates intact.`,
+    `${cmdCount} documented npm commands exist, recovery section present, no obsolete phrases, workflow gates intact, ` +
+    `AI Tool Routing doctrine present and referenced.`,
 );

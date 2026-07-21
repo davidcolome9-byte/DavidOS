@@ -8,6 +8,7 @@ list wins; fix the stale copy, never the authoritative one.
 
 | Data | Authoritative source | Notes |
 |---|---|---|
+| AI model/tool routing, independence, execution gates | [docs/AI_TOOL_ROUTING.md](AI_TOOL_ROUTING.md) | A separate axis from data authority below; outranks conversational memory and prior chat-session instructions; material changes need David's approval |
 | Entity shapes | `src/lib/types.ts` | Every module imports from here |
 | Agent specs | `seed/agents/*.json` | Authored data; app never edits them |
 | Workflow specs | `seed/workflows/*.json` | Same |
@@ -26,8 +27,13 @@ The repo and deployed bundle are public. Personal values exist only in:
    Cloud copy: in David's Google Drive (see `personal/README.md` on
    David's machine for exact private paths — that file is gitignored on
    purpose). Imported per-device via Settings → Import.
-2. **localStorage on each device** — live state under key
-   `davidos-state-v1`. Agents never hand-edit it; the app owns it.
+2. **localStorage on each device** — live state persisted as an
+   immutable generation journal (`davidos-state-generation-v1-<id>` +
+   `davidos-state-head-v1-a`/`-b`; see docs/DATA_MODEL.md → Persistence).
+   The legacy single key `davidos-state-v1` is migration input and read
+   fallback only — no longer written by the journal, and may remain on a
+   device indefinitely. Agents never hand-edit any of these keys; the
+   app owns them.
 3. **David's Google Drive "Source Of Truth" folder** — life-domain
    documents (health logs, work, home, cooking, etc.). DavidOS will sync
    with Drive in v0.3; until then Drive files are read/updated by David
@@ -72,7 +78,9 @@ binding on agents working in this repo:
    GitHub holds public-safe code, specs, and synthetic fixtures only.
 3. **Temporary provider memory (ChatGPT/Claude session recall) and
    generated handoffs are not durable authority.** They lose to Drive
-   records and to the personal backup.
+   records and to the personal backup for data, and — for AI model/tool
+   selection, independence requirements, and execution gates — to the
+   tracked doctrine in `docs/AI_TOOL_ROUTING.md`.
 4. **Human corrections outrank imported values** for the corrected fact
    (the Handoff `status`/`correctsHandoffId` mechanism implements this
    for continuity history).
