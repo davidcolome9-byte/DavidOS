@@ -1,104 +1,66 @@
-# Current State — 2026-07-20
+# Current State — 2026-07-21
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
 the single authoritative description of the deployed production state;
 the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
-`package.json` and `package-lock.json` were unchanged by DOS-WF-002A and
-remain unchanged in this documentation-closeout candidate.
-
-## Documentation closeout status (this branch)
-
-This file is currently being edited on the local branch
-`docs/dos-agt-001a-supervised-coding-agent-closeout` as a
-**documentation-closeout candidate** for DOS-AGT-001A. That is separate
-from the DOS-AGT-001A product status: the product itself (PR #20, squash
-merge `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, merged 2026-07-20T12:57:18Z)
-is implemented, merged to `main`, deployed to GitHub Pages, and
-independently live-verified in an isolated browser context, exactly as
-described below. What is still open is this documentation candidate's own
-lifecycle: its commit has **not yet** been pushed, opened as a pull
-request, run through CI, merged into `main`, or synchronized. Final
-documentation closure awaits those steps and David's explicit merge
-authorization.
-
-## In-flight candidate — DOS-STAB-001A (NOT deployed)
-
-Everything below this section describes the **deployed** production state.
-DOS-STAB-001A is a separate, currently **uncommitted** candidate on the local
-branch `feat/dos-stab-001a-durable-destructive-flows` (base `main` @
-`eb43f678a686bb984350699256eae6b2d9c00aca`). It replaces single-key canonical
-AppState persistence with an immutable generation journal (two alternating
-hash-verified heads, one exclusive Web Lock, boot reconciliation, no
-destructive rollback), routes Import/Reset/Prune through one shared
-destructive commit boundary, adds deep boot record quarantine, and adds a
-top-level crash recovery boundary. Architecture:
-[DATA_MODEL.md](DATA_MODEL.md) and the 2026-07-20 [DECISIONS.md](DECISIONS.md)
-entry; status and remaining gates: [OPEN_LOOPS.md](OPEN_LOOPS.md) OL-031.
-
-**None of it is live.** It has not been committed, pushed, opened as a PR,
-run through CI, merged, or deployed, and it has had no independent review or
-live verification. The "Data" and storage descriptions below remain the
-accurate account of production until that release sequence completes and
-David explicitly authorizes the merge. `package.json` and `package-lock.json`
-are unchanged by this candidate.
+`package.json` and `package-lock.json` are unchanged by DOS-WF-002A,
+DOS-AGT-001A, and DOS-STAB-001A.
 
 ## Version
 
-**v0.2 + Supervised Coding Coordinator release (PR #20, DOS-AGT-001A)**, on
-`main` @ `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836` (squash-merge commit of
-PR #20, "feat: add supervised coding coordinator foundation (DOS-AGT-001A)";
-approved candidate `382f9f8ac16ac22cf2a233f63deba4121d9899ab`; merged
-2026-07-20) @ GitHub `davidcolome9-byte/DavidOS`, auto-deployed to GitHub
-Pages (https://davidcolome9-byte.github.io/DavidOS/) on every push to
-`main`.
+**v0.2 + Durable Journaled State Transactions release (PR #22,
+DOS-STAB-001A)**, on `main` @ `d744e7d018d1c6c22ffcfdcf885cb568604f997c`
+(squash-merge commit of PR #22, "feat: add durable journaled state
+transactions"; approved candidate
+`2a946d7dede868cc678f4062ca67c7baaf90e7bd`; merged 2026-07-21) @ GitHub
+`davidcolome9-byte/DavidOS`, auto-deployed to GitHub Pages
+(https://davidcolome9-byte.github.io/DavidOS/) on every push to `main`.
 
-Adds the first operational DavidOS execution-agent profile: a local-only,
-supervised **DavidOS Coding Coordinator** (`coding-coordinator`) that
-creates, persists, validates, displays, copies, and tracks bounded
-execution records for coding work performed externally (Claude Code,
-Codex, Gemini, Antigravity, or manual) — see "What works today" below and
-docs/ARCHITECTURE.md / docs/DATA_MODEL.md for the architecture.
-Independent Codex candidate review verdict: **APPROVE WITH NON-BLOCKING
-NOTES** (after two prior targeted correction passes — see
-docs/DECISIONS.md 2026-07-19/2026-07-20 entries for DOS-AGT-001A).
+Replaces single-key canonical AppState persistence with an immutable
+generation journal (two alternating hash-verified heads, one exclusive
+Web Lock, boot reconciliation, no destructive rollback), routes Import/
+Reset/Prune through one shared destructive commit boundary, adds deep
+boot record quarantine (byte-exact preservation before any lossy repair),
+and adds a top-level crash recovery boundary (`AppErrorBoundary`) — see
+"What works today" below and docs/ARCHITECTURE.md / docs/DATA_MODEL.md
+for the architecture. Independent Gemini 3.1 Pro adversarial review
+verdict: **READY FOR CANDIDATE COMMIT**, no blocking defect (see
+docs/DECISIONS.md 2026-07-20 entry and docs/OPEN_LOOPS.md OL-031,
+Resolved & deployed).
 
-Merge-SHA CI (`ci.yml` run `29744211947`) succeeded. The
-`deploy.yml`/Pages run (`29744211960`) succeeded on 2026-07-20 — the full
-verify + Playwright smoke gate (103 tests; one pre-existing flaky test in
-`tests/smoke/navigation.spec.ts`, unrelated to DOS-AGT-001A, passed on
-retry) runs on the deployed SHA before publishing. Pages deployment ID
-`5522055312` (environment `github-pages`), deployed SHA
-`88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, status `success`.
+Merge-SHA CI (`ci.yml` run `29838916072`) succeeded. The `deploy.yml`/
+Pages run (`29838916344`) succeeded on 2026-07-21 — the full verify +
+Playwright smoke gate (108 tests, 0 failed, 0 flaky) runs on the deployed
+SHA before publishing. Pages deployment ID `5540025217` (environment
+`github-pages`), deployed SHA `d744e7d018d1c6c22ffcfdcf885cb568604f997c`,
+status `success`.
 
-**Live production acceptance passed this release.** An isolated,
-freshly-created browser context (no shared profile, no David's local
-data) verified the deployed build at both desktop (1440×900) and mobile
-(375×812, exact) against https://davidcolome9-byte.github.io/DavidOS/
-using only clearly synthetic data: 31/31 checks passed (app boot, existing
-domain-agent cards/nav unchanged, no new route/nav item, Supervised
-execution section + DavidOS Coding Coordinator visible, independent
-readiness feedback, all six authority values default to NOT authorized,
-locked capabilities visibly unavailable, Ready transition, deterministic
-packet + honesty notice, honest clipboard-copy messaging, evidence-gated
-completion, terminal read-only immutability, reload persistence within the
-isolated context, zero horizontal overflow at 375×812, and native
-Enter/Space keyboard cancellation with correct focus management); zero
-console errors; zero non-production-origin network requests (no provider,
-GitHub API, credential, or background-job traffic observed). Full evidence
-archived at
-`D:\DavidOS_Backups\DOS-AGT-001A\release\20260720-130542\` (ZIP
-`DOS-AGT-001A-release-20260720-130542.zip`, SHA-256
-`3c218cce3a9c4d1f342ff9ef923821463c651146d0946b31b082d40b32cfff59`).
+**Live production acceptance passed this release.** Fresh, isolated
+Playwright/Chromium browser contexts per viewport (no shared profile, no
+shared storage state) verified the deployed build at both desktop
+(1440×900) and mobile (375×812, exact) against
+https://davidcolome9-byte.github.io/DavidOS/ using only synthetic data
+generated by the acceptance script itself: **16/16 checks passed**,
+including a live Reset transaction (type-RESET confirm, honest
+completion message) and a live Import transaction (synthetic backup
+upload, "Import complete." confirmation, imported theme applied) against
+production; zero console errors; zero non-production-origin network
+requests; zero horizontal overflow at either viewport. Full evidence
+archived at `D:\DavidOS_Backups\DOS-STAB-001A\release\20260721-151748\`
+(ZIP `DOS-STAB-001A-release-20260721-151748.zip`, SHA-256
+`d21fef697158ddadf16523005b56897a3c45807247a4dd34a558e582d326f7ce`).
 
-DOS-AGT-001A is: **product merged; deployed; live-verified; release
-evidence archived; product package closed pending documentation-closeout
-merge** (this file's own edit — see the section above).
+DOS-STAB-001A is: **product merged; deployed; live-verified; release
+evidence archived; documentation closed; package closed.** OL-032
+(journal generations roughly double the effective storage ceiling)
+remains explicitly OPEN as a documented product decision for David — it
+is NOT closed by this release; see docs/OPEN_LOOPS.md OL-032.
 
-Prior release: v0.2 + Planning Context Unification (PR #18, merge
-`49c71caa7ad8af95afad3adc09893a0388810745`, merged 2026-07-19) — see
-"Release history" below.
+Prior release: v0.2 + Supervised Coding Coordinator (PR #20, DOS-AGT-001A,
+squash-merge `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, merged
+2026-07-20) — see "Release history" below.
 
 ## What works today
 
@@ -232,16 +194,29 @@ Prior release: v0.2 + Planning Context Unification (PR #18, merge
   tab's newer write via the `storage` event and blocks with a
   focus-managed "reload" dialog instead of clobbering (OL-004 resolved,
   PR #5; dialog a11y hardened in PR #6).
-- **Data**: localStorage persistence with a fail-safe recovery contract
-  (damaged state is classified, the exact original is quarantined and
-  confirmed before any lossy repair may persist, and saving is paused
-  rather than ever overwriting the only stored copy — see
-  docs/DATA_MODEL.md → "Load & recovery states"); JSON export/import
-  with envelope + deep per-item field/enum validation and handoff
-  relationship invariants (OL-005 resolved, PR #5) and a
-  forward-schemaVersion guard that rejects backups from a newer DavidOS
-  (OL-006 resolved, PR #5); type-RESET-to-confirm reset preserving the
-  Health Profile exactly (an explicitly deleted profile stays deleted).
+- **Data (durable journaled transactions, DOS-STAB-001A, PR #22)**:
+  canonical AppState is an immutable generation journal — two alternating
+  hash-verified head slots, all cooperating writes serialized by one
+  exclusive Web Lock, stale authority rejected inside the lock, boot
+  reconciliation selects the highest valid head with a valid referenced
+  generation, and destructive rollback was removed rather than repaired.
+  Import, Reset, and Prune each commit one complete candidate (completion
+  audit included) as one generation and one head advancement, updating
+  active state only after a verified head advancement (OL-031 resolved).
+  Deep boot record quarantine preserves the exact original blob before
+  any lossy repair may persist, and saving pauses rather than ever
+  overwriting the only stored copy (see docs/DATA_MODEL.md → "Load &
+  recovery states"); a top-level crash recovery boundary
+  (`AppErrorBoundary`) offers working export and reload on an otherwise
+  uncaught render crash. JSON export/import with envelope + deep
+  per-item field/enum validation and handoff relationship invariants
+  (OL-005 resolved, PR #5) and a forward-schemaVersion guard that rejects
+  backups from a newer DavidOS (OL-006 resolved, PR #5); type-RESET-to-
+  confirm reset preserving the Health Profile exactly (an explicitly
+  deleted profile stays deleted). Browser storage has no native
+  multi-key transaction, so journal generations roughly double the
+  effective storage ceiling — a documented open product decision
+  (OL-032, not resolved by this package).
 - **Google Drive backup export foundation**: token-model auth scaffold +
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status). Known gaps: GIS loads on
@@ -273,21 +248,38 @@ Prior release: v0.2 + Planning Context Unification (PR #18, merge
   prompts; it never calls an AI provider (planned as v0.6, OL-025).
   **Native packaging: not built** (Capacitor wrapper planned, v0.7).
 
-## Verification status (2026-07-20, `main` @ `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, post-PR #20)
+## Verification status (2026-07-21, `main` @ `d744e7d018d1c6c22ffcfdcf885cb568604f997c`, post-PR #22)
 
 Exact counts live here ONLY (other docs reference this file):
 
-- Unit/component tests: 52 files, **786/786 tests**, all passing
-  (`npm test`), up from the pre-DOS-AGT-001A 606/606 baseline (new:
-  `executionAgentRegistry.test.ts`, `executionAudit.test.ts`,
-  `executionPersistence.test.ts`, `executionRecords.test.ts`,
-  `executionRecovery.test.ts`, `supervisedExecution.test.tsx`).
-- Browser smoke tests: **103/103 passing on GitHub Actions** — both the
-  merge-SHA CI run (`29744211947`) and the merge-SHA Pages deploy run
-  (`29744211960`) completed successfully, and both run the full Playwright
-  suite as a blocking gate step. Up from the pre-DOS-AGT-001A 98/98
-  baseline (new: `tests/smoke/supervisedExecution.spec.ts`, 5 tests). The
-  Pages deploy run's Playwright step reported one flaky-then-passed test
+- Unit/component tests: 59 files, **901/901 tests**, all passing
+  (`npm test`), up from the pre-DOS-STAB-001A 786/786 baseline (new:
+  `stateJournal.test.ts`, `journalPersistence.test.ts`,
+  `bootJournal.test.ts`, `bootQuarantine.test.ts`,
+  `importTransaction.test.tsx`, `resetTransaction.test.tsx`,
+  `appErrorBoundary.test.tsx`).
+- Browser smoke tests: **108/108 passing on GitHub Actions** — both the
+  merge-SHA CI run (`29838916072`) and the merge-SHA Pages deploy run
+  (`29838916344`) completed successfully, and both run the full Playwright
+  suite as a blocking gate step. Up from the pre-DOS-STAB-001A 103/103
+  baseline (new: `tests/smoke/durableDestructive.spec.ts`,
+  `crashRecovery.spec.ts`, `bootQuarantine.spec.ts`).
+- **DOS-STAB-001A independent adversarial review**: Gemini 3.1 Pro
+  returned **READY FOR CANDIDATE COMMIT**, no blocking defect.
+- **DOS-STAB-001A isolated live production acceptance** (fresh
+  Playwright/Chromium context per viewport, no shared profile or
+  storage): **16/16 checks PASSED** at desktop (1440×900) and mobile
+  (375×812, exact) against https://davidcolome9-byte.github.io/DavidOS/,
+  using only synthetic data — including a live Reset transaction and a
+  live Import transaction against production. Zero console errors; zero
+  non-production-origin network requests; zero horizontal overflow at
+  either viewport. Full report and screenshots archived at
+  `D:\DavidOS_Backups\DOS-STAB-001A\release\20260721-151748\` (ZIP
+  SHA-256
+  `d21fef697158ddadf16523005b56897a3c45807247a4dd34a558e582d326f7ce`).
+- Prior release (DOS-AGT-001A, PR #20) Playwright baseline before this
+  package: the merge-SHA Pages deploy run's Playwright step reported one
+  flaky-then-passed test
   (`tests/smoke/navigation.spec.ts:94`, unrelated to DOS-AGT-001A).
 - **DOS-AGT-001A independent Codex candidate review**: **APPROVE WITH
   NON-BLOCKING NOTES**, no blocking runtime defect, after two prior
@@ -396,6 +388,31 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Release history (merged & deployed)
 
+- **PR #22 — Durable Journaled State Transactions (DOS-STAB-001A)**
+  (merged 2026-07-21T14:23:59Z, squash-merge commit
+  `d744e7d018d1c6c22ffcfdcf885cb568604f997c`; approved candidate
+  `2a946d7dede868cc678f4062ca67c7baaf90e7bd`): replaces single-key
+  canonical AppState persistence with an immutable generation journal
+  (two alternating hash-verified heads, one exclusive Web Lock, boot
+  reconciliation, no destructive rollback); routes Import/Reset/Prune
+  through one shared destructive commit boundary; adds deep boot record
+  quarantine (byte-exact preservation before any lossy repair) and a
+  top-level crash recovery boundary (`AppErrorBoundary`). Merge-SHA CI
+  (run `29838916072`) and Pages deploy (run `29838916344`) both
+  succeeded, running the full 108-test Playwright suite as a blocking
+  gate (the deploy job re-runs the full verify + Playwright gate on the
+  exact deployed SHA before publishing). Independent Gemini 3.1 Pro
+  adversarial review: READY FOR CANDIDATE COMMIT, no blocking defect.
+  Isolated live production acceptance: 16/16 checks passed at desktop
+  (1440×900) and mobile (375×812), including a live Reset transaction
+  and a live Import transaction against production. See
+  docs/DECISIONS.md 2026-07-20 DOS-STAB-001A entry and
+  docs/OPEN_LOOPS.md OL-031 (Resolved & deployed) for the technical
+  decision record; release evidence archived at
+  `D:\DavidOS_Backups\DOS-STAB-001A\release\20260721-151748\`. OL-032
+  (journal generations roughly double the effective storage ceiling)
+  remains open as a documented product decision for David — not closed
+  by this release.
 - **PR #20 — Supervised Coding Coordinator (DOS-AGT-001A)** (merged
   2026-07-20T12:57:18Z, squash-merge commit
   `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`; approved candidate
@@ -468,9 +485,9 @@ Exact counts live here ONLY (other docs reference this file):
   2026-07-13); **PR #1 — Universal Operations Core** (merged
   2026-07-12).
 
-## Repository state (branches & worktrees, 2026-07-20)
+## Repository state (branches & worktrees, 2026-07-21)
 
-Stable production branch: `main` @ `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836` (clean; local == origin).
+Stable production branch: `main` @ `d744e7d018d1c6c22ffcfdcf885cb568604f997c` (clean; local == origin).
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
@@ -485,6 +502,7 @@ whenever David chooses (removal deliberately NOT performed by agents):
 - `fix/ol-003-storage-protection-retention` @ `19e303b107c3540639a1a04809b5bd270290dd01` (PR #14)
 - `fix/ol-015-modal-focus-management` @ `393839908a9cc9f8bc8a60aa9241b387615fdecb` (PR #16, merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`)
 - `feat/dos-agt-001a-supervised-coding-agent` @ `382f9f8ac16ac22cf2a233f63deba4121d9899ab` (PR #20, squash-merge commit `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`) — remains intact locally and on `origin`, not deleted
+- `feat/dos-stab-001a-durable-destructive-flows` @ `2a946d7dede868cc678f4062ca67c7baaf90e7bd` (PR #22, squash-merge commit `d744e7d018d1c6c22ffcfdcf885cb568604f997c`) — remains intact locally and on `origin`, not deleted
 
 Stale local draft branches — NOT merged, NOT reviewed, NOT deployed;
 do not treat their contents as shipped:
