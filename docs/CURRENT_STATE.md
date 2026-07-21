@@ -487,12 +487,19 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Repository state (branches & worktrees, 2026-07-21)
 
-Stable production branch: `main` @ `b9eb45cba693b7bc96157752ca382667c6fcc34b`
-(clean; local == origin) — merged DOS-GOV-002A (PR #24, establishing the
-AI Tool Routing Doctrine) and its documentation closeout (PR #25,
-recording DOS-GOV-002A as merged, deployed, documented, and closed). No
-runtime source, tests, package manifests, GitHub workflows, or seed
-files were touched by either commit.
+Stable production branch: `main`. DOS-GOV-002A was merged through PR #24
+(establishing the AI Tool Routing Doctrine), with documentation closeout
+through PR #25 (merge commit `b9eb45cba693b7bc96157752ca382667c6fcc34b`,
+recording DOS-GOV-002A as merged, deployed, documented, and closed) and
+final authoritative closeout correction through PR #26. The exact moving
+tip of `main` is intentionally NOT hard-coded in this snapshot, because
+every documentation merge (including this one) advances it; use GitHub
+or `git rev-parse origin/main` for the current tip. `b9eb45cba693b7bc96157752ca382667c6fcc34b`
+is recorded here only as the historical PR #25 merge commit and the
+reconciliation baseline this correction pass verified against — not as a
+permanent claim about the current branch tip. No runtime source, tests,
+package manifests, GitHub workflows, or seed files were touched by PR
+#24, PR #25, or PR #26.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove

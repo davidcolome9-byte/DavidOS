@@ -1291,22 +1291,33 @@ identifier remains provisional while OPEN_LOOPS.md treats it as such.
   and docs/OPEN_LOOPS.md's stale claims to reflect the merged/deployed
   state. Merge-SHA CI (`verify`, run `29860875158`) and the Pages deploy
   run (`29860875713`) both succeeded.
-- **Google Drive routing pointer created successfully.** A Drive copy of
-  the doctrine (`DavidOS_AI_Tool_Routing_Doctrine_v1.0.md`, created
-  2026-07-21T17:17 UTC in David's DavidOS Drive folder) exists as the
-  Drive-side pointer/mirror contemplated by `docs/AI_TOOL_ROUTING.md` §14
-  item 4. Per that same doctrine section, **the repository copy of
-  `docs/AI_TOOL_ROUTING.md` remains authoritative** over the Drive copy;
-  the Drive copy may lag behind repository edits (e.g. this correction
-  pass) without requiring a synchronized update before the repository can
-  be relied on as the source of truth.
-- **Evidence record for this documentation-only package.** Unlike the
-  product packages above (DOS-AGT-001A, DOS-STAB-001A), DOS-GOV-002A
-  changed no runtime behavior and required no isolated live-browser
-  acceptance run or archived evidence ZIP; its evidence record is the
-  GitHub-confirmed PR merges, CI runs, and Pages deploy runs cited above,
-  independently re-queried via the GitHub API and `gh` CLI while
-  preparing this entry.
+- **Google Drive routing pointer created successfully.** A Drive pointer
+  file (`00_AI_TOOL_ROUTING_POINTER.md`, created 2026-07-21 in David's
+  DavidOS Drive folder) exists as the Drive-side pointer contemplated by
+  `docs/AI_TOOL_ROUTING.md` §14 item 4. Recording only verified facts:
+  it points to repository path `docs/AI_TOOL_ROUTING.md`; it states that
+  no parallel routing or authorization policy should be maintained in
+  Google Drive; and **the repository copy of `docs/AI_TOOL_ROUTING.md`
+  remains authoritative** over it. This entry does not claim the Drive
+  item is a full synchronized doctrine mirror — that has not been
+  independently verified, and the pointer's own stated purpose is to
+  point back to the repository file, not to duplicate its contents.
+- **Evidence record for this documentation-only package.** DOS-GOV-002A
+  changed no runtime behavior, so no isolated live-browser production
+  acceptance archive (of the kind DOS-AGT-001A and DOS-STAB-001A
+  required) applies here. That is distinct from archived evidence
+  generally: a final documentation-closeout correction evidence archive
+  WAS created, covering the Gate 1 push/PR/CI sequence for the
+  final-closeout-correction candidate —
+  `D:\DavidOS_Backups\DOS-GOV-002A\final-closeout-correction\20260721-211120\`,
+  containing PR/CI metadata, local validation output, the candidate
+  patch, and a ZIP
+  (`DOS-GOV-002A-final-closeout-correction-20260721-211120.zip`, SHA-256
+  `7c362197f26d0fae79947aa24fc404c709d938a056c5dec3e1c7e43f783b1922`,
+  independently read back and confirmed matching). The narrower PR
+  #24/#25 merge-and-deploy record itself rests on the GitHub-confirmed PR
+  merges, CI runs, and Pages deploy runs cited above, independently
+  re-queried via the GitHub API and `gh` CLI while preparing this entry.
 - **Status: DOS-GOV-002A is fully merged, deployed, documented, and
   closed.** No implementation package is currently active. Per this same
   correction pass's authorization, the next required action is David's
