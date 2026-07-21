@@ -11,8 +11,10 @@ a static Vite bundle is more portable — PWA today, Capacitor wrapper later. Se
 `docs/DECISIONS.md`.)
 
 > **AI coding agents:** start with [AGENTS.md](AGENTS.md) — rules,
-> architecture map, commands, and definition of done. The docs index and
-> backlog live in `docs/`.
+> architecture map, commands, and definition of done — which itself
+> points to [docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md), the
+> authoritative AI model/tool routing policy. The docs index and backlog
+> live in `docs/`.
 
 ## Run it
 
@@ -79,9 +81,11 @@ Full command list: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 - **Safety** — 6-level risk classification surfaced directly in the command
   palette (risky unmatched commands show an honest "nothing was sent" no-op),
   ApprovalGate modal (high-risk actions are unapprovable in v1), full audit log
-- **Data** — localStorage persistence, JSON export/import (Health-Profile-aware
-  conflict handling), type-`RESET`-to-confirm reset that preserves the Health
-  Profile by default
+- **Data** — canonical state persisted as an immutable, hash-verified
+  generation journal in localStorage (durable Import/Reset/Prune
+  transactions; see `docs/DATA_MODEL.md`), JSON export/import
+  (Health-Profile-aware conflict handling), type-`RESET`-to-confirm reset
+  that preserves the Health Profile by default
 - **Navigation** — 5-tab bottom bar (Home, Workflows, Projects, Logs, More) with
   grouped More menu: Build / Personal / System / Data
 

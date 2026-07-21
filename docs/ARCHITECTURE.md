@@ -163,10 +163,11 @@ mutable key (DOS-STAB-001A). Full format, commit protocol, and failure model:
   allowlisted, counts-only damage vocabulary for warnings and logs.
 - `lib/storage/exportImport.ts` — versioned JSON envelope
   (`{app: "davidos", schemaVersion, state}`); import validates the
-  envelope and top-level structure (required arrays + settings), then
-  repairs item-level damage via `normalizeState`. Deep per-field
-  validation and a forward-schemaVersion guard are pending (OL-005,
-  OL-006). Download helper for backups.
+  envelope and top-level structure (required arrays + settings), runs
+  deep per-item field/enum validation (`importValidation.ts`), and
+  rejects backups whose `schemaVersion` is newer than the app understands
+  before repairing remaining item-level damage via `normalizeState`
+  (OL-005, OL-006, resolved). Download helper for backups.
 
 ## Integration adapter pattern
 `lib/integrations/` — one file per adapter (`*.stub.ts`), each exporting:

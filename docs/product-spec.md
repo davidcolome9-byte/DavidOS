@@ -7,10 +7,12 @@ not a chatbot, not a demo: a router + vault + launchpad that any AI tool can plu
 into via portable specs.
 
 ## Target user
-One user — the owner of this instance. Works in a risk/security field, runs a
-body recomposition program (Operation David), has dogs, and is a heavy AI-tool
-user (ChatGPT, Claude, Claude Code, Codex, Gemini). Uses the app primarily on
-Android, on the go. Personal specifics live in on-device context, not in this repo.
+One user — the owner of this instance. A single-user, mobile-first, multi-
+domain command center for someone juggling several life/work domains
+(health & fitness, work, home/personal admin, and more) who is a heavy
+AI-tool user (ChatGPT, Claude, Claude Code, Codex, Gemini) and uses the app
+primarily on Android, on the go. Personal specifics live in on-device
+context and the user's private backup, never in this public repo.
 
 ## Core workflows (v1)
 | Workflow | Agent | What it produces |

@@ -15,10 +15,10 @@ needed, and a status marker:
   history in the "Resolved & deployed" section at the bottom
 - **Obsolete** — kept for history
 
-**Last full reconciliation: 2026-07-19**, verified item-by-item against
-`main` @ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` (PR #16, Modal Focus
-Management — the live deployed release). Items fixed in the
-2026-07-12 stabilization sprint are not listed; see git history
+**Last full reconciliation: 2026-07-21**, verified item-by-item against
+`main` @ `d744e7d018d1c6c22ffcfdcf885cb568604f997c` (PR #22, Durable
+Journaled State Transactions — the live deployed release). Items fixed in
+the 2026-07-12 stabilization sprint are not listed; see git history
 and docs/DECISIONS.md.
 
 ---
@@ -55,6 +55,10 @@ and docs/DECISIONS.md.
 - **Interim behavior (safe, and what ships today):** nothing is deleted or
   repaired automatically, an app-wide protection banner is always shown,
   export and recovery downloads remain available, and no data is lost.
+- **Decision packet:** [docs/OL-032_STORAGE_CAPACITY_DECISION.md](OL-032_STORAGE_CAPACITY_DECISION.md)
+  (DOS-GOV-002A) — verified current behavior, a full comparison of five
+  options, and a reasoned recommendation. This is a decision packet, not
+  an implementation; no option has been selected. This entry stays open.
 - **Complexity:** M · **Approval:** yes
 
 
@@ -438,13 +442,11 @@ without new evidence.
   `D:\DavidOS_Backups\DOS-AGT-001A\release\20260720-130542\` (ZIP
   `DOS-AGT-001A-release-20260720-130542.zip`, SHA-256
   `3c218cce3a9c4d1f342ff9ef923821463c651146d0946b31b082d40b32cfff59`).
-- **Documentation closeout status:** the product above is resolved,
-  merged, and deployed. The documentation entry recording this resolution
-  is itself part of a local documentation-closeout candidate on branch
-  `docs/dos-agt-001a-supervised-coding-agent-closeout` that has not yet
-  been pushed, opened as a pull request, merged, or synchronized. Final
-  documentation synchronization awaits those steps and David's explicit
-  merge authorization.
+- **Documentation closeout status:** resolved. The documentation entry
+  recording this resolution was closed by PR #21
+  (`docs/dos-agt-001a-supervised-coding-agent-closeout`, merge SHA
+  `eb43f678a686bb984350699256eae6b2d9c00aca`), matching the closeout
+  pattern recorded for OL-015 and OL-031 above/below.
 
 ### OL-015 · Modals lack focus management (aria-modal without the behavior) — RESOLVED
 - **Resolved by:** PR #16 (merged 2026-07-19, merge SHA `7077dac7a9e50f84e39b0f58bf7665b358a1e577`), recording feature candidate SHA `393839908a9cc9f8bc8a60aa9241b387615fdecb`, Pages run ID `29667970651`, and deployed SHA `7077dac7a9e50f84e39b0f58bf7665b358a1e577`.

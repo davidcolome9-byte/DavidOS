@@ -5,6 +5,19 @@ Gemini, or other) working on DavidOS. Read it fully before changing code.
 It is vendor-neutral and version-controlled; it supersedes
 `docs/handoff.md` (now a pointer here).
 
+**AI tool and model routing.** Before selecting a model, assigning
+implementation, beginning review, or releasing work, read
+[docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md) — the authoritative
+model-role, independence, quota-fallback, and two-gate execution policy
+for every AI tool and model working on DavidOS. It outranks conversational
+memory, prior handoffs, and any temporary chat-session instruction;
+package prompts may narrow it but may not weaken it without David's
+explicit approval.
+
+Read in this order before acting: this file, `docs/AI_TOOL_ROUTING.md`,
+`docs/CURRENT_STATE.md`, `docs/OPEN_LOOPS.md`, the active package brief
+or handoff, then any doc directly relevant to the task.
+
 ## 1. What DavidOS is — and is not
 
 DavidOS is a **private, local-first, mobile-first personal command center**:
@@ -50,10 +63,10 @@ Point-in-time status: [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).
    [docs/security-and-approval-model.md](docs/security-and-approval-model.md).
 4. **Local-first.** No backend, no accounts, no API keys in the repo or
    bundle (see `.env.example`). Offline operation is a design
-   requirement, but is only PARTIALLY delivered today: the service
-   worker caches the app shell, and a documented gap can white-screen
-   offline launches after a deploy (docs/OPEN_LOOPS.md OL-001). Do not
-   document offline reliability beyond that until OL-001 is fixed.
+   requirement and is fully delivered: the service worker precaches a
+   complete, build-derived app-shell manifest, and offline launch,
+   offline reload, and offline intent routing are reliable and verified
+   (docs/OPEN_LOOPS.md OL-001, resolved by PR #10, re-verified since).
 5. **Canonical history stays clean.** Saved handoffs store the cleaned
    current entry only — never full generated prompts (those are separate
    typed artifacts). No recursive history bloat.
@@ -117,6 +130,8 @@ davidos/
 ```
 
 Docs index:
+- [docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md) — authoritative AI
+  model/tool routing, independence, quota-fallback, and two-gate policy
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — how the pieces fit
 - [docs/DATA_MODEL.md](docs/DATA_MODEL.md) — AppState, persistence, migration
 - [docs/SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) — what data is authoritative where
@@ -138,6 +153,11 @@ Docs index:
 3. The user's personal backup JSON (gitignored/Drive) — personal values.
 4. localStorage on each device — live state (never edited by agents).
 5. Docs describe; code defines. On conflict, trust code, then fix the doc.
+
+For AI model and coding-tool selection, role separation, and execution
+gates — a separate axis from the data authority above —
+[docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md) is authoritative over
+conversational memory and prior chat-session instructions.
 
 Full hierarchy + protected files: [docs/SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md).
 
