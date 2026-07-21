@@ -54,9 +54,28 @@ Workers → "Update on reload", or unregister the worker.
 
 ## Data / state
 
+**Where state actually lives.** Canonical AppState is stored as immutable
+journal generations (`davidos-state-generation-v1-<id>`) selected by two
+alternating head records (`davidos-state-head-v1-a` / `-b`). The older
+single key `davidos-state-v1` is migration input and read fallback only;
+it is left byte-identical by migration and may still be present on a
+device long after the journal took over. See docs/DATA_MODEL.md →
+"Persistence".
+
+**"Saving is paused" and the app otherwise works.** Expected protective
+behavior, not data loss. Causes: boot preservation failed; journal
+authority needs reconciliation (a damaged head or an unverifiable
+generation); another tab advanced the head, making this tab stale; a
+commit ended with an UNCONFIRMED outcome; or `navigator.locks` is
+unsupported, which puts the app in safe read-only persistence mode.
+Export and recovery downloads stay available in every case. Reload to
+re-establish authority. Note the deliberate honesty distinction: after an
+unconfirmed outcome the app says the write could not be confirmed — it
+does NOT claim stored data is unchanged.
+
 **App boots to seed data unexpectedly, or shows a "Data recovery
-notice" banner.** The stored state under `davidos-state-v1` was
-unreadable or damaged. The exact original blob is preserved under a
+notice" banner.** The stored state was unreadable or damaged. The exact
+original blob is preserved under a
 unique `davidos-state-v1-recovery-<timestamp>` key (the banner names
 it) — inspect it via DevTools → Application → Local Storage and
 re-import your latest backup via Settings → Import. If the banner says

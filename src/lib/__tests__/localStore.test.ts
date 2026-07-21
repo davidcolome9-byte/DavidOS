@@ -6,7 +6,6 @@ import {
   isPlainObject,
   loadPersistedState,
   normalizeState,
-  persistState,
 } from '../storage/localStore';
 import { buildResetState } from '../storage/resetState';
 import { buildDefaultState } from '../../data/defaultState';
@@ -269,7 +268,9 @@ describe('loadPersistedState — recovery contract', () => {
     expect(r.recovery.rawPreserved).toBe(true);
     expect(r.recovery.canPersist).toBe(true);
     expect(r.recovery.recoveryKey).toBeTruthy();
-    expect(r.recovery.message).toContain(r.recovery.recoveryKey!);
+    // The warning names availability only — never the storage key itself.
+    expect(r.recovery.message).not.toContain(r.recovery.recoveryKey!);
+    expect(r.recovery.message).toMatch(/preserved/i);
     expect(storage.getItem(r.recovery.recoveryKey!)).toBe(raw); // byte-identical
     expect(r.state!.prompts).toEqual([]);
   });
@@ -282,7 +283,7 @@ describe('loadPersistedState — recovery contract', () => {
     expect(r.recovery.kind).toBe('repaired');
     expect(r.recovery.rawPreserved).toBe(false);
     expect(r.recovery.canPersist).toBe(false);
-    expect(r.recovery.message).toContain('Saving is paused');
+    expect(r.recovery.message).toMatch(/saving is paused/i);
     expect(storage.getItem(STORAGE_KEY)).toBe(raw); // the only copy is untouched
   });
 
@@ -357,24 +358,64 @@ describe('loadPersistedState — recovery contract', () => {
     expect(r.recovery.kind).toBe('unreadable');
     expect(r.recovery.rawPreserved).toBe(false);
     expect(r.recovery.canPersist).toBe(false);
-    expect(r.recovery.message).toContain('Saving is paused');
+    expect(r.recovery.message).toMatch(/saving is paused/i);
     expect(storage.getItem(STORAGE_KEY)).toBe(''); // untouched
   });
-});
 
-describe('persistState', () => {
-  it('returns true on success', () => {
-    expect(persistState(buildDefaultState())).toBe(true);
-    expect(storage.getItem(STORAGE_KEY)).toBeTruthy();
+  it('never logs malformed private-looking text, parse exceptions, stacks, values, or storage keys', () => {
+    const malformed = '{"synthetic-private-looking":"fragment"';
+    storage.setItem(STORAGE_KEY, malformed);
+    const calls: unknown[][] = [];
+    const originalError = console.error;
+    console.error = (...args: unknown[]) => { calls.push(args); };
+    try {
+      loadPersistedState();
+    } finally {
+      console.error = originalError;
+    }
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toHaveLength(1);
+    const logged = calls.flat().map(String).join('\n');
+    for (const forbidden of [malformed, 'synthetic-private-looking', 'fragment', 'SyntaxError', 'at JSON.parse', STORAGE_KEY]) {
+      expect(logged).not.toContain(forbidden);
+    }
   });
 
-  it('returns false when the write fails (quota) so the UI can warn', () => {
-    (globalThis as { localStorage?: Storage }).localStorage = fakeLocalStorage({
-      setItem: () => {
-        throw new Error('QuotaExceededError');
-      },
+  // The additive-migration log must obey the same allowlist as the damage
+  // path: `missing` internally carries field paths and array indices, which
+  // are structural internals and must never reach console output.
+  it('logs additive migration as approved categories and counts only — never field paths or indices', () => {
+    const legacy = JSON.parse(JSON.stringify(buildDefaultState())) as Record<string, unknown>;
+    // Two prompts whose additively-backfilled fields are absent (valid older
+    // shape) → internal `missing` entries like `prompts[0].tags`.
+    const olderPrompt = (id: string) => ({
+      id, title: 'synthetic', body: 'synthetic', category: 'synthetic',
+      favorite: false, updatedAt: '2020-01-01T00:00:00.000Z',
+      // `tags` and `versions` deliberately absent — the valid older shape.
     });
-    expect(persistState(buildDefaultState())).toBe(false);
+    legacy.prompts = [olderPrompt('synthetic-prompt-a'), olderPrompt('synthetic-prompt-b')];
+    delete legacy.artifacts;
+    storage.setItem(STORAGE_KEY, JSON.stringify(legacy));
+
+    const calls: unknown[][] = [];
+    const originalInfo = console.info;
+    console.info = (...args: unknown[]) => { calls.push(args); };
+    let result: ReturnType<typeof loadPersistedState>;
+    try {
+      result = loadPersistedState();
+    } finally {
+      console.info = originalInfo;
+    }
+
+    expect(result.recovery.kind).toBe('migrated');
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toHaveLength(1);
+    const logged = calls.flat().map(String).join('\n');
+    // No field paths, array indices, record ids, values, or storage keys.
+    for (const forbidden of ['[0]', '[1]', '.tags', '.versions', 'synthetic-prompt-a', 'synthetic-prompt-b', STORAGE_KEY]) {
+      expect(logged).not.toContain(forbidden);
+    }
+    expect(logged).toContain('prompts');
   });
 });
 

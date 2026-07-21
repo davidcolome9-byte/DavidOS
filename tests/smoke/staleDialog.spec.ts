@@ -1,21 +1,20 @@
 import { test, expect, type Page, type BrowserContext } from '@playwright/test';
+import { canonicalStateRaw, waitForCanonicalState } from './helpers/journalState';
 
 // F-08 — the cross-tab stale-state dialog must be keyboard-accessible (focus
 // moves in, focus is trapped, Escape dismisses, background is inert and
 // hidden from assistive technology) without weakening the overwrite guard:
 // dismissal never clears the stale condition or lets the stale tab persist.
 
-const STORAGE_KEY = 'davidos-state-v1';
-
-const storedState = (page: Page) =>
-  page.evaluate(([key]) => window.localStorage.getItem(key) ?? '', [STORAGE_KEY]);
+// DOS-STAB-001A: "stored state" is the committed journal generation.
+const storedState = async (page: Page) => (await canonicalStateRaw(page)) ?? '';
 
 /** Open two tabs sharing storage and make tab B stale via a write in tab A. */
 async function makeStaleTab(context: BrowserContext): Promise<{ a: Page; b: Page }> {
   const a = await context.newPage();
   await a.goto('/');
   await expect(a.getByRole('heading', { name: /OS Status/ })).toBeVisible();
-  await expect.poll(() => a.evaluate(() => !!localStorage.getItem('davidos-state-v1'))).toBe(true);
+  await waitForCanonicalState(a);
 
   const b = await context.newPage();
   await b.goto('/');

@@ -2,6 +2,9 @@ import type { AppState, ExecutionRecord, Handoff, Project, Prompt, PromptVersion
 import { seedHealthProfile } from '../../data/healthProfileSeed';
 import { normalizeHandoffRelationships } from '../workflows/continuity';
 import { validateExecutionRecordUnknown } from '../agents/executionRecords';
+import { inspectRecordIntegrity, quarantineInvalidRecords, summarizeRecordQuarantine, summarizeStructuralDamage } from './bootValidation';
+import type { RecordIntegrityReport } from './bootValidation';
+import { selectJournalAuthority } from './stateJournal';
 
 export const STORAGE_KEY = 'davidos-state-v1';
 /** Unreadable or lossy-repaired blobs are preserved under unique keys with this prefix. */
@@ -45,7 +48,15 @@ export interface LoadResult {
   /** null → boot with defaults (fresh device or unreadable state). */
   state: AppState | null;
   recovery: RecoveryInfo;
+  /** Null while booting from the legacy key or a fresh device. */
+  committedGeneration: string | null;
+  /** Zero while booting from the legacy key or a fresh device. */
+  committedSequence: number;
+  /** True when boot fell back past damaged journal metadata/generations. */
+  journalReconciliationNeeded: boolean;
 }
+
+type RawLoadResult = Pick<LoadResult, 'state' | 'recovery'>;
 
 const CLEAN: RecoveryInfo = { kind: 'none', rawPreserved: false, canPersist: true, message: '' };
 
@@ -148,14 +159,18 @@ export function normalizeState(state: AppState): AppState {
     artifacts: objectArray(state.artifacts),
     executionRecords: normalizeExecutionRecords(state.executionRecords),
     // Seed-if-missing: `undefined` means the state predates Health Profiles →
-    // seed one. `null` means the user explicitly deleted it → respect that.
-    // Anything that isn't a plain object is unusable → reseed the generic starter.
+    // seed one (genuinely absent per the schema). `null` means the user
+    // explicitly deleted it → respect that. A PRESENT value of any other
+    // shape is malformed data and QUARANTINES to null — it must never be
+    // silently converted into a seeded replacement profile (the untouched
+    // original lives in the preserved raw blob; inspectStructure classifies
+    // this as invalid, so the preserve-then-repair contract applies first).
     healthProfile:
       state.healthProfile === undefined
         ? seedHealthProfile()
         : state.healthProfile === null || isPlainObject(state.healthProfile)
           ? state.healthProfile
-          : seedHealthProfile(),
+          : null,
     auditLog: objectArray(state.auditLog),
     settings: {
       theme: isPlainObject(state.settings) && state.settings.theme === 'light' ? 'light' : 'dark',
@@ -236,6 +251,20 @@ export function inspectStructure(state: AppState): StructuralReport {
 }
 
 /**
+ * True when boot-time handoff relationship normalization would CHANGE the
+ * given (already quarantine-filtered) state — i.e. persisting the loaded
+ * view would silently rewrite orphaned/contradictory correction pointers or
+ * statuses. That is a LOSSY repair, so the caller must preserve the exact
+ * original raw blob first. normalizeHandoffRelationships keeps the identity
+ * of unchanged items, so reference inequality means a real mutation.
+ */
+function handoffRelationshipRepairNeeded(state: AppState): boolean {
+  const list = objectArray<Handoff>(state.handoffs);
+  const repaired = normalizeHandoffRelationships(list);
+  return repaired.length !== list.length || repaired.some((h, i) => h !== list[i]);
+}
+
+/**
  * Write the exact raw blob to a unique recovery key and CONFIRM it by
  * reading it back. Never overwrites an earlier recovery record (unique,
  * collision-suffixed keys). Returns the key on confirmed success, null on
@@ -254,12 +283,12 @@ function preserveRawBlob(raw: string): string | null {
   }
 }
 
-export function loadPersistedState(): LoadResult {
+function loadRawState(rawOverride?: string): RawLoadResult {
   let raw: string | null;
   try {
-    raw = localStorage.getItem(STORAGE_KEY);
-  } catch (err) {
-    console.error('DavidOS: device storage is unavailable — running in memory only; nothing was overwritten.', err);
+    raw = rawOverride === undefined ? localStorage.getItem(STORAGE_KEY) : rawOverride;
+  } catch {
+    console.error('DavidOS: device storage is unavailable — running in memory only; nothing was overwritten.');
     return {
       state: null,
       recovery: {
@@ -282,10 +311,10 @@ export function loadPersistedState(): LoadResult {
       throw new Error('not a DavidOS state object (missing schemaVersion)');
     }
     parsed = candidate;
-  } catch (err) {
+  } catch {
     const key = preserveRawBlob(raw);
     if (key) {
-      console.error(`DavidOS: stored state is unreadable — the exact original was preserved under localStorage key "${key}"; booting with defaults.`, err);
+      console.error('DavidOS: stored state is unreadable — the exact original was preserved on this device; booting with defaults.');
       return {
         state: null,
         recovery: {
@@ -293,11 +322,11 @@ export function loadPersistedState(): LoadResult {
           rawPreserved: true,
           recoveryKey: key,
           canPersist: true,
-          message: `Saved data could not be read. The untouched original was preserved on this device (key "${key}") and the app started fresh.`,
+          message: 'Saved data could not be read. The untouched original was preserved on this device and the app started fresh.',
         },
       };
     }
-    console.error('DavidOS: stored state is unreadable AND could not be preserved — running in memory only; the stored copy was NOT overwritten.', err);
+    console.error('DavidOS: stored state is unreadable AND could not be preserved — running in memory only; the stored copy was NOT overwritten.');
     return {
       state: null,
       recovery: {
@@ -334,20 +363,42 @@ export function loadPersistedState(): LoadResult {
   }
 
   const report = inspectStructure(parsed);
-  if (report.invalid.length === 0) {
+  // DOS-STAB-001A: deep per-record integrity on top of the structural check.
+  // Malformed-but-parseable records (wrong types, invalid enums/dates, broken
+  // nested items, duplicate ids) are QUARANTINED — valid neighbors keep
+  // loading — after the exact original blob has been preserved.
+  const records = inspectRecordIntegrity(parsed);
+  // Handoff relationship normalization (orphaned corrections, contradictory
+  // supersession) MUTATES data when it repairs, so it is lossy too. Detected
+  // on the quarantine-filtered view (what would actually persist).
+  const relationshipRepair = handoffRelationshipRepairNeeded(quarantineInvalidRecords(parsed, records));
+  if (report.invalid.length === 0 && records.totalInvalid === 0 && !relationshipRepair) {
     const state = normalizeState(parsed);
     if (report.missing.length > 0) {
-      console.info(`DavidOS: state migrated additively (backfilled: ${report.missing.join(', ')}).`);
+      // Collapsed to approved collection categories + counts, exactly like the
+      // damage path: raw `missing` entries carry field paths and array indices
+      // (e.g. `prompts[3].tags`), which must not reach console output.
+      console.info(`DavidOS: state migrated additively (backfilled: ${summarizeStructuralDamage(report.missing)}).`);
       return { state, recovery: { kind: 'migrated', rawPreserved: false, canPersist: true, message: '' } };
     }
     return { state, recovery: CLEAN };
   }
 
-  // Lossy repair: preserve the exact original BEFORE anything may replace it.
+  // Lossy repair/quarantine: preserve the exact original BEFORE anything may
+  // replace it. The damage summary names fields, collections, and counts only
+  // — never record contents, field values, ids, or storage keys.
+  const damage = describeDamage(report, records);
   const key = preserveRawBlob(raw);
-  const state = normalizeState(parsed);
+  const state = normalizeState(quarantineInvalidRecords(parsed, records));
+  const excludedNote = damage
+    ? `Some saved records were damaged and were quarantined — excluded from active data (${damage}).`
+    : '';
+  const repairNote = relationshipRepair
+    ? 'Inconsistent handoff relationship links were repaired.'
+    : '';
+  const summary = [excludedNote, repairNote].filter(Boolean).join(' ');
   if (key) {
-    console.warn(`DavidOS: stored state was damaged (${report.invalid.join(', ')}) and repaired. The exact original was preserved under "${key}".`);
+    console.warn(`DavidOS: ${summary} The exact original blob was preserved on this device first.`);
     return {
       state,
       recovery: {
@@ -355,35 +406,89 @@ export function loadPersistedState(): LoadResult {
         rawPreserved: true,
         recoveryKey: key,
         canPersist: true,
-        message: `Some saved data was damaged (${report.invalid.join(', ')}) and was repaired. The untouched original is preserved on this device (key "${key}").`,
+        message: `${summary} The untouched original was preserved on this device and can be exported from Settings.`,
       },
     };
   }
-  console.error(`DavidOS: stored state is damaged (${report.invalid.join(', ')}) and preservation FAILED — the repaired copy stays in memory; the stored original was NOT overwritten.`);
+  console.error(`DavidOS: ${summary} Preservation FAILED — the quarantined view stays in memory only; the stored original was NOT overwritten.`);
   return {
     state,
     recovery: {
       kind: 'repaired',
       rawPreserved: false,
       canPersist: false,
-      message: 'Some saved data was damaged and was repaired in memory, but backing up the original failed. Saving is paused so the stored copy is not overwritten — export a backup, free up storage, then reload.',
+      message: `${summary} Backing up the original failed, so saving is paused and the stored copy is not overwritten — export a backup, free up storage, then reload.`,
     },
   };
 }
 
-/** @returns false when the write failed (quota exceeded / unavailable). */
-export function persistState(state: AppState): boolean {
+/**
+ * Journal-aware boot. A valid journal generation is authoritative over the
+ * legacy key, then passes through the exact same preservation/quarantine
+ * pipeline. Unreferenced generations are never considered here.
+ */
+export function loadPersistedState(): LoadResult {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    return true;
-  } catch (err) {
-    // localStorage quota (~5MB) exceeded or unavailable — the app keeps
-    // working in-memory; the store surfaces this to the UI.
-    console.error('DavidOS: failed to persist state', err);
-    return false;
+    const journal = selectJournalAuthority(localStorage);
+    if (journal.authority) {
+      const loaded = loadRawState(journal.authority.raw);
+      return {
+        ...loaded,
+        recovery: journal.reconciliationNeeded
+          ? {
+              ...loaded.recovery,
+              canPersist: false,
+              message: loaded.recovery.message ||
+                'Saved-data authority requires reconciliation. Saving is paused; recovery and export remain available.',
+            }
+          : loaded.recovery,
+        committedGeneration: journal.authority.generationId,
+        committedSequence: journal.authority.sequence,
+        journalReconciliationNeeded: journal.reconciliationNeeded,
+      };
+    }
+    const loaded = loadRawState();
+    return {
+      ...loaded,
+      recovery: journal.reconciliationNeeded
+        ? {
+            ...loaded.recovery,
+            canPersist: false,
+            message: loaded.recovery.message ||
+              'Saved-data authority requires reconciliation. Saving is paused; recovery and export remain available.',
+          }
+        : loaded.recovery,
+      committedGeneration: null,
+      committedSequence: 0,
+      journalReconciliationNeeded: journal.reconciliationNeeded,
+    };
+  } catch {
+    return {
+      state: null,
+      committedGeneration: null,
+      committedSequence: 0,
+      journalReconciliationNeeded: true,
+      recovery: {
+        kind: 'unreadable',
+        rawPreserved: false,
+        canPersist: false,
+        message: 'Saved-data authority could not be established. Saving is paused; recovery and export remain available.',
+      },
+    };
   }
 }
 
-export function clearPersistedState(): void {
-  localStorage.removeItem(STORAGE_KEY);
+/**
+ * Human-readable damage summary combining collection-level structural
+ * categories with per-record quarantine counts, e.g. "prompts: 2;
+ * openLoops: 2 of 5". Approved category names and counts only — never field
+ * paths, indices, ids, values, or storage keys (allowlist in bootValidation).
+ */
+function describeDamage(report: StructuralReport, records: RecordIntegrityReport): string {
+  const parts: string[] = [];
+  const structural = summarizeStructuralDamage(report.invalid);
+  if (structural) parts.push(structural);
+  const quarantine = summarizeRecordQuarantine(records);
+  if (quarantine) parts.push(quarantine);
+  return parts.join('; ');
 }

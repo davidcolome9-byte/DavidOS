@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
-import { clearPersistedState } from '../lib/storage/localStore';
 import { commitImport } from '../lib/storage/importCommit';
+import type { DestructiveCommitFailureReason } from '../lib/storage/journalPersistence';
 import { buildResetState } from '../lib/storage/resetState';
 import { hasHealthDraft, clearHealthDraft } from '../lib/health/profileDraft';
+import { appendAudit, makeAuditEntry } from '../lib/audit/auditLog';
 import { fingerprintInput } from '../lib/audit/redaction';
 import { INTEGRATIONS } from '../lib/integrations';
 import { requiresApproval } from '../lib/safety/approvalRules';
@@ -37,8 +38,29 @@ const EXPORT_WARNING =
 
 const DRIVE_BACKUP_PATH = formatDrivePath(DRIVE_BACKUP_FOLDER_PATH);
 
+/**
+ * Honest wording for an UNCERTAIN import outcome: the in-memory data was not
+ * replaced, but whether the imported data landed in device storage could not
+ * be confirmed. It must never claim "nothing was changed", never mention a
+ * rollback (there is none), and never expose keys, IDs, values, or errors.
+ */
+const IMPORT_UNCERTAIN_MESSAGE =
+  'Import failed: the data you see on screen was not replaced, but whether the imported data ' +
+  'was saved on this device could not be confirmed. Saving is paused to protect your data — ' +
+  'reload the app to continue, or export a backup first from recovery.';
+
 export default function Settings() {
-  const { state, update, audit, recovery, externalChange } = useStore();
+  const {
+    state,
+    update,
+    audit,
+    recovery,
+    externalChange,
+    persistFailed,
+    commitUncertain,
+    getAuthority,
+    commitDestructiveState,
+  } = useStore();
   const fileInput = useRef<HTMLInputElement>(null);
   const [flash, setFlash] = useState('');
   const [pending, setPending] = useState<PendingCall | null>(null);
@@ -90,6 +112,26 @@ export default function Settings() {
   const driveConfigured = isGoogleDriveConfigured();
   const driveConnected = isDriveSessionFresh(driveSession);
 
+  // DOS-STAB-001A: destructive flows are BLOCKED (not merely warned) whenever
+  // a durable commit could not be honored. One human-readable reason at a
+  // time, in guard-precedence order; null means persistence is healthy.
+  const liveAuthority = getAuthority();
+  const persistenceBlockReason: string | null = !recovery.canPersist || liveAuthority.preservationFailed
+    ? 'saving is paused on this device while your original data is being protected (it could not be backed up during recovery)'
+    : liveAuthority.reconciliationRequired
+      ? 'saved journal metadata needs reconciliation before destructive changes can continue'
+      : liveAuthority.outcomeUncertain || commitUncertain
+        ? 'a previous save on this device could not be confirmed, so saving is paused to protect your data — reload to continue'
+        : !liveAuthority.persistenceAvailable
+          ? 'saving to this device is currently unavailable'
+          : liveAuthority.writeQueued || liveAuthority.writeRunning
+            ? 'a save is still in progress; wait for it to finish before continuing'
+      : externalChange
+      ? 'DavidOS was changed in another tab, so this tab has stopped saving — reload to continue with the latest saved data'
+      : persistFailed
+        ? 'saving to this device is currently failing (storage may be full or unavailable)'
+        : null;
+
   useEffect(() => {
     let cancelled = false;
     if (!driveConfigured) {
@@ -126,26 +168,96 @@ export default function Settings() {
     setFlash('Backup downloaded. ' + EXPORT_WARNING);
   }
 
+  /**
+   * A specific, honest failure message per value-free SAFE failure cause.
+   * Every branch ends in "Nothing was changed." — used ONLY for outcomes the
+   * journal transaction proved safe (no head advancement, no partial write).
+   * A draft-specific statement is appended by the caller ONLY after verifying
+   * a draft actually exists. Uncertain outcomes use IMPORT_UNCERTAIN_MESSAGE
+   * instead — they must never claim nothing changed.
+   */
+  function importFailureMessage(cause: DestructiveCommitFailureReason): string {
+    switch (cause) {
+      case 'preservation_failure':
+        return (
+          'Import failed: saving is paused on this device while your original data is being ' +
+          'protected, so the imported data could not be stored. Nothing was changed.'
+        );
+      case 'external_change':
+      case 'stale_authority':
+        return (
+          'Import failed: DavidOS was changed in another tab, so this tab cannot save. ' +
+          'Reload to continue with the latest saved data, then import again. Nothing was changed.'
+        );
+      case 'reconciliation_required':
+        return (
+          'Import failed: the data saved on this device needs to be checked before it can be ' +
+          'replaced. Export a backup, then reload. Nothing was changed.'
+        );
+      case 'unsupported_lock':
+      case 'lock_request_failed':
+        return (
+          'Import failed: this browser could not coordinate a safe save across tabs, so the ' +
+          'import was not started. Recovery and export remain available. Nothing was changed.'
+        );
+      case 'persistence_suppressed':
+        return (
+          'Import failed: saving is currently paused on this device, so the imported data ' +
+          'could not be stored. Reload, then import again. Nothing was changed.'
+        );
+      default:
+        return (
+          'Import failed: the imported data could not be saved on this device (storage may be ' +
+          'full or unavailable). Nothing was changed.'
+        );
+    }
+  }
+
   /** Apply an imported backup. healthChoice decides the profile when it matters. */
-  function applyImport(
+  async function applyImport(
     imported: AppState,
     healthChoice: 'imported' | 'keep-current',
     fileName: string,
     discardDraftConfirmed: boolean,
   ) {
+    // Authority is snapshotted synchronously at the moment of the commit —
+    // never from closures captured before `await file.text()` resolved or
+    // while a dialog was open. The snapshot supplies the current Health
+    // Profile for keep-current and the expected committed journal generation;
+    // the transaction re-reads authority inside the exclusive lock.
+    const authority = getAuthority();
     const next: AppState =
       healthChoice === 'keep-current'
-        ? { ...imported, healthProfile: state.healthProfile }
+        ? { ...imported, healthProfile: authority.state.healthProfile }
         : imported;
-    // Centralized draft-aware commit (importCommit.ts): the unsaved-draft check
-    // is repeated HERE, at the actual apply — a draft that appeared after the
-    // file-select gate re-raises the choice instead of being silently erased —
-    // and a confirmed discard clears the draft only AFTER the imported state
-    // was durably written. A failed write aborts the whole import: stored
-    // state and draft both stay exactly as they were. Never logged.
-    const result = commitImport(next, {
+    // The completed audit entry is part of the candidate BEFORE the durable
+    // write, so the committed state and its audit history always agree. The
+    // filename can carry personal text — record only a fingerprint (F-05).
+    const candidate = appendAudit(
+      next,
+      makeAuditEntry({
+        command: 'Import backup',
+        actionType: 'local_write',
+        approvalStatus: 'approved',
+        actionTaken: true,
+        resultSummary:
+          `Backup imported — local state replaced (source fp ${fingerprintInput(fileName)}). Health Profile: ` +
+          (healthChoice === 'keep-current' ? 'kept current.' : 'used imported.'),
+      }),
+    );
+    // Centralized draft-aware journal transaction (importCommit.ts): the
+    // unsaved-draft check is repeated HERE, at the actual apply — a draft that
+    // appeared after the file-select gate re-raises the choice instead of
+    // being silently erased. EVERY accepted import (draft or not) becomes
+    // exactly one journal generation whose head advancement is verified
+    // before active state is replaced or success is reported; a confirmed
+    // discard clears the draft only AFTER that verified write. A failed
+    // commit aborts the whole import: committed authority, active state,
+    // and draft all stay exactly as they were. Never logged.
+    const result = await commitImport(candidate, {
       discardDraftConfirmed,
-      persistAllowed: recovery.canPersist && !externalChange,
+      expectedGeneration: authority.committedGeneration,
+      commit: commitDestructiveState,
     });
     if (!result.ok) {
       setImportConflict(null);
@@ -153,23 +265,21 @@ export default function Settings() {
         setDraftConflict({ state: imported, fileName });
         return;
       }
+      // Persistence health lives OUTSIDE AppState — the journal controller
+      // already recorded the failure; no audit append, no follow-up write.
+      if (result.outcome === 'uncertain') {
+        setFlash(IMPORT_UNCERTAIN_MESSAGE);
+        return;
+      }
+      // Proven-safe failure. The draft-preserved note is added ONLY when a
+      // draft verifiably still exists.
       setFlash(
-        'Import failed: the imported data could not be saved on this device. ' +
-        'Nothing was changed and your unsaved Health Profile edits were kept.',
+        importFailureMessage(result.cause) +
+          (hasHealthDraft() ? ' Your unsaved Health Profile edits were kept.' : ''),
       );
       return;
     }
-    update(() => next);
-    // The filename can carry personal text — record only a fingerprint (F-05).
-    audit({
-      command: 'Import backup',
-      actionType: 'local_write',
-      approvalStatus: 'approved',
-      actionTaken: true,
-      resultSummary:
-        `Backup imported — local state replaced (source fp ${fingerprintInput(fileName)}). Health Profile: ` +
-        (healthChoice === 'keep-current' ? 'kept current.' : 'used imported.'),
-    });
+    update(() => candidate);
     setImportConflict(null);
     setFlash('Import complete.');
   }
@@ -179,14 +289,15 @@ export default function Settings() {
     setDraftConflict(null);
     // Health Profile is never silently overwritten. (Backups that predate
     // profiles arrive with healthProfile === null — no false conflict.)
-    if (imported.healthProfile && state.healthProfile) {
+    // The CURRENT authoritative profile decides — not a pre-await closure.
+    if (imported.healthProfile && getAuthority().state.healthProfile) {
       setImportConflict({ state: imported, fileName, discardDraftConfirmed });
       return;
     }
     if (!window.confirm('Importing replaces your current DavidOS data on this device. Continue?')) return;
     // If the imported backup has no profile but you have one, keep yours (don't wipe it).
     const choice = imported.healthProfile ? 'imported' : 'keep-current';
-    applyImport(imported, choice, fileName, discardDraftConfirmed);
+    void applyImport(imported, choice, fileName, discardDraftConfirmed);
   }
 
   async function importData(file: File) {
@@ -353,27 +464,72 @@ export default function Settings() {
     });
   }
 
-  function confirmReset() {
+  async function confirmReset() {
     if (resetText !== 'RESET') return;
-    clearPersistedState();
-    // An unsaved Health Profile draft would be stale against the reset state —
-    // discard it explicitly (the modal warned about it) rather than leaving it
-    // to silently reappear.
-    clearHealthDraft();
+    // Persistence authority is re-checked at EXECUTION time from the store's
+    // synchronous snapshot (the confirm button is also disabled, but state
+    // can change while the dialog is open).
+    const authority = getAuthority();
+    if (
+      !authority.canPersist ||
+      authority.externalChange ||
+      authority.persistFailed ||
+      authority.commitUncertain ||
+      !authority.persistenceAvailable ||
+      authority.reconciliationRequired ||
+      authority.outcomeUncertain ||
+      authority.preservationFailed ||
+      authority.writeQueued ||
+      authority.writeRunning
+    ) {
+      return;
+    }
     // Health Profile preserved EXACTLY by default (null stays null);
     // only the explicit checkbox deletes it.
     const preserved = !alsoDeleteHealth;
-    const next = buildResetState(state, alsoDeleteHealth);
-    update(() => next);
+    const summary = `Reset to seed data. Health Profile ${preserved ? 'preserved' : 'deleted'}.`;
+    // The completed audit entry is part of the candidate BEFORE the durable
+    // write, so the committed state and its audit history always agree.
+    const candidate = appendAudit(
+      buildResetState(authority.state, alsoDeleteHealth),
+      makeAuditEntry({
+        command: 'Reset to seed — completed',
+        actionType: 'local_write',
+        approvalStatus: 'approved',
+        actionTaken: true,
+        resultSummary: summary,
+      }),
+    );
+    // Persist-first transaction: the COMPLETE replacement state must be
+    // durably written and confirmed before anything is deleted, replaced,
+    // or reported. Nothing here ever removes the stored blob. The expected
+    // prior value refuses the reset if another tab wrote in the meantime.
+    const result = await commitDestructiveState(candidate, authority.committedGeneration);
+    if (!result.ok) {
+      setResetOpen(false);
+      // A failed Reset leaves active AppState deeply unchanged: NO audit
+      // append (that would itself be a state change and trigger another
+      // StoreProvider persistence attempt). Persistence health/uncertainty
+      // is reported to the store, which keeps it OUTSIDE AppState.
+      setFlash(
+        result.reason === 'external_change' || result.reason === 'stale_authority'
+          ? 'Reset failed: DavidOS was changed in another tab, so nothing was deleted. ' +
+            'Reload to continue with the latest saved data.'
+          : result.outcome === 'uncertain'
+            ? 'Reset failed: the replacement data could not be confirmed as saved. Nothing was ' +
+              'reported as deleted, and saving is paused to protect your data. Reload before trying again.'
+            : 'Reset failed: the replacement data could not be saved on this device, so nothing was deleted. ' +
+              'Free up storage or export a backup, then try again.',
+      );
+      return;
+    }
+    // Only after the confirmed durable commit: the now-stale unsaved Health
+    // Profile draft is discarded (the modal warned about it), active state is
+    // replaced, and success is reported.
+    clearHealthDraft();
+    update(() => candidate);
     setResetOpen(false);
-    audit({
-      command: 'Reset to seed — completed',
-      actionType: 'local_write',
-      approvalStatus: 'approved',
-      actionTaken: true,
-      resultSummary: `Reset to seed data. Health Profile ${preserved ? 'preserved' : 'deleted'}.`,
-    });
-    setFlash(`Reset to seed data. Health Profile ${preserved ? 'preserved' : 'deleted'}.`);
+    setFlash(summary);
   }
 
   /** Demonstrates the full approval loop against a stub — honestly. */
@@ -555,6 +711,12 @@ export default function Settings() {
                 Cancel and save your draft first if you want to keep it.
               </p>
             )}
+            {persistenceBlockReason !== null && (
+              <p className="notice risk-block small" data-testid="reset-blocked-note">
+                <strong>Reset is unavailable:</strong> {persistenceBlockReason}. Nothing is deleted
+                until the replacement data can be safely saved on this device.
+              </p>
+            )}
             <label className="field" htmlFor="reset-confirm">Type <code>RESET</code> to confirm</label>
             <input
               id="reset-confirm"
@@ -573,7 +735,11 @@ export default function Settings() {
               <span>Also delete my Health &amp; Fitness Profile (otherwise it’s preserved)</span>
             </label>
             <div className="btn-row">
-              <button className="danger" disabled={resetText !== 'RESET'} onClick={confirmReset}>
+              <button
+                className="danger"
+                disabled={resetText !== 'RESET' || persistenceBlockReason !== null}
+                onClick={confirmReset}
+              >
                 {alsoDeleteHealth ? 'Reset + delete Health Profile' : 'Reset (keep Health Profile)'}
               </button>
               <button ref={resetCancelRef} onClick={cancelReset}>Cancel</button>
@@ -640,11 +806,11 @@ export default function Settings() {
               <button
                 className="primary"
                 ref={importKeepCurrentRef}
-                onClick={() => applyImport(importConflict.state, 'keep-current', importConflict.fileName, importConflict.discardDraftConfirmed)}
+                onClick={() => void applyImport(importConflict.state, 'keep-current', importConflict.fileName, importConflict.discardDraftConfirmed)}
               >
                 Keep current
               </button>
-              <button onClick={() => applyImport(importConflict.state, 'imported', importConflict.fileName, importConflict.discardDraftConfirmed)}>
+              <button onClick={() => void applyImport(importConflict.state, 'imported', importConflict.fileName, importConflict.discardDraftConfirmed)}>
                 Replace with imported
               </button>
               <button className="ghost" onClick={cancelImportConflict}>

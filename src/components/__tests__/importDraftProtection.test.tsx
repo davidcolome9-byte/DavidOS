@@ -7,6 +7,11 @@ import { MemoryRouter } from 'react-router-dom';
 import { StoreProvider } from '../../state/store';
 import Settings from '../Settings';
 import { STORAGE_KEY } from '../../lib/storage/localStore';
+import {
+  JOURNAL_GENERATION_PREFIX,
+  JOURNAL_HEAD_KEYS,
+  selectJournalAuthority,
+} from '../../lib/storage/stateJournal';
 import { serializeState } from '../../lib/storage/exportImport';
 import { buildDefaultState } from '../../data/defaultState';
 import { HEALTH_DRAFT_KEY, saveHealthDraft, loadHealthDraft } from '../../lib/health/profileDraft';
@@ -49,7 +54,7 @@ function fakeLocalStorage() {
     },
     getItem: (k: string) => (store.has(k) ? store.get(k)! : null),
     setItem: (k: string, v: string) => {
-      if (failStateWrites && k === STORAGE_KEY) {
+      if (failStateWrites && k.startsWith(JOURNAL_GENERATION_PREFIX)) {
         throw new DOMException('quota', 'QuotaExceededError');
       }
       ops.push(['set', k]);
@@ -77,6 +82,14 @@ let baseline: AppState;
 beforeEach(() => {
   storage = fakeLocalStorage();
   Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+  // The journal transaction requires an exclusive Web Lock — grant it inline.
+  Object.defineProperty(navigator, 'locks', {
+    value: {
+      request: async (_name: string, _options: LockOptions, callback: () => Promise<unknown>) =>
+        callback(),
+    },
+    configurable: true,
+  });
   baseline = buildDefaultState();
   storage.store.set(STORAGE_KEY, JSON.stringify(baseline));
   storage.ops.length = 0;
@@ -95,8 +108,18 @@ afterEach(async () => {
   if (root) await act(async () => root!.unmount());
   root = null;
   container.remove();
+  Reflect.deleteProperty(navigator, 'locks');
   vi.restoreAllMocks();
 });
+
+async function flush() {
+  await act(async () => {
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+    await Promise.resolve();
+  });
+}
 
 async function mountSettings() {
   root = createRoot(container);
@@ -109,6 +132,7 @@ async function mountSettings() {
       </StoreProvider>,
     );
   });
+  await flush();
 }
 
 /** Persist a synthetic dirty draft, exactly as the Health Profile editor would. */
@@ -131,10 +155,10 @@ async function importBackup(json: string, name = 'backup.json') {
   await act(async () => {
     input.dispatchEvent(new Event('change', { bubbles: true }));
   });
-  // importData awaits file.text() — flush the microtask chain.
-  await act(async () => {
-    await Promise.resolve();
-  });
+  // importData awaits file.text() and the async journal transaction —
+  // flush the microtask chain fully.
+  await flush();
+  await flush();
 }
 
 const draftDialog = () =>
@@ -153,7 +177,12 @@ function dialogButton(dialog: HTMLElement, re: RegExp): HTMLButtonElement {
   return b as HTMLButtonElement;
 }
 
-const storedState = (): AppState => JSON.parse(storage.store.get(STORAGE_KEY)!) as AppState;
+/** Committed state = the journal authority (the legacy key is read-only). */
+const storedState = (): AppState => {
+  const raw = selectJournalAuthority(storage as unknown as Storage).authority?.raw;
+  if (!raw) throw new Error('journal authority missing');
+  return JSON.parse(raw) as AppState;
+};
 const flashText = () => container.querySelector('.flash')?.textContent ?? '';
 
 function expectNoSyntheticLeak() {
@@ -274,16 +303,19 @@ describe('confirmed destructive import', () => {
     }));
     const d = draftDialog()!;
     await act(async () => dialogButton(d, /Discard edits & import/).click());
+    await flush();
 
     expect(flashText()).toContain('Import complete');
     expect(storedState().settings.theme).toBe('light');
     expect(storage.store.has(HEALTH_DRAFT_KEY)).toBe(false);
-    // Ordering: the imported state must be durably written BEFORE the draft
-    // is destroyed — the draft clear is part of the committed import.
-    const stateWrite = storage.ops.findIndex(([op, k]) => op === 'set' && k === STORAGE_KEY);
+    // Ordering: the imported state must be durably committed (verified head
+    // advancement) BEFORE the draft is destroyed.
+    const headWrite = storage.ops.findIndex(
+      ([op, k]) => op === 'set' && JOURNAL_HEAD_KEYS.includes(k as never),
+    );
     const draftClear = storage.ops.findIndex(([op, k]) => op === 'remove' && k === HEALTH_DRAFT_KEY);
-    expect(stateWrite).toBeGreaterThanOrEqual(0);
-    expect(draftClear).toBeGreaterThan(stateWrite);
+    expect(headWrite).toBeGreaterThanOrEqual(0);
+    expect(draftClear).toBeGreaterThan(headWrite);
     expectNoSyntheticLeak();
   });
 
@@ -294,9 +326,11 @@ describe('confirmed destructive import', () => {
       s.settings.theme = 'light';
     }));
     await act(async () => dialogButton(draftDialog()!, /Discard edits & import/).click());
+    await flush();
     const pc = profileConflictDialog();
     expect(pc).not.toBeNull();
     await act(async () => dialogButton(pc!, /Keep current/).click());
+    await flush();
     expect(storedState().settings.theme).toBe('light');
     expect(JSON.stringify(storedState().healthProfile)).toBe(JSON.stringify(baseline.healthProfile));
     expect(storage.store.has(HEALTH_DRAFT_KEY)).toBe(false);
@@ -341,6 +375,7 @@ describe('commit failure (REPRODUCTION: draft must survive a failed commit)', ()
       s.settings.theme = 'light';
     }));
     await act(async () => dialogButton(draftDialog()!, /Discard edits & import/).click());
+    await flush();
 
     // The import did not commit — the draft must NOT have been destroyed and
     // the stored state must be the old state: no partial mixture.
@@ -365,6 +400,7 @@ describe('draft appearing after the file-select gate (REPRODUCTION: no silent er
     // another tab, or the dialog left open across a long pause).
     seedDraft();
     await act(async () => dialogButton(pc!, /Replace with imported/).click());
+    await flush();
 
     // The draft must still exist — destroying it here would be silent erasure.
     expect(loadHealthDraft(storage as unknown as Storage)).not.toBeNull();
@@ -383,6 +419,7 @@ describe('a draft does not block unrelated behavior', () => {
       /Switch to (light|dark) mode/.test(b.textContent ?? ''),
     )!;
     await act(async () => themeBtn.click());
+    await flush();
     expect(storedState().settings.theme).not.toBe(baseline.settings.theme);
     // The draft itself was not touched by unrelated activity.
     expect(loadHealthDraft(storage as unknown as Storage)!.profile).toEqual(SYNTHETIC_DRAFT);

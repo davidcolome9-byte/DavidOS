@@ -6,6 +6,7 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdir
 import { tmpdir } from 'node:os';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { canonicalStateRaw } from './helpers/journalState';
 
 // OL-001 offline-launch suite. Runs against REAL production builds served
 // under the GitHub Pages base path /DavidOS/ by a throwaway static server
@@ -204,7 +205,7 @@ test('deployment update A→B is atomic: offline launch of B, old cache gone, us
   const errors = collectPageErrors(page);
   await firstVisit(page);
   await page.evaluate(() => localStorage.setItem('davidos-offline-spec-marker', 'synthetic-user-data'));
-  const stateBefore = await page.evaluate(() => localStorage.getItem('davidos-state-v1'));
+  const stateBefore = await canonicalStateRaw(page);
   expect(stateBefore).toBeTruthy();
 
   await deployAndReload(page, context, buildB.dir);
@@ -223,7 +224,7 @@ test('deployment update A→B is atomic: offline launch of B, old cache gone, us
   expect(errors).toEqual([]);
   // No user-data cleanup happened anywhere in the update.
   expect(await page.evaluate(() => localStorage.getItem('davidos-offline-spec-marker'))).toBe('synthetic-user-data');
-  expect(await page.evaluate(() => localStorage.getItem('davidos-state-v1'))).toBeTruthy();
+  expect(await canonicalStateRaw(page)).toBeTruthy();
 });
 
 test('failed B deployment: candidate is rejected and build A still launches offline', async ({ page, context }) => {

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Locator, Page } from '@playwright/test';
+import { canonicalStateRaw } from './helpers/journalState';
 
 // DOS-AGT-001A — Supervised execution acceptance against the production
 // build at the phone viewport (375×812 from playwright.config.ts).
@@ -10,8 +11,11 @@ import type { Locator, Page } from '@playwright/test';
 const STORAGE_KEY = 'davidos-state-v1';
 const PRIV = 'ZZPRIV';
 
-const storedState = (page: Page) =>
-  page.evaluate(([key]) => JSON.parse(window.localStorage.getItem(String(key)) ?? 'null'), [STORAGE_KEY]);
+// DOS-STAB-001A: read the committed journal generation, not the legacy key.
+const storedState = async (page: Page) => {
+  const raw = await canonicalStateRaw(page);
+  return raw === null ? null : JSON.parse(raw);
+};
 
 function trackRequests(page: Page): string[] {
   const urls: string[] = [];
@@ -141,16 +145,20 @@ test('full supervised execution journey: draft → ready → packet → lifecycl
   await expect(page.locator('p.notice', { hasText: `Blocked: ${PRIV}-blocker-text` })).toBeVisible();
   await page.getByRole('button', { name: 'Resume work' }).click();
   await expect(page.locator('p.notice', { hasText: `Blocked: ${PRIV}-blocker-text` })).toHaveCount(0);
-  let state = await storedState(page);
-  expect(state.executionRecords[0].blockerSummary).toBeUndefined();
+  // The UI updates before the journal commit lands, so poll the COMMITTED
+  // state rather than reading it once (DOS-STAB-001A: persistence is async).
+  await expect
+    .poll(() => storedState(page).then((s) => s.executionRecords[0].blockerSummary))
+    .toBeUndefined();
 
   await page.getByLabel(/Decision needed/).fill(`${PRIV}-decision-text`);
   await page.getByRole('button', { name: 'Request approval' }).click();
   await expect(page.locator('p.notice', { hasText: `Required decision: ${PRIV}-decision-text` })).toBeVisible();
   await page.getByRole('button', { name: 'Resume work' }).click();
   await expect(page.locator('p.notice', { hasText: `Required decision: ${PRIV}-decision-text` })).toHaveCount(0);
-  state = await storedState(page);
-  expect(state.executionRecords[0].decisionSummary).toBeUndefined();
+  await expect
+    .poll(() => storedState(page).then((s) => s.executionRecords[0].decisionSummary))
+    .toBeUndefined();
   // The live packet preview also drops the stale summaries after resume.
   await expect(page.locator('pre.output')).not.toContainText('Required decision:');
   await expect(page.locator('pre.output')).not.toContainText('Blocker:');
@@ -174,7 +182,7 @@ test('full supervised execution journey: draft → ready → packet → lifecycl
   await page.reload();
   await page.goto('/#/agents');
   await expect(page.locator('.badge', { hasText: 'Completed' })).toBeVisible();
-  state = await storedState(page);
+  const state = await storedState(page);
   expect(state.executionRecords).toHaveLength(1);
   expect(state.executionRecords[0].status).toBe('completed');
   expect(state.executionRecords[0].closedAt).toBeTruthy();
@@ -187,10 +195,7 @@ test('full supervised execution journey: draft → ready → packet → lifecycl
   await expect(page.getByText('execution_record_created').first()).toBeVisible();
   await expect(page.locator('body')).not.toContainText(PRIV);
   await expect(page.locator('body')).not.toContainText(recordId);
-  const audit = await page.evaluate(
-    ([key]) => JSON.stringify(JSON.parse(window.localStorage.getItem(String(key))!).auditLog),
-    [STORAGE_KEY],
-  );
+  const audit = JSON.stringify((await storedState(page)).auditLog);
   expect(audit).not.toContain(PRIV);
   expect(audit).not.toContain(recordId);
   expect(audit).toContain('execution_status_changed');
@@ -237,7 +242,7 @@ test('legacy backup without executionRecords imports cleanly; malformed records 
 
   // Malformed executionRecords → rejected with a value-free message and the
   // just-imported state stays byte-identical.
-  const before = await page.evaluate(([key]) => window.localStorage.getItem(String(key)), [STORAGE_KEY]);
+  const before = await canonicalStateRaw(page);
   const malformed = {
     ...legacyState,
     executionRecords: [{ id: 'x', executionAgentId: 'coding-coordinator', title: `${PRIV}-bad`, status: 'completed' }],
@@ -251,7 +256,7 @@ test('legacy backup without executionRecords imports cleanly; malformed records 
   await expect(flash).toContainText(/Import failed/i);
   await expect(flash).toContainText(/executionRecords\[0\]/);
   await expect(flash).not.toContainText(PRIV);
-  const after = await page.evaluate(([key]) => window.localStorage.getItem(String(key)), [STORAGE_KEY]);
+  const after = await canonicalStateRaw(page);
   expect(after).toBe(before);
   expect(after).not.toContain(PRIV);
 
@@ -469,10 +474,7 @@ test('a completed record with a long unbroken outcome renders mobile-safe (seede
   await assertNoPageOverflow(page);
 
   // The seeded record survived the load byte-meaningfully (not repaired).
-  const stored = await page.evaluate(
-    ([key]) => JSON.parse(window.localStorage.getItem(String(key))!),
-    [STORAGE_KEY],
-  );
+  const stored = await storedState(page);
   expect(stored.executionRecords).toHaveLength(1);
   expect(stored.executionRecords[0].outcomeSummary).toBe(LONG_OUTCOME);
   expect(stored.executionRecords[0].status).toBe('completed');

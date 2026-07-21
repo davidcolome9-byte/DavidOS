@@ -493,6 +493,11 @@ The retention-policy decision OL-003 was waiting on came from David's OL-003 wor
 
 ## 2026-07-18 — OL-003 correction: prune made persistence-atomic
 
+> **Historical.** The persist-first ORDERING decided here still holds, but the
+> boundary named below (`persistState()`, single-key) was superseded on
+> 2026-07-20 by the state journal and `commitDestructiveState()` — see
+> "DOS-STAB-001A: AppState persistence moved to an immutable state journal".
+
 Independent review of the OL-003 candidate found the prune commit
 non-transactional: React state was replaced (and success reported)
 before the deferred store effect attempted the durable write, and
@@ -973,3 +978,112 @@ merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`, feature candidate
   `docs/dos-agt-001a-supervised-coding-agent-closeout` that is NOT yet
   merged. DOS-AGT-001B or any further execution-agent package is
   explicitly out of scope for this closeout and was not started.
+
+## 2026-07-20 — DOS-STAB-001A: AppState persistence moved to an immutable state journal
+
+Destructive flows (Import, Reset, Prune) and ordinary autosave all wrote
+canonical AppState by replacing ONE mutable localStorage key. That key was
+the only copy: an interrupted or partially-applied replacement had no
+recoverable predecessor, concurrent tabs could clobber each other, and the
+previous "persist-first" pattern still depended on a rollback-capable
+single-key transaction whose failure path could not be made honest.
+
+Decision: canonical AppState is now an **immutable generation journal**.
+Implementation in `src/lib/storage/stateJournal.ts` (format + commit) and
+`src/lib/storage/journalPersistence.ts` (per-tab controller). Full
+specification: [DATA_MODEL.md → Persistence](DATA_MODEL.md#persistence--the-state-journal-dos-stab-001a).
+
+- **Immutable generations.** Each commit writes a NEW
+  `davidos-state-generation-v1-<id>` key holding one complete serialized
+  AppState. Committed generations are never overwritten in place, so the
+  predecessor stays readable for the whole transaction.
+- **Two alternating verified heads.** `davidos-state-head-v1-a/-b` hold
+  control metadata only — journal version, monotonic sequence, current and
+  previous generation ids, transaction id, and SHA-256 + length for both.
+  No AppState and no user-entered data ever enters a head record. Each
+  commit writes the slot that is not current authority, then verifies it by
+  read-back, then re-runs selection to confirm the intended generation and
+  sequence actually won.
+- **Boot reconciliation, not trust.** Authority is selected by inspecting
+  BOTH heads, validating structure, and hash-verifying the referenced
+  generation. The highest valid sequence wins; an invalid HIGHER head falls
+  back to its verified previous generation; an orphan generation referenced
+  by no valid head is never selectable. Nothing is ever activated on
+  timestamp or mere presence. Any damaged head or unverifiable generation
+  raises `reconciliationNeeded`, which pauses saving while leaving recovery
+  and export available.
+- **One exclusive Web Lock.** Every cooperating canonical write — autosave,
+  Import, Reset, Prune, and legacy migration — runs under
+  `davidos-app-state-journal-v1`, re-reads authority INSIDE the lock, and
+  refuses a stale `expectedGeneration` before creating any candidate. Per
+  tab, the controller additionally serializes and coalesces queued saves so
+  an older state can never commit after a newer one. Scope is stated
+  honestly: Web Locks coordinate cooperating tabs of this app, not arbitrary
+  unrelated code.
+- **No destructive rollback.** Rollback was removed rather than fixed: a
+  failed commit leaves an unreferenced candidate that can never become
+  active, which is strictly safer than attempting to restore bytes. The
+  rollback-capable single-key transaction module and its test were deleted,
+  as was `persistState()`. **This supersedes the 2026-07-18 OL-003 entry's
+  description of `persistState()` as the canonical persistence boundary**;
+  the shared boundary is now `commitDestructiveState(candidate,
+  expectedGeneration)`.
+- **Safe vs uncertain, stated honestly.** Failures before the head moves are
+  proven-safe and are reported as "nothing was changed". Failures at or
+  after the head write (`head_write_failed`, `head_verification_failed`,
+  `lock_callback_failed`) are UNCERTAIN: active state is still left
+  unchanged, but the app does not claim stored data is unchanged — it
+  reports that the write could not be confirmed and pauses saving until a
+  reload re-establishes authority.
+- **Legacy retention during migration.** Valid legacy `davidos-state-v1`
+  bytes migrate under the exclusive lock into an initial verified
+  generation, and are left BYTE-IDENTICAL. Nothing in this package deletes
+  the legacy key, so it may remain on devices indefinitely. Interruption
+  before a valid head simply leaves the legacy key authoritative and
+  migration retries next boot; once a valid journal head exists the journal
+  wins, and later legacy-key writes from older tabs cannot override it
+  (storage events are honoured only for the two controlled head keys).
+- **Unsupported Web Locks → read-only.** With no `navigator.locks`, the app
+  enters safe read-only persistence mode. There is deliberately no unlocked
+  or legacy-key fallback write; export and recovery remain available.
+- **One operation, one generation.** Import, Reset, and Prune each construct
+  their complete final AppState — completion audit included — before
+  committing, so one logical operation is exactly one generation and one
+  head advancement, and committed state can never disagree with its own
+  audit history. Active React state changes only after a verified head
+  advancement. Failures append no audit entry (that would itself be a state
+  change and would trigger another write); persistence health lives outside
+  AppState so recording it cannot recurse.
+
+Also landed in this package, and documented in DATA_MODEL.md:
+
+- **Deep boot record integrity** (`src/lib/storage/bootValidation.ts`):
+  malformed-but-parseable records are quarantined per record so valid
+  neighbours keep loading; nothing is "fixed" with invented values. A
+  present-but-malformed Health Profile quarantines to `null` and is never
+  silently replaced by a seeded profile — legitimate absence (`undefined` →
+  seed) and malformed presence stay distinct. Historical output-only v1
+  Handoffs remain supported.
+- **Warning and log vocabulary is allowlisted**: approved top-level
+  collection categories and counts only. Field paths, array indices, record
+  ids, values, raw data, and storage keys never reach user-facing text or
+  console output. The additive-migration `console.info` was corrected during
+  this package's audit — it previously emitted raw structural paths such as
+  `prompts[3].tags` — and is now collapsed through the same allowlist, with
+  a focused regression test using synthetic private-looking data.
+- **Top-level crash boundary** (`src/app/AppErrorBoundary.tsx`): a render
+  crash lands on a recovery surface offering reload plus byte-exact
+  downloads of the primary blob and preserved recovery copies, with no stack
+  traces, raw state, storage keys, or user content rendered. Discovery is
+  bounded and the primary/recovery probes are guarded independently.
+  Deliberate limitations, not defects: React error boundaries do not catch
+  module-evaluation failures, `createRoot` failures, event-handler errors,
+  or arbitrary async errors, and anything thrown before the boundary mounts
+  is outside it. It is not a global browser-error capture system.
+
+**Status: OPEN.** Implementation and local verification are complete, but
+the package stays open pending the full release sequence — independent Codex
+review, commit, push, PR, CI, pre-merge report, **David's explicit merge
+authorization** (the stop-before-merge gate is preserved), merge, deployment,
+live verification, evidence archival, and documentation closeout. The
+identifier remains provisional while OPEN_LOOPS.md treats it as such.

@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { canonicalStateRaw, waitForCanonicalState } from './helpers/journalState';
 
 // Import vs unsaved Health Profile draft. All health values are SYNTHETIC.
 // The whole suite runs at the project-default mobile viewport (375×812), so
@@ -22,17 +23,16 @@ async function createDraft(page: Page) {
 
 /** A valid backup built from the CURRENT persisted state (passes validation). */
 async function buildBackup(page: Page, opts: { nullProfile?: boolean; schemaVersion?: number } = {}) {
-  return page.evaluate(({ nullProfile, schemaVersion }) => {
-    const state = JSON.parse(localStorage.getItem('davidos-state-v1') as string);
-    if (nullProfile) state.healthProfile = null;
-    if (schemaVersion !== undefined) state.schemaVersion = schemaVersion;
-    return JSON.stringify({
-      app: 'davidos',
-      exportedAt: new Date().toISOString(),
-      schemaVersion: state.schemaVersion,
-      state,
-    });
-  }, { nullProfile: opts.nullProfile ?? false, schemaVersion: opts.schemaVersion });
+  await waitForCanonicalState(page);
+  const state = JSON.parse((await canonicalStateRaw(page)) as string);
+  if (opts.nullProfile) state.healthProfile = null;
+  if (opts.schemaVersion !== undefined) state.schemaVersion = opts.schemaVersion;
+  return JSON.stringify({
+    app: 'davidos',
+    exportedAt: new Date().toISOString(),
+    schemaVersion: state.schemaVersion,
+    state,
+  });
 }
 
 async function importFile(page: Page, json: string) {
@@ -48,14 +48,14 @@ const guardDialog = (page: Page) => page.getByTestId('import-draft-guard');
 test('the warning appears BEFORE any data is mutated', async ({ page }) => {
   await createDraft(page);
   const backup = await buildBackup(page);
-  const stateBefore = await page.evaluate(() => localStorage.getItem('davidos-state-v1'));
+  const stateBefore = await canonicalStateRaw(page);
 
   await page.goto('/#/settings');
   await importFile(page, backup);
 
   await expect(guardDialog(page)).toBeVisible();
   // Nothing has been imported or destroyed while the dialog is open.
-  const stateAfter = await page.evaluate(() => localStorage.getItem('davidos-state-v1'));
+  const stateAfter = await canonicalStateRaw(page);
   expect(stateAfter).toBe(stateBefore);
   const draft = await page.evaluate(() => localStorage.getItem('davidos-health-draft-v1'));
   expect(draft).toContain(SYN_CALORIES);
@@ -98,13 +98,13 @@ test('confirmed discard imports the backup and clears the draft', async ({ page 
 
 test('an invalid (corrupt) import preserves the draft and saved data', async ({ page }) => {
   await createDraft(page);
-  const stateBefore = await page.evaluate(() => localStorage.getItem('davidos-state-v1'));
+  const stateBefore = await canonicalStateRaw(page);
   await page.goto('/#/settings');
   await importFile(page, '{this is not valid json');
 
   await expect(page.getByText(/Import failed/)).toBeVisible();
   await expect(guardDialog(page)).toHaveCount(0);
-  expect(await page.evaluate(() => localStorage.getItem('davidos-state-v1'))).toBe(stateBefore);
+  expect(await canonicalStateRaw(page)).toBe(stateBefore);
 
   await page.goto('/#/health');
   await expect(page.getByLabel('Calories (kcal)')).toHaveValue(SYN_CALORIES);

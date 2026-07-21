@@ -8,13 +8,16 @@ import { StoreProvider } from '../../state/store';
 import ProjectVault from '../ProjectVault';
 import PromptVault from '../PromptVault';
 import ContextVault from '../ContextVault';
-import { STORAGE_KEY } from '../../lib/storage/localStore';
+import { selectJournalAuthority } from '../../lib/storage/stateJournal';
 
 // POST-H-PRIV-01 — new Project, Prompt, and Context audit records must not
 // store titles, descriptions, bodies, or other personal free text verbatim.
 // These tests drive the REAL vault components with distinctive synthetic
 // private text and prove it never reaches the audit log or its serialized
 // state.
+//
+// DOS-STAB-001A: canonical state is read back from the VERIFIED JOURNAL HEAD
+// (what the app actually committed), not from the legacy single key.
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -31,7 +34,7 @@ function fakeLocalStorage() {
     setItem: (k: string, v: string) => void store.set(k, String(v)),
     removeItem: (k: string) => void store.delete(k),
     clear: () => store.clear(),
-    key: () => null,
+    key: (index: number) => [...store.keys()][index] ?? null,
     get length() {
       return store.size;
     },
@@ -45,6 +48,10 @@ let storage: ReturnType<typeof fakeLocalStorage>;
 beforeEach(() => {
   storage = fakeLocalStorage();
   Object.defineProperty(globalThis, 'localStorage', { value: storage, configurable: true });
+  Object.defineProperty(navigator, 'locks', {
+    configurable: true,
+    value: { request: async (_name: string, _options: LockOptions, callback: () => Promise<unknown>) => callback() },
+  });
   container = document.createElement('div');
   document.body.appendChild(container);
 });
@@ -53,6 +60,7 @@ afterEach(async () => {
   if (root) await act(async () => root!.unmount());
   root = null;
   container.remove();
+  Reflect.deleteProperty(navigator, 'locks');
 });
 
 async function mount(children: React.ReactNode) {
@@ -64,6 +72,7 @@ async function mount(children: React.ReactNode) {
       </StoreProvider>,
     );
   });
+  await settle();
 }
 
 /** Set a controlled input/textarea value the way a user would. */
@@ -82,8 +91,16 @@ function button(label: string): HTMLButtonElement {
   return b as HTMLButtonElement;
 }
 
+/** Let the journal controller's async initialize/drain settle. */
+async function settle() {
+  await act(async () => {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  });
+}
+
 async function click(label: string) {
   await act(async () => button(label).click());
+  await settle();
 }
 
 interface StoredAudit {
@@ -91,8 +108,13 @@ interface StoredAudit {
   resultSummary?: string;
 }
 
+/** Serialized AppState of the current verified journal head. */
+function committedRaw(): string {
+  return selectJournalAuthority(storage as unknown as Storage).authority?.raw ?? '{}';
+}
+
 function auditLog(): StoredAudit[] {
-  return (JSON.parse(storage.store.get(STORAGE_KEY) ?? '{}').auditLog ?? []) as StoredAudit[];
+  return ((JSON.parse(committedRaw()) as { auditLog?: StoredAudit[] }).auditLog ?? []) as StoredAudit[];
 }
 
 function serializedAuditLog(): string {
@@ -147,7 +169,7 @@ describe('Prompt audit privacy (POST-H-PRIV-01)', () => {
 
     // The prompt itself IS stored (that's the vault's job) — only the audit
     // records must be clean.
-    expect(storage.store.get(STORAGE_KEY)).toContain(SECRET_PROMPT_BODY);
+    expect(committedRaw()).toContain(SECRET_PROMPT_BODY);
   });
 });
 
@@ -173,6 +195,6 @@ describe('Context audit privacy (POST-H-PRIV-01)', () => {
 
     // The context body itself IS stored (that's the vault's job) — only the
     // audit records must be clean.
-    expect(storage.store.get(STORAGE_KEY)).toContain(SECRET_CONTEXT_BODY);
+    expect(committedRaw()).toContain(SECRET_CONTEXT_BODY);
   });
 });

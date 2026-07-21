@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { canonicalStateRaw, waitForCanonicalState } from './helpers/journalState';
 
 // Browser smoke tests for the Training Readiness & Recovery workflow
 // (fitness-readiness): Command Palette routing, URL hydration, build, Copy/Save
@@ -26,8 +27,10 @@ async function openReadiness(page: Page, input?: string) {
 // with the profile (a hash-only navigation would not re-read localStorage).
 async function seedProfile(page: Page) {
   await page.goto('/#/');
-  const merged = await page.evaluate(() => {
-    const state = JSON.parse(localStorage.getItem('davidos-state-v1') as string);
+  await waitForCanonicalState(page);
+  const canonical = (await canonicalStateRaw(page)) as string;
+  const merged = await page.evaluate((raw) => {
+    const state = JSON.parse(raw as string);
     state.healthProfile = {
       id: 'synthetic-readiness',
       createdAt: '2026-01-01T00:00:00.000Z',
@@ -42,8 +45,23 @@ async function seedProfile(page: Page) {
       freeformContext: 'Financial note: SYNTHETICMORTGAGE stress; occasional SYNTHETICSLEEPAID.',
     };
     return JSON.stringify(state);
-  });
-  await page.addInitScript((m) => localStorage.setItem('davidos-state-v1', m), merged);
+  }, canonical);
+  // DOS-STAB-001A: a bare legacy-key write is IGNORED once a valid journal
+  // head exists (that guard is the point of the journal). To keep this seed
+  // deterministic on EVERY load, the init script drops the journal records
+  // first, so each boot migrates exactly these bytes into a fresh generation.
+  await page.addInitScript((m) => {
+    for (const headKey of ['davidos-state-head-v1-a', 'davidos-state-head-v1-b']) {
+      localStorage.removeItem(headKey);
+    }
+    const doomed: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('davidos-state-generation-v1-')) doomed.push(key);
+    }
+    for (const key of doomed) localStorage.removeItem(key);
+    localStorage.setItem('davidos-state-v1', m);
+  }, merged);
 }
 
 // (1)(2)(3)(7) — every target readiness request routes through the Command
@@ -161,10 +179,7 @@ test('Copy and Save guards: valid prompt is actionable, edits make it stale', as
 // (6) — a stale prompt performs no local write (defense-in-depth).
 test('a stale readiness prompt performs no local write', async ({ page }) => {
   const artifactCount = () =>
-    page.evaluate(() => {
-      const raw = window.localStorage.getItem('davidos-state-v1');
-      return raw ? (JSON.parse(raw).artifacts?.length ?? 0) : 0;
-    });
+    canonicalStateRaw(page).then((raw) => (raw ? (JSON.parse(raw).artifacts?.length ?? 0) : 0));
   await openReadiness(page, 'Train or rest today?');
   await buildBtn(page).click();
   await savePromptBtn(page).click();

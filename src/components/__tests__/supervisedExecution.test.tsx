@@ -14,6 +14,7 @@ import { StoreProvider } from '../../state/store';
 import AgentsPage from '../AgentsPage';
 import SupervisedExecutionSection from '../SupervisedExecutionSection';
 import { STORAGE_KEY } from '../../lib/storage/localStore';
+import { selectJournalAuthority } from '../../lib/storage/stateJournal';
 import type { AppState } from '../../lib/types';
 import { CODING_COORDINATOR } from '../../lib/agents/executionAgentRegistry';
 
@@ -27,7 +28,7 @@ interface FakeStorage {
   setItem: (k: string, v: string) => void;
   removeItem: (k: string) => void;
   clear: () => void;
-  key: () => null;
+  key: (index: number) => string | null;
   readonly length: number;
 }
 
@@ -43,7 +44,7 @@ function fakeLocalStorage(seed?: string, failWrites = false): FakeStorage {
     },
     removeItem: (k: string) => void store.delete(k),
     clear: () => store.clear(),
-    key: () => null,
+    key: (index: number) => [...store.keys()][index] ?? null,
     get length() {
       return store.size;
     },
@@ -57,13 +58,28 @@ let storage: FakeStorage;
 beforeEach(() => {
   container = document.createElement('div');
   document.body.appendChild(container);
+  // DOS-STAB-001A: canonical writes go through the journal's exclusive Web
+  // Lock. Without a coordinator the app is correctly read-only, so these
+  // persistence tests must supply one.
+  Object.defineProperty(navigator, 'locks', {
+    configurable: true,
+    value: { request: async (_name: string, _options: LockOptions, callback: () => Promise<unknown>) => callback() },
+  });
 });
 
 afterEach(async () => {
   if (root) await act(async () => root!.unmount());
   root = null;
   container.remove();
+  Reflect.deleteProperty(navigator, 'locks');
 });
+
+/** Let the journal controller's async initialize/drain settle. */
+async function settle() {
+  await act(async () => {
+    for (let i = 0; i < 5; i++) await Promise.resolve();
+  });
+}
 
 async function mount(opts: { seed?: string; failWrites?: boolean; wholePage?: boolean } = {}) {
   storage = fakeLocalStorage(opts.seed, opts.failWrites);
@@ -78,6 +94,7 @@ async function mount(opts: { seed?: string; failWrites?: boolean; wholePage?: bo
       </StoreProvider>,
     );
   });
+  await settle();
 }
 
 function mockClipboard(behavior: 'ok' | 'fail'): string[] {
@@ -108,6 +125,7 @@ function maybeButton(label: string): HTMLButtonElement | undefined {
 
 async function click(label: string) {
   await act(async () => button(label).click());
+  await settle();
 }
 
 async function type(el: Element, value: string) {
@@ -126,7 +144,12 @@ function byId(id: string): Element {
   return el;
 }
 
-const storedState = (): AppState => JSON.parse(storage.store.get(STORAGE_KEY)!) as AppState;
+/**
+ * The state the app actually committed: the verified journal head's
+ * generation, not the legacy single key (DOS-STAB-001A).
+ */
+const storedState = (): AppState =>
+  JSON.parse(selectJournalAuthority(storage as unknown as Storage).authority!.raw) as AppState;
 
 /** Fill the draft editor with valid (marker-carrying) values and create it. */
 async function createFullDraft() {

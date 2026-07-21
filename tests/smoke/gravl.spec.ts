@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { canonicalStateRaw } from './helpers/journalState';
 
 // DOS-WF-001 browser smoke tests for the Gravl Workout Review & Optimization
 // workflow: input hydration, build, validity/staleness guards, and the
@@ -171,10 +172,7 @@ test('the real Command Palette route into Gravl preserves the exact request', as
 
 test('a stale prompt performs no local write (defense-in-depth)', async ({ page }) => {
   const artifactCount = () =>
-    page.evaluate(() => {
-      const raw = window.localStorage.getItem('davidos-state-v1');
-      return raw ? (JSON.parse(raw).artifacts?.length ?? 0) : 0;
-    });
+    canonicalStateRaw(page).then((raw) => (raw ? (JSON.parse(raw).artifacts?.length ?? 0) : 0));
 
   await openGravl(page, 'Review my workout');
   await buildBtn(page).click();

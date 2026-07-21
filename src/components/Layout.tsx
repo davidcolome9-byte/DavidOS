@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import { useStore } from '../state/store';
 import { measureStorageUsage } from '../lib/storage/storageUsage';
+import { downloadTextFile } from '../lib/storage/exportImport';
 import StaleTabDialog from './StaleTabDialog';
 
 // Primary bottom-nav tabs. Kept to 5 so touch targets stay large on a
@@ -78,6 +79,29 @@ export default function Layout() {
           <div className="notice risk-block" role="alert" data-testid="recovery-banner" style={{ borderStyle: 'solid' }}>
             <strong>⚠️ Data recovery notice.</strong>{' '}
             <span className="small">{recovery.message}</span>
+            {recovery.rawPreserved && recovery.recoveryKey && (
+              <div className="btn-row">
+                <button
+                  data-testid="recovery-download-original"
+                  onClick={() => {
+                    // Byte-exact export of the untouched preserved original.
+                    // Filename is fixed-format — never derived from the
+                    // storage key (only used here as a lookup handle).
+                    try {
+                      const raw = window.localStorage.getItem(recovery.recoveryKey!);
+                      if (raw !== null) {
+                        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+                        downloadTextFile(raw, `davidos-preserved-original-${ts}.json`);
+                      }
+                    } catch {
+                      /* storage unavailable — nothing to download */
+                    }
+                  }}
+                >
+                  Download preserved original
+                </button>
+              </div>
+            )}
           </div>
         )}
         {storageLevel === 'critical' && !persistFailed && (
