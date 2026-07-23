@@ -1325,3 +1325,99 @@ identifier remains provisional while OPEN_LOOPS.md treats it as such.
   prospective package that cannot begin until David selects or approves
   an OL-032 direction. OL-032 itself is untouched by this entry and stays
   **Requires David**.
+
+## 2026-07-22 — DOS-STAB-002A Stage 1: earlier storage-capacity warning thresholds (OL-032 Option 1)
+
+Implementation candidate on branch
+`feat/dos-stab-002a-stage1-storage-thresholds` (not yet merged, deployed,
+or independently reviewed at the time of this entry).
+
+- **David's decision.** David selected **OL-032 Option 5** (the staged
+  combination) as the storage-capacity direction. This package implements
+  **Stage 1 = Option 1 only** (earlier, more accurate warning thresholds).
+  **Option 2 is rejected.** **Option 3** (a persist-first, crash-safe
+  emergency prune-only recovery path) remains a **separate follow-on plan**
+  that Program Control will scope after this stage is independently
+  reviewed. **Option 4** (IndexedDB) remains **deferred** and requires its
+  own separate explicit approval.
+- **What the percentage means (corrected after independent Codex review).**
+  `usedFraction` in `src/lib/storage/storageUsage.ts` is the ESTIMATED TOTAL
+  same-origin storage usage ÷ the ~5MB origin-quota estimate — NOT a single
+  logical copy of state. `measureStorageUsage` enumerates every localStorage
+  key and sums the stored representation (key + value units), each key counted
+  once: retained journal generations, both journal heads, the legacy state key,
+  quarantined recovery blobs, the health-profile draft, and unrelated
+  same-origin keys. The earlier single-copy estimate under-counted real quota
+  pressure (it omitted the retained second generation, the legacy key, and
+  unrelated keys); this pass measures what is actually stored. The live-state
+  per-collection breakdown is retained for display only and does not drive
+  classification.
+- **New thresholds.** warning `WARNING_THRESHOLD = 0.35` (≥35%), critical
+  `CRITICAL_THRESHOLD = 0.45` (≥45%) of the measured total. Since DOS-STAB-001A
+  a durable commit keeps redundant generations and must write ANOTHER full
+  generation before the oldest is cleaned up, so warning/critical at 35%/45% of
+  what is actually stored leaves runway to export, prune, or reduce history
+  while a commit can still complete. Classification uses the unrounded
+  `usedFraction`. When storage is absent or a read throws, complete total-origin
+  enumeration is unavailable: every partial tally is DISCARDED and never
+  presented as a measured total-origin result, and the measurement degrades
+  deterministically to the single serialized copy (`measured` = false). Corrected
+  after independent Codex review — that fallback is a deterministic estimate of
+  ONE copy of current state, NOT a measured total: the actual total-origin usage
+  could not be determined and may be higher OR lower than the displayed estimate.
+  It is not a lower bound, upper bound, minimum, maximum, or directionally
+  conservative figure, and no claim that the fallback "never over-reports" is
+  made.
+- **Stage 1 does NOT raise the actual storage ceiling and does NOT add
+  emergency pruning.** It changes only the threshold constants, the measurement
+  (to total-origin usage), and the directly-related user-facing copy
+  (StorageManager meter/breakdown/warning, Layout critical banner) so the
+  warning is honest and arrives with real runway to export, prune, or reduce
+  saved history. Copy corrected per Codex review: it drops any "nothing is
+  lost" claim and instead states that the last successfully committed
+  generation stays protected while new or unsaved in-memory changes may fail to
+  persist if capacity is exhausted; that exporting a backup makes a copy but
+  does NOT free local storage or raise the browser quota, whereas pruning or
+  reducing retained history is what frees capacity; that export and recovery
+  downloads stay available even if saving pauses; and that nothing is deleted
+  automatically.
+- **Pruning guidance is availability-qualified (corrected after independent
+  Codex review).** The Layout critical banner gates only on `persistFailed`,
+  while `canPrune` in StorageManager additionally requires recovery persistence
+  and no stale tab, reconciliation, uncertain commit, preservation failure, or
+  in-flight write — so the banner can render while the prune control is
+  disabled. Both the banner and the Settings warning therefore carry the same
+  governed sentence, "If pruning is available, pruning old saved prompts can
+  reduce storage usage", instead of an unconditional instruction to prune; the
+  banner adds that pruning is unavailable whenever saving is paused or failing.
+  No prune-availability logic changed, and no copy implies an emergency prune or
+  recovery path exists (Option 3 stays deferred). Regression coverage:
+  `storageRetention.test.tsx` mounts Settings inside Layout at critical usage
+  with a preservation failure — `persistFailed` false, `canPrune` false — and
+  asserts the disabled control, the exact governed sentence in both copies, and
+  the absence of any unconditional prune imperative.
+- **Preserved behavior (verified unchanged).** Generation creation and
+  retention, `safeCleanup`, head selection, boot reconciliation,
+  `commitDestructiveState`, ordinary prune, reset, import, export, storage
+  keys, persisted schemas, migration, and the localStorage backend are all
+  untouched. No `AppState` schema change; no `normalizeState` migration; no
+  dependency, lockfile, Vite/esbuild, or TypeScript-strictness change.
+- **Tests.** `src/lib/__tests__/storageUsage.test.ts` proves total-origin
+  accounting across a representative layout (journal generations, both heads,
+  legacy key, recovery blobs, health draft, unrelated keys) with each key
+  counted once and consistent key+value units; the exact boundary behavior on
+  the measured total (below 35% ok, exactly 35% warning, 35–45% warning,
+  exactly 45% critical, above 45% critical); pins the constants; proves
+  classification uses the unrounded value (a fraction that rounds to 35% for
+  display but sits below the threshold stays ok); and proves the
+  deterministic fallback for absent storage, a throwing reader, and a
+  mid-enumeration read failure. The near-quota Playwright case
+  (`tests/smoke/storageRetention.spec.ts`, ~92%) still classifies critical.
+  `src/components/__tests__/storageRetention.test.tsx` seeds a valid sized
+  journal so the enumerated total is deterministic, proves the badge and copy
+  match at ok/warning/critical (committed-protected vs unsaved, export
+  backup-only, prune/reduce frees space, nothing auto-deleted), directly
+  asserts the Settings **Export backup (JSON)** control triggers a download and
+  audit (not via the prune proxy), seeds a preserved-recovery condition and
+  asserts the actual **Download preserved original** control downloads, and
+  confirms the passive meter path performs no storage writes or deletes.

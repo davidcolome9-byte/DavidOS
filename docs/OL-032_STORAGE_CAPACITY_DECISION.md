@@ -1,11 +1,35 @@
 # OL-032 — Storage Capacity Decision Packet
 
-**Status:** Decision packet only. Nothing in this document is implemented.
-No option below has been selected. OL-032 remains **Requires David** in
-[docs/OPEN_LOOPS.md](OPEN_LOOPS.md) after this packet is added.
+> **DECISION RECORDED 2026-07-22 — see [§7](#7-decision-recorded-2026-07-22).**
+> David selected **Option 5** (the staged combination). **Stage 1 = Option 1**
+> is implemented under DOS-STAB-002A. **Option 2 is rejected.** **Option 3** is
+> a separate follow-on plan to be scoped after Stage 1 is independently
+> reviewed. **Option 4** remains deferred and separately approval-bound.
+> Sections 1–6 below are the ORIGINAL decision packet, retained verbatim as the
+> pre-decision analysis snapshot that informed this choice; where they say "no
+> option has been selected" / "Requires David," read them as the state BEFORE
+> 2026-07-22, now superseded by §7. Two further phrasings in §1–§6 are likewise
+> superseded and must not be read as current: (a) §1's "Nothing is lost or
+> corrupted" is accurate only about *stored* data — the last successfully
+> committed generation stays protected and readable, but changes made only in
+> memory since that commit are unsaved and are lost if the app closes before
+> another save succeeds; and (b) statements tying a commit failure to the
+> warning/critical storage level — since DOS-STAB-002A Stage 1 those levels
+> (≥35% / ≥45% of measured total-origin usage) are deliberately EARLY
+> capacity-runway signals and reaching them does NOT itself mean a commit must
+> fail. A commit fails only when there is no longer room for a second full
+> generation alongside the current one (roughly half the origin quota, as §2
+> describes).
+
+**Status (pre-decision snapshot, superseded 2026-07-22 by §7):** Decision
+packet only. At the time this packet was authored nothing in it was
+implemented and no option below had been selected; OL-032 was **Requires
+David** in [docs/OPEN_LOOPS.md](OPEN_LOOPS.md). That is a historical snapshot —
+the decision has since been made (see §7).
 
 **Package:** DOS-GOV-002A (documentation/governance only — this packet
-does not change storage logic, schemas, or runtime behavior).
+does not change storage logic, schemas, or runtime behavior). The
+implementation of the selected Stage 1 is a separate package (DOS-STAB-002A).
 
 **Purpose:** lay out the verified current behavior, why it changed, what
 remains safe today, and a reasoned comparison of the realistic options —
@@ -312,7 +336,41 @@ package rather than folded into a capacity-threshold decision. **Option
 just finished hardening, and is not recommended except as a narrowly
 scoped, separately safety-argued follow-on to Option 3, if at all.
 
-**This is a recommendation, not a decision.** OL-032 remains marked
-**Requires David** in docs/OPEN_LOOPS.md. No option above has been
-selected, scheduled, or implemented by this package (DOS-GOV-002A), which
-is documentation/governance only.
+**This was a recommendation, not a decision, when authored.** At that time
+OL-032 remained marked **Requires David** in docs/OPEN_LOOPS.md and no option
+above had been selected, scheduled, or implemented by this package
+(DOS-GOV-002A), which is documentation/governance only. **That state is
+superseded: David has since made the decision — see §7 below.**
+
+## 7. Decision (recorded 2026-07-22)
+
+David has made the product decision this packet was written to inform.
+Sections 1–6 are retained unchanged as the pre-decision analysis that
+supported it.
+
+- **Selected: Option 5 — the staged combination.** The capacity concern is
+  addressed by sequencing the low-risk work now and deferring the larger,
+  higher-risk work to separately-approved packages.
+- **Stage 1 = Option 1 only** (earlier, more accurate warning thresholds).
+  Implemented under **DOS-STAB-002A** on branch
+  `feat/dos-stab-002a-stage1-storage-thresholds` — at the time of this record
+  not yet merged, deployed, or independently reviewed. Stage 1 changes only the
+  threshold constants, moves the measurement to estimated total same-origin
+  usage, and updates the directly-related user-facing copy and tests. It does
+  NOT raise the actual ceiling and does NOT add emergency pruning.
+- **Option 2 — rejected.** It is the only option that directly weakens the
+  single-step-fallback guarantee DOS-STAB-001A was built to add, and it is not
+  adopted at any stage.
+- **Option 3 — separate follow-on plan.** The carefully safety-argued
+  emergency prune-only recovery path is NOT part of Stage 1. It is to be scoped
+  as its own package, with its own adversarial test suite, only after Stage 1
+  has been independently reviewed.
+- **Option 4 — deferred, separately approval-bound.** Moving canonical state to
+  IndexedDB remains a large, separate storage-layer package that requires its
+  own explicit David approval before it can begin (AGENTS.md §3); it is not
+  scheduled by this decision.
+
+This section records the decision; it does not itself implement anything.
+OL-032 stays **open** in docs/OPEN_LOOPS.md for the tracking of the Option 3
+and Option 4 follow-on directions, but it no longer awaits David's product
+decision — that decision is the Option 5 selection recorded here.

@@ -59,6 +59,19 @@ interface StoreValue {
    * could destroy data whose current stored form is unknown.
    */
   commitUncertain: boolean;
+  /**
+   * Identity of the last verified-committed journal generation, and its
+   * sequence. Both advance ONLY after a durable, read-back-verified commit (or
+   * the initial legacy migration / an accepted external head change) has landed
+   * in localStorage — see `JournalPersistenceController.acceptAuthority`. They
+   * are ephemeral in-memory React state (never themselves persisted) and are
+   * exposed so passive readers of localStorage (the storage meter) can recompute
+   * AFTER the committed bytes exist, not on the memory-only state change that
+   * merely enqueues the write. Reading storage in response never writes, so this
+   * cannot create a persistence feedback loop.
+   */
+  committedGeneration: string | null;
+  committedSequence: number;
   /** Synchronous current-authority snapshot — see AuthoritySnapshot. */
   getAuthority: () => AuthoritySnapshot;
   commitDestructiveState: (
@@ -194,6 +207,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       recovery,
       externalChange,
       commitUncertain,
+      // Read from the reactive `journalAuthority` (a memo dependency), NOT the
+      // ref, so consumers receive a fresh value only once a commit has been
+      // verified and published — this is the post-persistence refresh signal.
+      committedGeneration: journalAuthority.committedGeneration,
+      committedSequence: journalAuthority.sequence,
       getAuthority: () => ({
         state: stateRef.current,
         canPersist: recovery.canPersist && journalAuthorityRef.current.persistenceAvailable &&
@@ -222,7 +240,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     // persistence health through refs (so getAuthority() is always current),
     // but consumers must still receive a fresh context value when committed
     // authority changes. It is intentionally not "unnecessary".
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [controller, state, persistFailed, recovery, externalChange, commitUncertain, journalAuthority],
   );
 

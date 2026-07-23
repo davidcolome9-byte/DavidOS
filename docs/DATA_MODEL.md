@@ -119,13 +119,22 @@ Properties this does and does not give:
 **Capacity cost (honest limitation).** Because a commit writes a whole new
 generation beside the current one, and the previous generation is retained,
 the effective storage ceiling for canonical state is roughly HALF the
-localStorage quota. A state large enough to reach the warning/critical
-storage level can no longer be committed at all: the commit fails safely,
-saving is suppressed, and the app shows the "Saving to this device is
-failing" banner. Nothing is deleted or lost, export and recovery stay
-available — but pruning also needs a commit, so the in-app recovery path is
-narrowed at that level. Tracked as OPEN_LOOPS OL-032 (needs David's decision;
-deliberately not addressed inside DOS-STAB-001A).
+localStorage quota. Once there is no longer room for that second full
+generation alongside the current one, a state can no longer be committed: the
+commit fails safely, saving is suppressed, and the app shows the "Saving to
+this device is failing" banner. Reaching the warning or critical storage level
+is NOT itself that point — since DOS-STAB-002A Stage 1 those levels (≥35% /
+≥45% of measured total-origin usage) are deliberately EARLY capacity-runway
+signals, raised well before a commit must fail so there is still room to prune
+or reduce retained history (and to export a backup, which protects the data but
+frees no storage). The last successfully committed generation
+stays protected and readable, and export and recovery downloads stay available
+— but changes made only in memory since that commit are unsaved and are lost
+if the app closes before another save succeeds, and pruning also needs a
+commit, so the in-app recovery path narrows once saving is failing. Tracked as
+OPEN_LOOPS OL-032 (direction decided 2026-07-22 — Option 5 staged, Stage 1 =
+Option 1 implemented in DOS-STAB-002A; deliberately not addressed inside
+DOS-STAB-001A).
 
 ### Cross-tab coordination
 
@@ -187,11 +196,44 @@ and `persistence_suppressed`, and classifies every failure as exactly one of:
 
 ## Storage usage & retention (OL-003)
 
-`src/lib/storage/storageUsage.ts` (pure) measures the serialized state
-per collection plus DavidOS's other keys (recovery blobs, health draft)
-against a ~5MB quota ESTIMATE (browser localStorage quotas are
-UTF-16-unit based and vendor-specific; the UI labels every size as an
-estimate). Levels: warning ≥70%, critical ≥90%.
+`src/lib/storage/storageUsage.ts` (pure) classifies against the ESTIMATED
+TOTAL same-origin storage usage. `measureStorageUsage` enumerates every
+localStorage key this origin holds and sums the stored representation (key +
+value UTF-16 units), classifying each key into exactly one bucket so nothing is
+double-counted: retained journal generations, both journal heads, the legacy
+state key, quarantined recovery blobs, the health-profile draft, and any
+unrelated same-origin keys. That measured total (not a single logical copy of
+state) ÷ a ~5MB quota ESTIMATE is `usedFraction` (browser localStorage quotas
+are UTF-16-unit based and vendor-specific; the UI labels every size as an
+estimate). The live-state per-collection breakdown remains, but it is
+display-only and is NOT what classification is measured against. Levels
+(DOS-STAB-002A Stage 1, OL-032 Option 1): warning ≥35%, critical ≥45% of that
+measured total. Since DOS-STAB-001A a durable commit keeps redundant
+generations and must write ANOTHER full generation before the oldest is cleaned
+up, so warning at 35% / critical at 45% of what is actually stored leaves runway
+to prune or reduce retained history while a commit can still complete. These
+35%/45% marks are deliberately EARLY-runway signals, NOT the point of failure:
+the later point where a save can actually fail is when there is no longer room
+for that second full generation alongside the current one (roughly half the
+origin quota). Between those points, and after a save fails, the last
+successfully committed generation stays protected and readable — a failed save
+does NOT delete or corrupt what was already committed. But changes made only in
+memory since that commit are unsaved and are lost if the app is closed before a
+save succeeds. Pruning saved prompts or reducing retained history is what
+actually reduces DavidOS's stored footprint; exporting a backup writes a copy
+OUT of the browser and frees no browser storage and raises no quota, so it
+protects the unsaved data but never resolves the capacity condition on its own.
+Classification uses the unrounded `usedFraction`; Stage 1 changed only the
+thresholds, the measurement to total-origin usage, and the user-facing copy — it
+did not raise the actual ceiling or add emergency pruning. When storage is
+absent or any enumeration/read throws, complete total-origin enumeration is
+unavailable, so every partial tally is DISCARDED rather than presented as a
+measured total-origin result, and `totalUnits` degrades deterministically to the
+single serialized copy of state (`measured` = false). That fallback is a
+deterministic estimate of ONE copy of current state, not a measurement: the
+actual total-origin localStorage usage could not be determined and may be higher
+OR lower than the displayed estimate. It is NOT a lower bound, upper bound,
+minimum, maximum, or otherwise directionally conservative figure.
 
 - Settings → Data → Storage (`src/components/StorageManager.tsx`)
   shows the meter/breakdown and hosts the ONLY destructive retention

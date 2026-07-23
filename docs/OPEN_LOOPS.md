@@ -27,15 +27,22 @@ and docs/DECISIONS.md.
 
 ### OL-032 · Journal generations roughly double the effective storage ceiling
 - **Domain:** storage/capacity · **Kind:** defect (capacity trade-off) ·
-  **Status:** Verified · **Requires David** (product decision)
+  **Status:** Verified · **Decided 2026-07-22 — David selected Option 5**
+  (product decision made; no longer awaiting David). Open only for the
+  separately-scoped follow-on stages (see Decision/Remaining below).
 - **Problem:** committing a state requires room for a SECOND complete copy
   (the new immutable generation) alongside the current one, and the current +
-  previous generations are both retained. A state large enough to reach the
-  warning/critical storage level therefore can no longer be committed at all:
-  the commit fails safely, persistence is suppressed, and the app escalates to
-  the "Saving to this device is failing" banner. Nothing is lost or deleted —
-  but the in-app recovery path is narrowed, because pruning also needs a
-  commit and is blocked in that state.
+  previous generations are both retained. Once there is no longer room for that
+  second full copy, a state can no longer be committed: the commit fails safely,
+  persistence is suppressed, and the app escalates to the "Saving to this device
+  is failing" banner. Reaching the warning or critical storage level does NOT
+  itself mean a commit must fail — since DOS-STAB-002A Stage 1 those levels
+  (≥35% / ≥45% of measured total-origin usage) are deliberately EARLY
+  capacity-runway signals raised before that failure point. The last
+  successfully committed generation remains protected; new or unsaved
+  memory-only changes can be lost if the app closes before a successful save —
+  and the in-app recovery path is narrowed once saving is failing, because
+  pruning also needs a commit and is blocked in that state.
 - **Evidence (found 2026-07-20, DOS-STAB-001A Phase 2B browser acceptance):**
   `tests/smoke/storageRetention.spec.ts` near-quota case — a ~4.8M-char state
   seeds and loads fine, the meter reads "nearly full", but no journal
@@ -44,9 +51,11 @@ and docs/DECISIONS.md.
 - **Relationship to prior work:** OL-003 already accepted "at hard quota
   exhaustion pruning is blocked too — the recovery path is export + reset".
   DOS-STAB-001A does not introduce that behavior; it makes it start at
-  roughly HALF the previous state size. That threshold change is what needs
-  David's decision.
-- **Options (not implemented — out of DOS-STAB-001A scope):** drop the
+  roughly HALF the previous state size. That threshold change is what required
+  a product decision — **made 2026-07-22** (Option 5, staged; see Decision
+  below). It is no longer awaiting David.
+- **Options (historical, as scoped during DOS-STAB-001A — superseded by the
+  Decision below; the third option here is what Stage 1 implements):** drop the
   retained previous generation once a head is verified (weakens single-step
   fallback); allow a prune-only commit while persistence is otherwise
   suppressed (needs a careful safety argument); lower the warning/critical
@@ -54,15 +63,37 @@ and docs/DECISIONS.md.
   (much larger quota — but that is a separate package).
 - **Interim behavior (safe, and what ships today):** nothing is deleted or
   repaired automatically, an app-wide protection banner is always shown,
-  export and recovery downloads remain available, and no data is lost.
+  export and recovery downloads remain available, and the last successfully committed generation remains protected, but new or unsaved memory-only changes can be lost if the app closes before a successful save.
 - **Decision packet:** [docs/OL-032_STORAGE_CAPACITY_DECISION.md](OL-032_STORAGE_CAPACITY_DECISION.md)
   (DOS-GOV-002A) — verified current behavior, a full comparison of five
-  options, and a reasoned recommendation. This is a decision packet, not
-  an implementation; no option has been selected. This entry stays open.
-  With DOS-GOV-002A fully closed and no active implementation package,
-  **David's decision here is the next required action** — DOS-STAB-002A
-  and any further storage-capacity implementation package remain
-  prospective until an OL-032 direction is selected or approved.
+  options, and a reasoned recommendation.
+- **Decision (2026-07-22):** David selected **Option 5** (the staged
+  combination). **Stage 1 = Option 1** (earlier warning thresholds) is
+  implemented on branch `feat/dos-stab-002a-stage1-storage-thresholds`
+  (DOS-STAB-002A) — **not yet merged, deployed, or independently reviewed**.
+  Stage 1 sets the warning/critical thresholds to **≥35% / ≥45%** of the
+  ESTIMATED TOTAL same-origin storage usage — `measureStorageUsage` now
+  enumerates every localStorage key (journal generations, both heads, the
+  legacy key, recovery blobs, the health draft, and unrelated keys), each
+  counted once, rather than estimating a single logical copy of state
+  (corrected after independent Codex review). It updates the directly-related
+  user-facing copy and tests, and changes nothing else: it does **not** raise
+  the actual ceiling and does **not** add emergency pruning. The 35%/45% marks
+  are EARLY-runway signals, distinct from the later point where a save can
+  actually fail (when there is no longer room for the required second full
+  generation, roughly half the origin quota). The copy no longer claims
+  "nothing is lost"; it states that the last committed generation stays
+  protected and readable while changes made only in memory since that commit are
+  unsaved and can be lost if the app is closed before capacity is freed, that
+  export is a backup that does not free storage (pruning/reducing history does),
+  and that nothing is deleted automatically. See docs/DECISIONS.md
+  (2026-07-22 DOS-STAB-002A Stage 1) and
+  docs/DATA_MODEL.md → "Storage usage & retention".
+- **Remaining:** **Option 2 is rejected.** **Option 3** (persist-first
+  emergency prune-only recovery path) is a **separate follow-on plan**,
+  to be scoped after Stage 1 is independently reviewed. **Option 4**
+  (IndexedDB) remains **deferred** and separately approval-bound. This
+  entry stays **open** until those follow-on directions are resolved.
 - **Complexity:** M · **Approval:** yes
 
 

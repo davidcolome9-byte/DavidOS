@@ -44,6 +44,8 @@ export default function StorageManager() {
     externalChange,
     persistFailed,
     commitUncertain,
+    committedGeneration,
+    committedSequence,
     getAuthority,
     commitDestructiveState,
   } = useStore();
@@ -62,7 +64,21 @@ export default function StorageManager() {
     initialFocusRef: cancelRef,
   });
 
-  const usage = useMemo(() => measureStorageUsage(state, safeLocalStorage()), [state]);
+  // The meter enumerates localStorage, so it must recompute AFTER a commit's
+  // bytes land — not on the memory-only state change that only enqueues the
+  // write. `committedGeneration`/`committedSequence` advance only on a verified
+  // journal commit (or initial migration), so a durable prune/import/reset here
+  // refreshes the displayed total without any timeout, poll, reload, or extra
+  // state mutation. `state` stays a dependency for the live-state breakdown.
+  const usage = useMemo(
+    () => measureStorageUsage(state, safeLocalStorage()),
+    // committedGeneration/committedSequence are intentional cache-busters: the
+    // meter reads localStorage (not these values directly), so it must recompute
+    // when the committed generation advances, not only when `state` changes.
+    // They are deliberately retained, not "unnecessary".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state, committedGeneration, committedSequence],
+  );
   const badge = LEVEL_BADGE[usage.level];
 
   // Destructive pruning requires HEALTHY persistence. While it is suppressed
@@ -115,7 +131,10 @@ export default function StorageManager() {
       actionTaken: true,
       resultSummary: 'JSON backup downloaded before pruning (includes all saved prompts).',
     });
-    setFlash('Backup downloaded — it contains every saved prompt, including the ones a prune would delete.');
+    setFlash(
+      'Backup downloaded — it contains every saved prompt, including the ones a prune would delete. ' +
+      'A backup is a copy and does not free local storage; pruning below is what frees space.',
+    );
   }
 
   async function confirmPrune() {
@@ -173,7 +192,9 @@ export default function StorageManager() {
             ? 'Prune failed: DavidOS was changed in another tab, so nothing was deleted. ' +
               'Reload to continue with the latest saved data.'
             : 'Prune failed: the pruned state could not be saved on this device, so nothing was deleted. ' +
-              'Free up storage or export a backup, then try again.',
+              'Your last saved data is unchanged. Pruning stays unavailable while saving is failing — ' +
+              'exporting a backup keeps a precautionary copy of your data, but it does not free storage ' +
+              'or make a prune succeed.',
       );
       return;
     }
@@ -198,7 +219,23 @@ export default function StorageManager() {
       </h3>
       <p className="muted small" data-testid="storage-usage-total">
         Using about <strong>{formatUnits(usage.totalUnits)}</strong> of the ~
-        {formatUnits(usage.quotaUnits)} this browser typically allows ({pct}%). Sizes are estimates.
+        {formatUnits(usage.quotaUnits)} this browser typically allows ({pct}%). Sizes are estimates.{' '}
+        {usage.measured ? (
+          <span data-testid="storage-usage-total-measured">
+            This is everything stored for this DavidOS site (browser origin) — including the
+            redundant crash-safe copies it keeps of your saved data and any other items saved under
+            this origin — not just one copy, and not only what DavidOS itself created. Saving a
+            change writes another full copy before the old one is removed, so warnings begin before
+            the browser’s quota looks full. This does not change the browser’s actual limit.
+          </span>
+        ) : (
+          <span data-testid="storage-usage-total-estimated">
+            Everything stored for this DavidOS site (browser origin) could not be read here, so this
+            is a deterministic estimate of a single copy of your current data. The actual total
+            stored under this origin could not be determined — it may be higher or lower than the
+            figure shown. This does not change the browser’s actual limit.
+          </span>
+        )}
       </p>
       <div
         data-testid="storage-meter"
@@ -215,6 +252,18 @@ export default function StorageManager() {
             <span>{formatUnits(c.units)}</span>
           </li>
         ))}
+        {usage.generationCount > 0 && (
+          <li className="row">
+            <span className="muted">Redundant crash-safe copies ({usage.generationCount})</span>
+            <span>{formatUnits(usage.generationUnits)}</span>
+          </li>
+        )}
+        {usage.legacyUnits > 0 && (
+          <li className="row">
+            <span className="muted">Earlier saved copy</span>
+            <span>{formatUnits(usage.legacyUnits)}</span>
+          </li>
+        )}
         {usage.recoveryCount > 0 && (
           <li className="row">
             <span className="muted">Preserved recovery copies ({usage.recoveryCount})</span>
@@ -227,12 +276,26 @@ export default function StorageManager() {
             <span>{formatUnits(usage.draftUnits)}</span>
           </li>
         )}
+        {usage.otherCount > 0 && (
+          <li className="row">
+            <span className="muted">Other items in this browser ({usage.otherCount})</span>
+            <span>{formatUnits(usage.otherUnits)}</span>
+          </li>
+        )}
       </ul>
       {usage.level !== 'ok' && (
         <p className="notice risk-block small" data-testid="storage-warning">
           <strong>Storage is {usage.level === 'critical' ? 'nearly full' : 'filling up'}.</strong>{' '}
-          When it runs out, new changes stop saving on this device. Export a backup, then prune old
-          saved prompts below. Nothing is ever deleted automatically.
+          {usage.level === 'critical'
+            ? 'DavidOS keeps redundant crash-safe copies of your data, and saving a change must write ' +
+              'another full copy before the old one is removed — on this device that may soon fail. '
+            : 'DavidOS keeps redundant crash-safe copies of your data, so the practical safe capacity ' +
+              'is reached well before the browser’s quota looks full. '}
+          Your last successfully saved data stays protected; new or unsaved changes may fail to save
+          if capacity runs out. Exporting a backup saves a copy of your data but does not free local
+          storage or raise the browser’s limit. If pruning is available, pruning old saved prompts
+          can reduce storage usage; reducing saved history also reduces what is stored. Export and
+          recovery downloads stay available even if saving pauses. Nothing is deleted automatically.
         </p>
       )}
       <div className="btn-row">
@@ -248,7 +311,8 @@ export default function StorageManager() {
       )}
       <p className="muted small">
         Retention applies to saved prompts (artifacts) only. Handoff history is append-only and is
-        never pruned; use Export backup to archive it.
+        never pruned; export a backup to archive it — a backup is a copy of your data and does not
+        free local storage. Pruning saved prompts or reducing saved history is what frees capacity.
       </p>
       {flash && <p className="notice flash">{flash}</p>}
 
@@ -291,6 +355,10 @@ export default function StorageManager() {
             <div className="btn-row">
               <button onClick={exportBeforePrune}>Export backup first (JSON)</button>
             </div>
+            <p className="muted small" data-testid="storage-prune-export-note">
+              A backup is a copy of your data — it does not free local storage or raise the browser’s
+              limit. Confirming the prune below is what frees space.
+            </p>
             <label className="field" htmlFor="prune-confirm">Type <code>PRUNE</code> to confirm</label>
             <input
               id="prune-confirm"
