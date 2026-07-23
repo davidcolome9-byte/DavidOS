@@ -16,14 +16,25 @@ const PRIMARY_NAV = [
 ];
 
 export default function Layout() {
-  const { state, persistFailed, recovery, externalChange } = useStore();
-  // OL-003 protection: warn BEFORE storage runs out, while an export can
-  // still be saved. Measured per state change — same cadence as persistence.
+  const { state, persistFailed, recovery, externalChange, committedGeneration, committedSequence } = useStore();
+  // OL-003 protection: warn BEFORE storage runs out, while an export can still
+  // be saved. The measurement enumerates localStorage, so it must recompute
+  // AFTER the journal write lands, not on the memory-only state change that only
+  // enqueues it — otherwise the meter reads one committed generation behind.
+  // `committedGeneration`/`committedSequence` advance only on a verified commit
+  // (or initial migration), so keying off them refreshes post-persistence
+  // without any timeout, poll, reload, or extra state mutation. `state` stays a
+  // dependency so a change is reflected promptly even before its commit lands.
   const storageLevel = useMemo(() => {
     let storage: Storage | null = null;
     try { storage = window.localStorage; } catch { /* unavailable */ }
     return measureStorageUsage(state, storage).level;
-  }, [state]);
+    // committedGeneration/committedSequence are intentional cache-busters: the
+    // measurement reads localStorage (not these values directly), so it must
+    // recompute when the committed generation advances, not only when `state`
+    // changes. They are deliberately retained, not "unnecessary".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, committedGeneration, committedSequence]);
   // F-08: dismissing the stale dialog is a LOCAL view choice only. The stale
   // condition (`externalChange`) lives in the store and keeps persistence
   // suppressed, so a dismissed dialog can never permit an overwrite — the
@@ -108,9 +119,14 @@ export default function Layout() {
           <div className="notice risk-block" role="alert" data-testid="storage-critical-banner" style={{ borderStyle: 'solid' }}>
             <strong>⚠️ Device storage is nearly full.</strong>{' '}
             <span className="small">
-              When it runs out, new changes will stop saving on this device. Export a backup and
-              prune old saved prompts in <a href="#/settings">Settings → Data</a>. Nothing is
-              deleted automatically.
+              DavidOS keeps redundant crash-safe copies, and saving a change must write another full
+              copy before the old one is removed — on this device that may soon fail. Your last saved
+              data stays protected, but new or unsaved changes may not be written. Export a backup (a
+              copy of your data that does not itself free storage or raise the browser’s limit) from{' '}
+              <a href="#/settings">Settings → Data</a>. If pruning is available, pruning old saved
+              prompts can reduce storage usage; pruning is unavailable whenever saving is paused or
+              failing. Export and recovery downloads stay available. Nothing is deleted
+              automatically.
             </span>
           </div>
         )}
@@ -118,8 +134,12 @@ export default function Layout() {
           <div className="notice risk-block" role="alert" style={{ borderStyle: 'solid' }}>
             <strong>⚠️ Saving to this device is failing.</strong>{' '}
             <span className="small">
-              Recent changes exist only in memory and will be lost when this app
-              closes. Free up storage or export a backup now (More → Settings → Data).
+              Your last successfully saved data is still on this device and is not deleted. Changes
+              made since then exist only in memory and will be lost if this app closes. Export a
+              backup now to keep a copy of them (More → Settings → Data) — an export is only a copy:
+              it does not free storage, raise the browser’s limit, or make saving work again.
+              Pruning is unavailable while saving is failing, because a delete that cannot be saved
+              is never performed.
             </span>
           </div>
         )}
