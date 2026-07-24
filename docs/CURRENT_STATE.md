@@ -1,4 +1,4 @@
-# Current State — 2026-07-23
+# Current State — 2026-07-24
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -6,7 +6,10 @@ the single authoritative description of the deployed production state;
 the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
 `package.json` and `package-lock.json` are unchanged by DOS-WF-002A,
-DOS-AGT-001A, DOS-STAB-001A, and DOS-STAB-002A Stage 1.
+DOS-AGT-001A, DOS-STAB-001A, DOS-STAB-002A Stage 1, and the
+documentation-only DOS-STAB-002B Option 3 planning closure. That closure
+changes no runtime behavior, dependency, schema, storage key, persistence
+logic, test, or deployed feature behavior.
 
 ## Version
 
@@ -81,17 +84,22 @@ archive SHA-256
 `25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`.
 
 DOS-STAB-002A Stage 1 is: **product merged; deployed; independently
-reviewed; live-verified; release evidence archived; documented by this
-closeout; package closed** at the revision containing this closeout
-record. OL-032 itself remains OPEN — not for Stage 1, which is closed,
-but only for the separately tracked follow-on directions: **Option 2
-remains rejected**, **Option 3 remains unimplemented** (its next
-authorized activity is a separate bounded planning package only — not
-implementation), and **Option 4 (IndexedDB) remains deferred and
-separately approval-bound**. See docs/OPEN_LOOPS.md OL-032 and
-docs/OL-032_STORAGE_CAPACITY_DECISION.md §8. No implementation package is
-active after this documentation closeout; the next program action is
-preparation and review of the separate Option 3 bounded plan.
+reviewed; live-verified; release evidence archived; documented; package
+closed**. OL-032's current disposition is: **Option 1 closed; Option 2
+rejected; Option 3 architecture planning and independent review complete
+and closed with a bounded NO-GO implementation disposition under the
+current localStorage design and safety constraints; Option 4 (IndexedDB)
+deferred and separately authorization-bound.** No Option 3 implementation
+was authorized or performed. Export plus reset remains the supported
+emergency recovery guidance when a persist-first save cannot fit; export
+creates a backup but does not free browser storage. See
+docs/OPEN_LOOPS.md OL-032 and
+docs/OL-032_STORAGE_CAPACITY_DECISION.md §8–§9.
+
+This DOS-STAB-002B closeout is documentation-only. No implementation
+package is active, and no next storage implementation action is inferred
+from OL-032. The next program package must be separately selected and
+explicitly authorized.
 
 Prior release: v0.2 + Durable Journaled State Transactions (PR #22,
 DOS-STAB-001A, squash-merge `d744e7d018d1c6c22ffcfdcf885cb568604f997c`,

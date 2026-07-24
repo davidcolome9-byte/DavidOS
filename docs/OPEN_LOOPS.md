@@ -15,7 +15,7 @@ needed, and a status marker:
   history in the "Resolved & deployed" section at the bottom
 - **Obsolete** — kept for history
 
-**Last full reconciliation: 2026-07-23**, verified item-by-item against
+**Last full reconciliation: 2026-07-24**, verified item-by-item against
 the verified product-release merge baseline
 `bfdc4a07fc7634c4f735893699c25a991cd8c1bc` (PR #27, DOS-STAB-002A Stage 1
 — merged, deployed, independently reviewed, live-verified, and closed).
@@ -34,13 +34,15 @@ listed; see git history and docs/DECISIONS.md.
 
 ### OL-032 · Journal generations roughly double the effective storage ceiling
 - **Domain:** storage/capacity · **Kind:** defect (capacity trade-off) ·
-  **Status:** Verified · **Decided 2026-07-22 — David selected Option 5**
-  (product decision made; no longer awaiting David). **Stage 1 (Option 1)
-  is resolved and deployed as of 2026-07-23 (PR #27) and is closed.**
-  This entry stays in the ACTIVE backlog — not moved to "Resolved &
-  deployed" — only because the Option 3 planning direction and the Option
-  4 deferral remain unresolved. See "Stage 1 — resolved & deployed" and
-  "Remaining" below.
+  **Status:** Verified · **Decided 2026-07-22 — David selected Option 5.**
+  **Stage 1 (Option 1) is resolved, deployed, and closed. Option 2 is
+  rejected. Option 3 planning and independent review are complete and
+  closed with a bounded NO-GO implementation disposition as of
+  2026-07-24. Option 4 remains deferred and separately
+  authorization-bound.** This entry remains in the ACTIVE backlog because
+  the underlying verified localStorage capacity trade-off still exists;
+  it is not an active Option 3 work item and does not authorize Option 4.
+  See "Stage 1 — resolved & deployed" and "Current disposition" below.
 - **Problem:** committing a state requires room for a SECOND complete copy
   (the new immutable generation) alongside the current one, and the current +
   previous generations are both retained. Once there is no longer room for that
@@ -139,21 +141,27 @@ listed; see git history and docs/DECISIONS.md.
     ceiling, adds no emergency prune path, and changes no persistence,
     journal, schema, migration, storage-key, pruning-transaction, import,
     reset, export, recovery-download, dependency, or backend semantics.
-- **Remaining (why this entry stays open):** **DOS-STAB-002A Stage 1 is
-  closed; OL-032 itself remains open** for the follow-on directions only.
+- **Current disposition (why this entry stays open):**
+  **DOS-STAB-002A Stage 1 is closed, but the underlying verified capacity
+  trade-off remains.**
   - **Option 2 — rejected.** It is the only option that directly weakens
     the single-step-fallback guarantee DOS-STAB-001A was built to add;
-    not adopted at any stage.
-  - **Option 3 (persist-first emergency prune-only recovery path) —
-    unimplemented.** The **next authorized activity is a separate bounded
-    planning package only**; Option 3 implementation is **not**
-    authorized. Any such plan must preserve the persist-first,
-    verified-authority, crash-safe transaction boundary and must require
-    its own adversarial review.
+    it is not adopted at any stage.
+  - **Option 3 — planning and independent review complete; bounded NO-GO
+    under the current localStorage architecture and current safety
+    constraints.** The browser cannot reliably distinguish every genuine
+    capacity failure from a quota-shaped policy/storage-access failure
+    without residual risk that an emergency commit could permanently
+    remove saved prompt artifacts for the wrong diagnosed cause. Program
+    Control declined that destructive false-positive risk. No Option 3
+    implementation occurred or remains active.
+  - **Supported emergency guidance:** when a persist-first save cannot
+    fit, export a backup and reset. Export does not itself free browser
+    storage.
   - **Option 4 (IndexedDB) — deferred and separately approval-bound.**
-  - No implementation package is active. The next program action is
-    preparation and review of the separate Option 3 bounded plan, not
-    code implementation.
+  - No storage implementation package is active, and there is no
+    authorized next storage implementation action. Any future package
+    must be selected and explicitly authorized separately.
 - **Complexity:** M · **Approval:** yes
 
 
