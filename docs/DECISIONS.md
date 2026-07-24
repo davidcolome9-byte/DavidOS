@@ -1516,3 +1516,41 @@ records the completed release.
   - **No implementation package is active after this documentation
     closeout.** The next program action is preparation and review of the
     separate Option 3 bounded plan, not code implementation.
+
+## 2026-07-24 — DOS-STAB-002B: OL-032 Option 3 planning closure / bounded NO-GO
+
+- **Scope was planning and independent review only.** Three primary
+  architecture revisions were completed. Independent Codex reviews
+  repeatedly returned **REVISE**; none returned approval. No Option 3
+  source, UI, test, schema, migration, storage-key,
+  dependency, deployment, or runtime change was authorized or performed.
+- **The existing persistence guarantees remained protected throughout
+  planning:** immutable write-once generations, predecessor retention,
+  candidate read-back before head advancement, alternating verified
+  heads, exclusive Web Lock serialization, in-lock stale-authority
+  rejection, final authority reselection, and no active-state update or
+  success claim before verified commit.
+- **The unresolved boundary is browser-platform ambiguity, not an
+  implementation defect.** A quota-shaped failure can reflect genuine
+  origin-capacity exhaustion or a browser policy/storage-access condition.
+  Read-only corroboration can reduce but cannot eliminate that ambiguity.
+- **Residual destructive false-positive risk was not accepted.** A
+  policy-originated false positive could clear, or a smaller emergency
+  candidate could fit, allowing a verified commit that permanently
+  deletes saved prompt artifacts even though capacity was not the true
+  original cause. Program Control chose the safety-first disposition
+  rather than treating that risk as a proven-safe engineering invariant.
+- **Decision:** Option 3 is **NO-GO for implementation under the current
+  localStorage architecture and current safety constraints**. This is a
+  bounded decision about the current design, not a claim that safe
+  emergency recovery is impossible under every future storage
+  architecture.
+- **Supported recovery remains export plus reset** when a persist-first
+  save cannot fit. Export creates a backup but does not release browser
+  storage.
+- **Option status:** Option 1 remains completed and closed; Option 2
+  remains rejected; Option 3 planning/review are closed and implementation
+  remains unauthorized; Option 4 / IndexedDB remains deferred and
+  separately authorization-bound.
+- **No implementation package is activated by this decision.** Any future
+  storage package requires a separate explicit authorization.

@@ -2,15 +2,19 @@
 
 > **DECISION RECORDED 2026-07-22 — see [§7](#7-decision-recorded-2026-07-22).
 > STAGE 1 RELEASE COMPLETED 2026-07-23 — see
-> [§8](#8-stage-1-release-completed-2026-07-23).**
+> [§8](#8-stage-1-release-completed-2026-07-23).
+> OPTION 3 PLANNING CLOSED 2026-07-24 — see
+> [§9](#9-option-3-planning-closed--bounded-no-go-2026-07-24).**
 > David selected **Option 5** (the staged combination). **Stage 1 = Option 1**
-> was implemented under DOS-STAB-002A and is now **merged, deployed,
-> independently reviewed, live-verified, archived, documented, and closed**
-> (PR #27, squash-merge `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`) — see §8.
-> **Option 2 is rejected.** **Option 3** is still unimplemented; its next
-> authorized activity is a separate bounded planning package only. **Option 4**
-> remains deferred and separately approval-bound. OL-032 remains open for those
-> follow-on directions only.
+> was implemented under DOS-STAB-002A and is **merged, deployed, independently
+> reviewed, live-verified, archived, documented, and closed** (PR #27,
+> squash-merge `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`) — see §8.
+> **Option 2 remains rejected. Option 3 planning and independent review are
+> complete and closed with a bounded NO-GO implementation disposition under
+> the current localStorage design and safety constraints — see §9. Option 4
+> remains deferred and separately approval-bound.** OL-032 remains open only
+> for the underlying verified capacity trade-off and that deferred future
+> direction; no storage implementation package is authorized.
 > Sections 1–6 below are the ORIGINAL decision packet, retained verbatim as the
 > pre-decision analysis snapshot that informed this choice; where they say "no
 > option has been selected" / "Requires David," read them as the state BEFORE
@@ -483,3 +487,61 @@ Stage 1 implements **Option 1 only**. As released it:
 - **No implementation package is active after this documentation closeout.**
   The next program action is preparation and review of the separate Option 3
   bounded plan, not code implementation.
+
+## 9. Option 3 planning closed — bounded NO-GO (2026-07-24)
+
+This section supersedes the current-direction statements in Section 8.3
+that identified Option 3 planning as the next program action and described
+OL-032 as open for that follow-on direction. Section 8.3 is retained as
+the dated 2026-07-23 Stage 1 closeout record; this Section 9 is the
+authoritative disposition beginning 2026-07-24.
+
+DOS-STAB-002B was a **planning and independent-review effort only**. It
+produced three architecture revisions. The independent Codex reviews
+repeatedly returned **REVISE**; none returned approval. No Option 3 source
+code, UI, tests, schema, migration, storage
+key, dependency, branch implementation, deployment, or runtime behavior
+was created or changed by that effort.
+
+The planning work preserved the existing safety requirements throughout:
+immutable write-once generations, predecessor retention, candidate
+read-back before head advancement, alternating verified heads, exclusive
+Web Lock serialization, in-lock stale-authority rejection, final authority
+reselection, and no React-state update or success claim before a verified
+commit. The independent reviews did not identify an implemented defect;
+there was no implementation to assess.
+
+The unresolved issue was a browser-platform limit in deciding when to
+offer a destructive emergency action. A quota-shaped browser exception
+can represent genuine origin-capacity exhaustion, but it can also arise
+from a browser policy or storage-access condition. Additional read-only
+corroboration can reduce that ambiguity but cannot eliminate it. A
+policy-originated false positive could later clear, or a smaller emergency
+candidate could fit, allowing a verified commit that permanently removes
+saved prompt artifacts even though capacity was not the true cause of the
+original failure.
+
+Program Control chose **not** to accept that residual destructive
+false-positive risk. Option 3 is therefore **NO-GO for implementation under
+the current localStorage architecture and current safety constraints**.
+This is a bounded decision about the present design, not a claim that
+emergency recovery is impossible under every future storage architecture.
+
+Current disposition:
+
+- **Option 1 is complete and closed** through DOS-STAB-002A Stage 1.
+- **Option 2 remains rejected.**
+- **Option 3 planning and review are complete and closed; implementation is
+  not authorized.**
+- **Export plus reset remains the supported emergency recovery guidance**
+  when a persist-first save cannot fit. Export creates a backup; it does
+  not itself free browser storage.
+- **Option 4 / IndexedDB remains deferred and separately
+  authorization-bound.**
+- No automatic deletion, emergency-prune implementation, IndexedDB work,
+  migration, storage-layer rewrite, or new storage package is authorized.
+- No implementation package is active as a result of this closure.
+
+The planning candidates and independent-review records were archived as
+Program Control evidence outside the public runtime source. This record
+intentionally does not publish private local archive paths.

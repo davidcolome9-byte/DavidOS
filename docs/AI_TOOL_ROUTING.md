@@ -13,7 +13,7 @@ generations and should rarely change. Sections 4 and 13 are the CURRENT
 MAPPING — the specific model/tool bound to each stable role today — and
 are expected to change far more often as models are released, retired,
 or reassigned. **Current role mapping (§4) reviewed: 2026-07-21. Current
-strategic routing (§13) reviewed: 2026-07-23.** The two mapping sections
+strategic routing (§13) reviewed: 2026-07-24.** The two mapping sections
 carry their own dates and are reviewed independently — §13 typically
 moves whenever the active package changes, while §4 moves only when a
 model/role binding changes — so reviewing this document means
@@ -439,7 +439,7 @@ A fresh room must read this doctrine before acting.
 
 ## 13. Current strategic routing
 
-*Current mapping reviewed: 2026-07-23. This whole section is the DATED
+*Current mapping reviewed: 2026-07-24. This whole section is the DATED
 package-level mapping (§4's note above applies here too) — expect it to
 change every time the active package changes, independent of the stable
 doctrine in the other sections.*
@@ -447,77 +447,51 @@ doctrine in the other sections.*
 ### Current program direction
 
 Continue DavidOS development while prioritizing stabilization and
-governance over new integrations. The current storage direction is the
-**approved OL-032 Option 5 staged sequence**: ship the low-risk stage
-first, and treat each later stage as separately scoped and separately
-authorized work. Stage 1 (Option 1) is complete; the sequence has not
-advanced beyond it.
+governance over new integrations. The OL-032 storage-capacity direction
+now has this recorded disposition:
+
+- **Option 1 — implemented, released, and closed** through DOS-STAB-002A
+  Stage 1.
+- **Option 2 — rejected.**
+- **Option 3 — architecture planning and independent review complete;
+  bounded NO-GO for implementation under the current localStorage design
+  and current safety constraints.**
+- **Option 4 / IndexedDB — deferred and separately
+  authorization-bound.**
+
+The Option 3 no-go reflects a residual destructive false-positive risk in
+diagnosing quota-shaped browser failures, not an implementation failure;
+no Option 3 implementation occurred.
 
 ### Current active package
 
-**None.** DOS-STAB-002A Stage 1 (Earlier Storage Capacity Warnings,
-OL-032 Option 1 only) is **merged, deployed, independently reviewed,
-live-verified, archived, documented, and closed** at the revision
-containing its documentation closeout — product PR #27, approved
-candidate `c3eaaba2f7947f9dd1c69534ed238138c84755ba`, squash-merge
-`bfdc4a07fc7634c4f735893699c25a991cd8c1bc`, exact-SHA CI run
-`30051919118` and Pages run `30051919108` both successful, isolated live
-production acceptance 20/20, release evidence archived and verified. See
-docs/CURRENT_STATE.md, docs/OPEN_LOOPS.md OL-032, docs/DECISIONS.md
-(2026-07-23 entry), and docs/OL-032_STORAGE_CAPACITY_DECISION.md §8.
+**DOS-STAB-002B Closure Documentation — documentation only.**
 
-DOS-GOV-002A (Authoritative State Reconciliation and OL-032 Decision
-Packet) closed earlier, through PR #24 and its documentation closeout PR
-#25.
-
-**No implementation package is active after this closeout.** A
-documentation closeout is not itself an active package and must never be
-recorded as one.
+This bounded package may update only the authoritative records needed to
+close Option 3 planning, complete independent review, create a draft pull
+request, and stop before merge. It authorizes no source, test, dependency,
+schema, migration, storage-key, runtime, implementation, merge, or
+deployment change.
 
 ### Next required action
 
-**Preparation and independent review of a separate bounded planning
-package for OL-032 Option 3** (persist-first emergency prune-only
-recovery path). Explicitly:
+Complete independent Codex review of the exact committed documentation
+diff and draft pull request. If Gate 1 is approved, stop and request
+explicit Gate 2 authorization before merge.
 
-- **Planning and independent review only.** No source implementation is
-  authorized by this mapping, by the Option 5 selection, or by Stage 1's
-  closure.
-- The plan **must preserve the persist-first, verified-authority,
-  crash-safe transaction boundary** established by DOS-STAB-001A.
-- The plan **must define its own adversarial validation** and its own
-  future authorization gates before any implementation package is
-  proposed.
-- Producing the plan does not authorize executing it. Implementation
-  requires a separate, explicit David authorization under §9.
+### After this closure
 
-### Next likely package (planning only)
-
-**OL-032 Option 3 bounded planning package — planning only;
-implementation separately authorization-bound.**
-
-This is a planning direction, not an authorized or active implementation
-package. Option status carried into it:
-
-- **Option 2 — rejected.** It is the only option that directly weakens
-  the single-step-fallback guarantee DOS-STAB-001A was built to add; not
-  adopted at any stage.
-- **Option 3 — unimplemented.** Planning package next; implementation not
-  authorized.
-- **Option 4 (IndexedDB) — deferred and separately approval-bound**
-  (storage-layer replacement, AGENTS.md §3 and §9 below).
-
-Planning assignment under the stable doctrine (§4–§6 unchanged by this
-mapping):
-
+- No implementation package is active.
+- No Option 3 work remains active.
+- Export plus reset remains the supported emergency recovery guidance
+  when a persist-first save cannot fit.
+- Option 4 remains deferred and separately approval-bound.
+- The next program package must be selected and explicitly authorized
+  separately; it must not be inferred from OL-032.
 - Program Control: GPT-5.6 Thinking
-- Primary planning/architecture: Fable 5 or Sonnet 5 High, selected by
-  Program Control according to the plan's assessed risk class
-- Independent plan review: Codex preferred
-- Secondary adversarial review: Gemini 3.1 Pro when useful
+- Independent closure review: Codex
 - Implementation: **not authorized**
-- Release execution: **not applicable** until a later implementation
-  package receives explicit authorization
+- Merge and release execution: **not authorized until Gate 2**
 
 ---
 
