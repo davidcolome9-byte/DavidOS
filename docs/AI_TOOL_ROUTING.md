@@ -13,7 +13,7 @@ generations and should rarely change. Sections 4 and 13 are the CURRENT
 MAPPING — the specific model/tool bound to each stable role today — and
 are expected to change far more often as models are released, retired,
 or reassigned. **Current role mapping (§4) reviewed: 2026-07-21. Current
-strategic routing (§13) reviewed: 2026-07-23.** The two mapping sections
+strategic routing (§13) reviewed: 2026-07-24.** The two mapping sections
 carry their own dates and are reviewed independently — §13 typically
 moves whenever the active package changes, while §4 moves only when a
 model/role binding changes — so reviewing this document means
