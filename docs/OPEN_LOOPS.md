@@ -15,11 +15,18 @@ needed, and a status marker:
   history in the "Resolved & deployed" section at the bottom
 - **Obsolete** — kept for history
 
-**Last full reconciliation: 2026-07-21**, verified item-by-item against
-`main` @ `b9eb45cba693b7bc96157752ca382667c6fcc34b` (PR #24 and PR #25,
-DOS-GOV-002A - merged, deployed, documented, and closed). Items fixed in
-the 2026-07-12 stabilization sprint are not listed; see git history
-and docs/DECISIONS.md.
+**Last full reconciliation: 2026-07-23**, verified item-by-item against
+the verified product-release merge baseline
+`bfdc4a07fc7634c4f735893699c25a991cd8c1bc` (PR #27, DOS-STAB-002A Stage 1
+— merged, deployed, independently reviewed, live-verified, and closed).
+That SHA is the release baseline this reconciliation was performed
+against, not a permanent claim about the moving tip of `main`, which
+advances with every later merge including this closeout; use `git
+rev-parse origin/main` for the current tip. The prior reconciliation
+(2026-07-21) was performed against
+`b9eb45cba693b7bc96157752ca382667c6fcc34b` (PR #24 and PR #25,
+DOS-GOV-002A). Items fixed in the 2026-07-12 stabilization sprint are not
+listed; see git history and docs/DECISIONS.md.
 
 ---
 
@@ -28,8 +35,12 @@ and docs/DECISIONS.md.
 ### OL-032 · Journal generations roughly double the effective storage ceiling
 - **Domain:** storage/capacity · **Kind:** defect (capacity trade-off) ·
   **Status:** Verified · **Decided 2026-07-22 — David selected Option 5**
-  (product decision made; no longer awaiting David). Open only for the
-  separately-scoped follow-on stages (see Decision/Remaining below).
+  (product decision made; no longer awaiting David). **Stage 1 (Option 1)
+  is resolved and deployed as of 2026-07-23 (PR #27) and is closed.**
+  This entry stays in the ACTIVE backlog — not moved to "Resolved &
+  deployed" — only because the Option 3 planning direction and the Option
+  4 deferral remain unresolved. See "Stage 1 — resolved & deployed" and
+  "Remaining" below.
 - **Problem:** committing a state requires room for a SECOND complete copy
   (the new immutable generation) alongside the current one, and the current +
   previous generations are both retained. Once there is no longer room for that
@@ -68,32 +79,81 @@ and docs/DECISIONS.md.
   (DOS-GOV-002A) — verified current behavior, a full comparison of five
   options, and a reasoned recommendation.
 - **Decision (2026-07-22):** David selected **Option 5** (the staged
-  combination). **Stage 1 = Option 1** (earlier warning thresholds) is
-  implemented on branch `feat/dos-stab-002a-stage1-storage-thresholds`
-  (DOS-STAB-002A) — **not yet merged, deployed, or independently reviewed**.
-  Stage 1 sets the warning/critical thresholds to **≥35% / ≥45%** of the
-  ESTIMATED TOTAL same-origin storage usage — `measureStorageUsage` now
-  enumerates every localStorage key (journal generations, both heads, the
-  legacy key, recovery blobs, the health draft, and unrelated keys), each
-  counted once, rather than estimating a single logical copy of state
-  (corrected after independent Codex review). It updates the directly-related
-  user-facing copy and tests, and changes nothing else: it does **not** raise
-  the actual ceiling and does **not** add emergency pruning. The 35%/45% marks
-  are EARLY-runway signals, distinct from the later point where a save can
-  actually fail (when there is no longer room for the required second full
-  generation, roughly half the origin quota). The copy no longer claims
-  "nothing is lost"; it states that the last committed generation stays
-  protected and readable while changes made only in memory since that commit are
-  unsaved and can be lost if the app is closed before capacity is freed, that
-  export is a backup that does not free storage (pruning/reducing history does),
-  and that nothing is deleted automatically. See docs/DECISIONS.md
-  (2026-07-22 DOS-STAB-002A Stage 1) and
-  docs/DATA_MODEL.md → "Storage usage & retention".
-- **Remaining:** **Option 2 is rejected.** **Option 3** (persist-first
-  emergency prune-only recovery path) is a **separate follow-on plan**,
-  to be scoped after Stage 1 is independently reviewed. **Option 4**
-  (IndexedDB) remains **deferred** and separately approval-bound. This
-  entry stays **open** until those follow-on directions are resolved.
+  combination). **Stage 1 = Option 1** (earlier warning thresholds) was
+  the only stage authorized for implementation by that decision. See
+  docs/DECISIONS.md (2026-07-22 DOS-STAB-002A Stage 1 implementation
+  entry and the 2026-07-23 release-closeout entry) and
+  docs/OL-032_STORAGE_CAPACITY_DECISION.md §7–§8.
+- **Stage 1 — RESOLVED & DEPLOYED (2026-07-23, PR #27):** DOS-STAB-002A
+  Stage 1 is merged, deployed, independently reviewed, live-verified,
+  archived, documented, and **closed**. It is not awaiting review, merge,
+  deployment, or verification.
+  - **Evidence:** approved candidate SHA
+    `c3eaaba2f7947f9dd1c69534ed238138c84755ba`; squash-merge SHA
+    `bfdc4a07fc7634c4f735893699c25a991cd8c1bc` (PR #27, merged
+    2026-07-23); merge-SHA CI run `30051919118` (workflow `CI`, success,
+    exact SHA `bfdc4a07...`); merge-SHA Pages run `30051919108` (workflow
+    `Deploy to GitHub Pages`, success, exact SHA `bfdc4a07...`). Both
+    exact-SHA workflows ran `npm ci`, `npm run verify`, Chromium
+    installation, and the complete Playwright suite, and every gate
+    passed in each workflow (exact current test totals are recorded only
+    in docs/CURRENT_STATE.md under its verification-status section, the
+    single source of exact counts). Local post-merge
+    verification: `npm run verify` passed on canonical `main` at the
+    exact merge SHA, focused storage Playwright validation passed, and
+    `package.json` / `package-lock.json` remained unchanged. Final
+    independent Codex verdict: **APPROVE**, no blocking findings, no
+    non-blocking findings. Isolated live production acceptance against
+    https://davidcolome9-byte.github.io/DavidOS/ with synthetic data
+    only, mobile (375×812) and desktop (1440×900): **20/20 checks
+    passed**. Evidence directory
+    `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\20260723-181712`;
+    authoritative archive
+    `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`;
+    verified backup archive
+    `D:\DavidOS_Backups\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`;
+    archive SHA-256
+    `25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`.
+  - **Shipped behavior:** warning at raw measured total-origin
+    localStorage usage ≥35%, critical at ≥45%, classified from the raw
+    fraction rather than rounded display output. When complete
+    enumeration succeeds, every readable same-origin localStorage
+    key/value pair is counted exactly once (journal generations, heads,
+    legacy state, recovery data, drafts, unrelated same-origin keys).
+    Null keys, null values, and thrown reads are treated as incomplete
+    enumeration; every partial tally is discarded and the measurement
+    degrades to a deterministic estimate of one serialized current-state
+    copy — presented as neither a lower bound, upper bound, minimum,
+    maximum, nor directionally conservative estimate, with actual
+    total-origin use possibly higher or lower. Measurement refreshes
+    after verified journal authority advances, so paused memory-only
+    changes cannot masquerade as committed storage growth. Pruning
+    guidance is availability-qualified; export is described only as a
+    backup that does not release storage capacity. The 35%/45% marks are
+    EARLY-runway signals, distinct from the later point where a save can
+    actually fail (no room for the required second full generation,
+    roughly half the origin quota).
+  - **Scope invariants:** Stage 1 implements **Option 1 only**. It
+    produced **no Option 3 implementation**. It deletes nothing
+    automatically, does not raise the actual browser quota or journal
+    ceiling, adds no emergency prune path, and changes no persistence,
+    journal, schema, migration, storage-key, pruning-transaction, import,
+    reset, export, recovery-download, dependency, or backend semantics.
+- **Remaining (why this entry stays open):** **DOS-STAB-002A Stage 1 is
+  closed; OL-032 itself remains open** for the follow-on directions only.
+  - **Option 2 — rejected.** It is the only option that directly weakens
+    the single-step-fallback guarantee DOS-STAB-001A was built to add;
+    not adopted at any stage.
+  - **Option 3 (persist-first emergency prune-only recovery path) —
+    unimplemented.** The **next authorized activity is a separate bounded
+    planning package only**; Option 3 implementation is **not**
+    authorized. Any such plan must preserve the persist-first,
+    verified-authority, crash-safe transaction boundary and must require
+    its own adversarial review.
+  - **Option 4 (IndexedDB) — deferred and separately approval-bound.**
+  - No implementation package is active. The next program action is
+    preparation and review of the separate Option 3 bounded plan, not
+    code implementation.
 - **Complexity:** M · **Approval:** yes
 
 

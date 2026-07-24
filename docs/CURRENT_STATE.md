@@ -1,4 +1,4 @@
-# Current State — 2026-07-21
+# Current State — 2026-07-23
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -6,61 +6,96 @@ the single authoritative description of the deployed production state;
 the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
 
 `package.json` and `package-lock.json` are unchanged by DOS-WF-002A,
-DOS-AGT-001A, and DOS-STAB-001A.
+DOS-AGT-001A, DOS-STAB-001A, and DOS-STAB-002A Stage 1.
 
 ## Version
 
-**v0.2 + Durable Journaled State Transactions release (PR #22,
-DOS-STAB-001A)**, on `main` @ `d744e7d018d1c6c22ffcfdcf885cb568604f997c`
-(squash-merge commit of PR #22, "feat: add durable journaled state
-transactions"; approved candidate
-`2a946d7dede868cc678f4062ca67c7baaf90e7bd`; merged 2026-07-21) @ GitHub
-`davidcolome9-byte/DavidOS`, auto-deployed to GitHub Pages
-(https://davidcolome9-byte.github.io/DavidOS/) on every push to `main`.
+**v0.2 + Earlier Storage Capacity Warnings release (PR #27,
+DOS-STAB-002A Stage 1)**, verified product-release merge baseline
+`bfdc4a07fc7634c4f735893699c25a991cd8c1bc` (squash-merge commit of PR
+#27, "DOS-STAB-002A Stage 1: Earlier storage capacity warnings";
+approved candidate `c3eaaba2f7947f9dd1c69534ed238138c84755ba`; merged
+2026-07-23) @ GitHub `davidcolome9-byte/DavidOS`, auto-deployed to GitHub
+Pages (https://davidcolome9-byte.github.io/DavidOS/) on every push to
+`main`. `bfdc4a07...` is the product-release baseline this snapshot
+describes; the moving tip of `main` advances with every later merge
+(including this closeout) — use `git rev-parse origin/main` or GitHub for
+the current tip.
 
-Replaces single-key canonical AppState persistence with an immutable
-generation journal (two alternating hash-verified heads, one exclusive
-Web Lock, boot reconciliation, no destructive rollback), routes Import/
-Reset/Prune through one shared destructive commit boundary, adds deep
-boot record quarantine (byte-exact preservation before any lossy repair),
-and adds a top-level crash recovery boundary (`AppErrorBoundary`) — see
-"What works today" below and docs/ARCHITECTURE.md / docs/DATA_MODEL.md
-for the architecture. Independent Gemini 3.1 Pro adversarial review
-verdict: **READY FOR CANDIDATE COMMIT**, no blocking defect (see
-docs/DECISIONS.md 2026-07-20 entry and docs/OPEN_LOOPS.md OL-031,
-Resolved & deployed).
+Implements **OL-032 Option 1 only** (the Stage 1 of David's selected
+Option 5 staged direction). Storage warning begins at raw measured
+total-origin localStorage usage **≥35%** and critical at **≥45%**,
+classified from the raw fraction rather than rounded display output.
+`measureStorageUsage` enumerates all readable same-origin localStorage
+key/value pairs exactly once when complete enumeration succeeds —
+journal generations, both heads, legacy state, recovery data, drafts, and
+unrelated same-origin keys included. Null keys, null values, and thrown
+reads are treated as incomplete enumeration; every partial tally is
+discarded and the measurement degrades to a deterministic estimate of one
+serialized current-state copy. That fallback is **not** claimed to be a
+lower bound, upper bound, minimum, maximum, or directionally conservative
+estimate — actual total-origin use may be higher or lower. Measurement
+refreshes after verified journal authority advances, so paused
+memory-only changes cannot masquerade as committed storage growth.
+Pruning guidance is truthfully availability-qualified, and export is
+described only as a backup that does not release storage capacity. See
+"What works today" below and docs/DATA_MODEL.md → "Storage usage &
+retention".
 
-Merge-SHA CI (`ci.yml` run `29838916072`) succeeded. The `deploy.yml`/
-Pages run (`29838916344`) succeeded on 2026-07-21 — the full verify +
-Playwright smoke gate (108 tests, 0 failed, 0 flaky) runs on the deployed
-SHA before publishing. Pages deployment ID `5540025217` (environment
-`github-pages`), deployed SHA `d744e7d018d1c6c22ffcfdcf885cb568604f997c`,
-status `success`.
+Stage 1 deliberately does **not**: delete anything automatically; raise
+the actual browser quota or journal ceiling; add an emergency prune path;
+or change persistence, journal, schema, migration, storage-key,
+pruning-transaction, import, reset, export, recovery-download,
+dependency, or backend semantics.
+
+Final independent Codex verdict: **APPROVE** — no blocking findings and
+no non-blocking findings.
+
+Merge-SHA CI (`ci.yml` run `30051919118`, exact SHA
+`bfdc4a07fc7634c4f735893699c25a991cd8c1bc`) succeeded. The `deploy.yml`/
+Pages run (`30051919108`, same exact SHA) succeeded on 2026-07-23. Both
+exact-SHA workflows ran `npm ci`, `npm run verify`, Chromium
+installation, and the complete Playwright suite.
+https://github.com/davidcolome9-byte/DavidOS/actions/runs/30051919118 and
+https://github.com/davidcolome9-byte/DavidOS/actions/runs/30051919108.
+
+**Local post-merge verification:** `npm run verify` passed on canonical
+`main` at the exact merge SHA, focused storage Playwright validation
+passed, and `package.json` / `package-lock.json` remained unchanged.
 
 **Live production acceptance passed this release.** Fresh, isolated
-Playwright/Chromium browser contexts per viewport (no shared profile, no
-shared storage state) verified the deployed build at both desktop
-(1440×900) and mobile (375×812, exact) against
-https://davidcolome9-byte.github.io/DavidOS/ using only synthetic data
-generated by the acceptance script itself: **16/16 checks passed**,
-including a live Reset transaction (type-RESET confirm, honest
-completion message) and a live Import transaction (synthetic backup
-upload, "Import complete." confirmation, imported theme applied) against
-production; zero console errors; zero non-production-origin network
-requests; zero horizontal overflow at either viewport. Full evidence
-archived at `D:\DavidOS_Backups\DOS-STAB-001A\release\20260721-151748\`
-(ZIP `DOS-STAB-001A-release-20260721-151748.zip`, SHA-256
-`d21fef697158ddadf16523005b56897a3c45807247a4dd34a558e582d326f7ce`).
+browser contexts per viewport (no shared profile, no shared storage
+state) verified the deployed build at both desktop (1440×900) and mobile
+(375×812, exact) against https://davidcolome9-byte.github.io/DavidOS/
+using synthetic data only: **20/20 checks passed** — HTTP 200, title
+render, storage meter, total-origin usage copy, storage breakdown, fresh
+isolated storage classifying `ok`, zero horizontal overflow, zero console
+errors, zero page errors, and zero non-production-origin network requests
+at each viewport. Release evidence directory:
+`C:\dev\davidos-release-evidence\DOS-STAB-002A\release\20260723-181712`.
+Authoritative local archive:
+`C:\dev\davidos-release-evidence\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`;
+verified backup archive:
+`D:\DavidOS_Backups\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`;
+archive SHA-256
+`25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`.
 
-DOS-STAB-001A is: **product merged; deployed; live-verified; release
-evidence archived; documentation closed; package closed.** OL-032
-(journal generations roughly double the effective storage ceiling)
-remains explicitly OPEN as a documented product decision for David — it
-is NOT closed by this release; see docs/OPEN_LOOPS.md OL-032.
+DOS-STAB-002A Stage 1 is: **product merged; deployed; independently
+reviewed; live-verified; release evidence archived; documented by this
+closeout; package closed** at the revision containing this closeout
+record. OL-032 itself remains OPEN — not for Stage 1, which is closed,
+but only for the separately tracked follow-on directions: **Option 2
+remains rejected**, **Option 3 remains unimplemented** (its next
+authorized activity is a separate bounded planning package only — not
+implementation), and **Option 4 (IndexedDB) remains deferred and
+separately approval-bound**. See docs/OPEN_LOOPS.md OL-032 and
+docs/OL-032_STORAGE_CAPACITY_DECISION.md §8. No implementation package is
+active after this documentation closeout; the next program action is
+preparation and review of the separate Option 3 bounded plan.
 
-Prior release: v0.2 + Supervised Coding Coordinator (PR #20, DOS-AGT-001A,
-squash-merge `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, merged
-2026-07-20) — see "Release history" below.
+Prior release: v0.2 + Durable Journaled State Transactions (PR #22,
+DOS-STAB-001A, squash-merge `d744e7d018d1c6c22ffcfdcf885cb568604f997c`,
+merged 2026-07-21) — see "Release history" below.
 
 ## What works today
 
@@ -215,8 +250,33 @@ squash-merge `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, merged
   confirm reset preserving the Health Profile exactly (an explicitly
   deleted profile stays deleted). Browser storage has no native
   multi-key transaction, so journal generations roughly double the
-  effective storage ceiling — a documented open product decision
-  (OL-032, not resolved by this package).
+  effective storage ceiling (OL-032). The **product decision on that
+  trade-off is made and Stage 1 has shipped** — David selected Option 5
+  (staged), and Stage 1 = Option 1 (earlier warning thresholds) is
+  merged, deployed, and closed (PR #27, DOS-STAB-002A). The warning
+  thresholds are no longer an unresolved product decision. OL-032 stays
+  open only for the follow-on directions: Option 2 rejected, Option 3
+  unimplemented (next action is a bounded planning package only), Option
+  4 (IndexedDB) deferred and separately approval-bound.
+- **Storage capacity warnings (DOS-STAB-002A Stage 1, PR #27)**: warning
+  begins at raw measured total-origin localStorage usage ≥35% and
+  critical at ≥45%, classified from the raw fraction rather than rounded
+  display output. When complete enumeration succeeds, every readable
+  same-origin localStorage key/value pair is counted exactly once —
+  journal generations, both heads, legacy state, recovery data, drafts,
+  and unrelated same-origin keys. Null keys, null values, and thrown
+  reads count as incomplete enumeration: every partial tally is discarded
+  and the measurement falls back to a deterministic estimate of one
+  serialized current-state copy, which is honestly presented as neither a
+  lower nor an upper bound — actual total-origin use may be higher or
+  lower. Measurement refreshes after verified journal authority advances,
+  so paused memory-only changes never masquerade as committed storage
+  growth. Pruning guidance is availability-qualified ("If pruning is
+  available, …") because the critical banner can render while the prune
+  control is legitimately disabled; export is described only as a backup
+  that does not release storage capacity. Nothing is deleted
+  automatically, the actual browser quota and journal ceiling are
+  unchanged, and no emergency prune path was added.
 - **Google Drive backup export foundation**: token-model auth scaffold +
   Drive client for folder bootstrap and backup upload, ApprovalGate-gated
   (see docs/INTEGRATIONS.md for exact status). Known gaps: GIS loads on
@@ -248,22 +308,50 @@ squash-merge `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`, merged
   prompts; it never calls an AI provider (planned as v0.6, OL-025).
   **Native packaging: not built** (Capacitor wrapper planned, v0.7).
 
-## Verification status (2026-07-21, `main` @ `d744e7d018d1c6c22ffcfdcf885cb568604f997c`, post-PR #22)
+## Verification status (2026-07-23, product-release merge baseline `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`, post-PR #27)
 
-Exact counts live here ONLY (other docs reference this file):
+Exact counts live here ONLY (other docs reference this file). The counts
+below are read from the exact-SHA workflow logs of the DOS-STAB-002A
+Stage 1 release, not carried over from a prior release:
 
-- Unit/component tests: 59 files, **901/901 tests**, all passing
-  (`npm test`), up from the pre-DOS-STAB-001A 786/786 baseline (new:
-  `stateJournal.test.ts`, `journalPersistence.test.ts`,
-  `bootJournal.test.ts`, `bootQuarantine.test.ts`,
-  `importTransaction.test.tsx`, `resetTransaction.test.tsx`,
-  `appErrorBoundary.test.tsx`).
-- Browser smoke tests: **108/108 passing on GitHub Actions** — both the
-  merge-SHA CI run (`29838916072`) and the merge-SHA Pages deploy run
-  (`29838916344`) completed successfully, and both run the full Playwright
-  suite as a blocking gate step. Up from the pre-DOS-STAB-001A 103/103
-  baseline (new: `tests/smoke/durableDestructive.spec.ts`,
-  `crashRecovery.spec.ts`, `bootQuarantine.spec.ts`).
+- Unit/component tests: **59 test files, 926/926 tests passed** on the
+  exact merge SHA (`ci.yml` run `30051919118`, `npm run verify` step), up
+  from the pre-DOS-STAB-002A 901/901 baseline. Stage 1 extended
+  `src/lib/__tests__/storageUsage.test.ts` and
+  `src/components/__tests__/storageRetention.test.tsx` rather than adding
+  new test files.
+- Browser smoke tests: **108/108 passing on GitHub Actions** at the exact
+  merge SHA — both the merge-SHA CI run (`30051919118`) and the merge-SHA
+  Pages deploy run (`30051919108`) completed successfully, and both run
+  the full Playwright suite as a blocking gate step. Both exact-SHA
+  workflows ran `npm ci`, `npm run verify`, Chromium installation, and
+  the complete Playwright suite. (Same total as the DOS-STAB-001A
+  baseline — Stage 1 extended existing smoke assertions rather than
+  adding smoke specs; this number is confirmed by the Stage 1 run logs
+  themselves, not inherited.)
+- **Local post-merge verification (DOS-STAB-002A Stage 1)**: `npm run
+  verify` passed on canonical `main` at the exact merge SHA (exit 0), and
+  a focused `npx playwright test tests/smoke/storageRetention.spec.ts`
+  run passed (exit 0). `package.json` and `package-lock.json` remained
+  unchanged.
+- **DOS-STAB-002A Stage 1 independent review**: final independent Codex
+  verdict **APPROVE** — no blocking findings, no non-blocking findings.
+- **DOS-STAB-002A Stage 1 isolated live production acceptance** (fresh,
+  isolated browser context per viewport, no shared profile or storage
+  state, synthetic data only): **20/20 checks PASSED** at desktop
+  (1440×900) and mobile (375×812, exact) against
+  https://davidcolome9-byte.github.io/DavidOS/ — HTTP 200, title render,
+  storage meter, total-origin usage copy, storage breakdown, fresh
+  isolated storage classifying `ok`, zero horizontal overflow, zero
+  console errors, zero page errors, zero non-production-origin network
+  requests at each viewport. Evidence directory
+  `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\20260723-181712`;
+  authoritative archive
+  `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`;
+  verified backup archive
+  `D:\DavidOS_Backups\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`;
+  archive SHA-256
+  `25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`.
 - **DOS-STAB-001A independent adversarial review**: Gemini 3.1 Pro
   returned **READY FOR CANDIDATE COMMIT**, no blocking defect.
 - **DOS-STAB-001A isolated live production acceptance** (fresh
@@ -388,6 +476,43 @@ Exact counts live here ONLY (other docs reference this file):
 
 ## Release history (merged & deployed)
 
+- **PR #27 — Earlier Storage Capacity Warnings (DOS-STAB-002A Stage 1)**
+  (merged 2026-07-23T23:02:16Z, squash-merge commit
+  `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`; approved candidate
+  `c3eaaba2f7947f9dd1c69534ed238138c84755ba`): implements **OL-032 Option
+  1 only** — warning at raw measured total-origin localStorage usage
+  ≥35%, critical at ≥45%, classified from the raw fraction rather than
+  rounded display output; complete same-origin enumeration counting each
+  readable key/value pair exactly once (journal generations, heads,
+  legacy state, recovery data, drafts, unrelated keys), with null keys,
+  null values, and thrown reads treated as incomplete enumeration and
+  every partial tally discarded in favour of a deterministic
+  one-serialized-copy estimate that is claimed as neither a lower nor an
+  upper bound; measurement refresh after verified journal authority
+  advances; availability-qualified pruning guidance; export described
+  only as a backup that does not release storage capacity. It does not
+  delete anything automatically, does not raise the actual browser quota
+  or journal ceiling, does not add an emergency prune path, and changes
+  no persistence, journal, schema, migration, storage-key,
+  pruning-transaction, import, reset, export, recovery-download,
+  dependency, or backend semantics. Merge-SHA CI (run `30051919118`) and
+  Pages deploy (run `30051919108`) both succeeded on the exact merge SHA,
+  each running `npm ci`, `npm run verify`, Chromium installation, and the
+  complete Playwright suite (59 test files / 926 unit-component tests;
+  108 Playwright tests). Final independent Codex verdict: **APPROVE**, no
+  blocking and no non-blocking findings. Isolated live production
+  acceptance: **20/20 checks passed** at desktop (1440×900) and mobile
+  (375×812), synthetic data only. See docs/DECISIONS.md 2026-07-23
+  DOS-STAB-002A Stage 1 release-closeout entry, docs/OPEN_LOOPS.md
+  OL-032, and docs/OL-032_STORAGE_CAPACITY_DECISION.md §8; release
+  evidence archived at
+  `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\20260723-181712`
+  (ZIP `DOS-STAB-002A-Stage1-release-20260723-181712.zip`, SHA-256
+  `25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`,
+  backup copy under `D:\DavidOS_Backups\DOS-STAB-002A\release\`). OL-032
+  remains open only for Option 3 (planning package next, not
+  implementation) and Option 4 (deferred, approval-bound); Option 2 is
+  rejected.
 - **PR #22 — Durable Journaled State Transactions (DOS-STAB-001A)**
   (merged 2026-07-21T14:23:59Z, squash-merge commit
   `d744e7d018d1c6c22ffcfdcf885cb568604f997c`; approved candidate
@@ -485,21 +610,30 @@ Exact counts live here ONLY (other docs reference this file):
   2026-07-13); **PR #1 — Universal Operations Core** (merged
   2026-07-12).
 
-## Repository state (branches & worktrees, 2026-07-21)
+## Repository state (branches & worktrees, 2026-07-23)
 
-Stable production branch: `main`. DOS-GOV-002A was merged through PR #24
+Stable production branch: `main`. The most recent product release is
+DOS-STAB-002A Stage 1 through PR #27 (squash-merge commit
+`bfdc4a07fc7634c4f735893699c25a991cd8c1bc`, approved candidate
+`c3eaaba2f7947f9dd1c69534ed238138c84755ba`), documented and closed by
+this closeout record. Before it, DOS-GOV-002A was merged through PR #24
 (establishing the AI Tool Routing Doctrine), with documentation closeout
-through PR #25 (merge commit `b9eb45cba693b7bc96157752ca382667c6fcc34b`,
-recording DOS-GOV-002A as merged, deployed, documented, and closed) and
-final authoritative closeout correction through PR #26. The exact moving
-tip of `main` is intentionally NOT hard-coded in this snapshot, because
-every documentation merge (including this one) advances it; use GitHub
-or `git rev-parse origin/main` for the current tip. `b9eb45cba693b7bc96157752ca382667c6fcc34b`
-is recorded here only as the historical PR #25 merge commit and the
-reconciliation baseline this correction pass verified against — not as a
-permanent claim about the current branch tip. No runtime source, tests,
-package manifests, GitHub workflows, or seed files were touched by PR
-#24, PR #25, or PR #26.
+through PR #25 (merge commit `b9eb45cba693b7bc96157752ca382667c6fcc34b`)
+and final authoritative closeout correction through PR #26. The exact
+moving tip of `main` is intentionally NOT hard-coded in this snapshot,
+because every documentation merge (including this one) advances it; use
+GitHub or `git rev-parse origin/main` for the current tip.
+`bfdc4a07fc7634c4f735893699c25a991cd8c1bc` is recorded here as the
+verified product-release merge baseline this snapshot describes — not as
+a permanent claim about the current branch tip, which will be ahead of it
+once this closeout lands. `b9eb45cba693b7bc96157752ca382667c6fcc34b` is
+likewise recorded only as the historical PR #25 merge commit. PR #27
+touched runtime source and tests (`src/lib/storage/storageUsage.ts`,
+`src/components/StorageManager.tsx`, `src/components/Layout.tsx`,
+`src/state/store.tsx`, and the two storage test files) plus four docs; it
+touched no package manifest, GitHub workflow, or seed file. No runtime
+source, tests, package manifests, GitHub workflows, or seed files were
+touched by PR #24, PR #25, PR #26, or this documentation closeout.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
@@ -515,6 +649,7 @@ whenever David chooses (removal deliberately NOT performed by agents):
 - `fix/ol-015-modal-focus-management` @ `393839908a9cc9f8bc8a60aa9241b387615fdecb` (PR #16, merge commit `7077dac7a9e50f84e39b0f58bf7665b358a1e577`)
 - `feat/dos-agt-001a-supervised-coding-agent` @ `382f9f8ac16ac22cf2a233f63deba4121d9899ab` (PR #20, squash-merge commit `88b0a6d475c26c8d357b0ba2b74d6304ab6ed836`) — remains intact locally and on `origin`, not deleted
 - `feat/dos-stab-001a-durable-destructive-flows` @ `2a946d7dede868cc678f4062ca67c7baaf90e7bd` (PR #22, squash-merge commit `d744e7d018d1c6c22ffcfdcf885cb568604f997c`) — remains intact locally and on `origin`, not deleted
+- `feat/dos-stab-002a-stage1-storage-thresholds` @ `c3eaaba2f7947f9dd1c69534ed238138c84755ba` (PR #27, squash-merge commit `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`) — remains intact locally and on `origin`, not deleted
 
 Stale local draft branches — NOT merged, NOT reviewed, NOT deployed;
 do not treat their contents as shipped:
@@ -555,13 +690,23 @@ The authoritative list with priorities lives in
   #24), deployed, documented, and closed (PR #25); see docs/DECISIONS.md
   for both entries. The Google Drive routing pointer was created
   successfully; the repository copy of `docs/AI_TOOL_ROUTING.md` remains
-  authoritative over it. There is currently no active implementation
-  package. The next required action is **David's decision on OL-032**
-  (see docs/OPEN_LOOPS.md OL-032 and
-  docs/OL-032_STORAGE_CAPACITY_DECISION.md for the five-option comparison
-  and recommendation) — no storage-capacity option has been selected yet,
-  and DOS-STAB-002A remains a prospective package that cannot begin until
-  David selects or approves an OL-032 direction.
+  authoritative over it.
+- **Storage capacity (OL-032) — decided; Stage 1 shipped and closed.**
+  David selected **Option 5** (the staged direction).
+  **DOS-STAB-002A Stage 1 = Option 1** (earlier warning thresholds) is
+  merged, deployed, independently reviewed, live-verified, archived,
+  documented by this closeout, and **closed** (PR #27). No implementation
+  package is active after this documentation closeout. OL-032 stays open
+  only for the follow-on directions: **Option 2 is rejected**, **Option 3
+  (persist-first emergency prune-only recovery path) is unimplemented and
+  its next authorized activity is a separate bounded planning package
+  only — not implementation**, and **Option 4 (IndexedDB) remains
+  deferred and separately approval-bound**. Any Option 3 plan must
+  preserve the persist-first, verified-authority, crash-safe transaction
+  boundary and require its own adversarial review. The next program
+  action is preparation and review of that separate Option 3 bounded
+  plan, not code implementation. See docs/OPEN_LOOPS.md OL-032 and
+  docs/OL-032_STORAGE_CAPACITY_DECISION.md §8.
 
 ## Environment facts (David's machine)
 
