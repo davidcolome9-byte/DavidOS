@@ -1421,3 +1421,98 @@ or independently reviewed at the time of this entry).
   audit (not via the prune proxy), seeds a preserved-recovery condition and
   asserts the actual **Download preserved original** control downloads, and
   confirms the passive meter path performs no storage writes or deletes.
+
+## 2026-07-23 — DOS-STAB-002A Stage 1: merge, deployment, live acceptance, and package closure (OL-032 Option 1)
+
+Release closeout for the Stage 1 candidate recorded in the 2026-07-22
+entry above. That entry described a pre-merge candidate; this entry
+records the completed release.
+
+- **Independent review.** The final independent Codex verdict on Stage 1
+  was **APPROVE**, with **no blocking findings and no non-blocking
+  findings**.
+- **Merge.** PR #27, "DOS-STAB-002A Stage 1: Earlier storage capacity
+  warnings" (branch `feat/dos-stab-002a-stage1-storage-thresholds`),
+  approved candidate SHA `c3eaaba2f7947f9dd1c69534ed238138c84755ba`,
+  squash-merged into `main` on 2026-07-23 as merge commit
+  `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`.
+  https://github.com/davidcolome9-byte/DavidOS/pull/27
+- **Post-merge CI and deployment (both on the exact merge SHA).**
+  Workflow `CI`, run ID `30051919118`, result success, exact SHA
+  `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`
+  (https://github.com/davidcolome9-byte/DavidOS/actions/runs/30051919118).
+  Workflow `Deploy to GitHub Pages`, run ID `30051919108`, result
+  success, same exact SHA
+  (https://github.com/davidcolome9-byte/DavidOS/actions/runs/30051919108).
+  Both exact-SHA workflows ran `npm ci`, `npm run verify`, Chromium
+  installation, and the complete Playwright suite, and every gate passed
+  in each workflow. Exact current test totals are deliberately NOT
+  repeated here — per the standing **test-count policy (DAV-005**,
+  2026-07-13 entry above**)** they are recorded only in
+  docs/CURRENT_STATE.md under its verification-status section, which
+  remains the single source of exact counts.
+- **Local post-merge verification.** `npm run verify` passed on canonical
+  `main` at the exact merge SHA (exit 0); a focused `npx playwright test
+  tests/smoke/storageRetention.spec.ts` run passed (exit 0);
+  `package.json` and `package-lock.json` remained unchanged.
+- **Live production acceptance.** Against
+  https://davidcolome9-byte.github.io/DavidOS/ using isolated browser
+  contexts (no shared profile or storage state), covering mobile
+  (375×812) and desktop (1440×900), with synthetic data only:
+  **20/20 checks passed** — HTTP 200, title render, storage meter,
+  total-origin usage copy, storage breakdown, fresh isolated storage
+  classifying `ok`, zero horizontal overflow, zero console errors, zero
+  page errors, and zero non-production-origin network requests at each
+  viewport.
+- **Evidence locations.** Evidence directory
+  `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\20260723-181712`.
+  Authoritative local archive
+  `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`.
+  Verified backup archive
+  `D:\DavidOS_Backups\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`.
+  Archive SHA-256
+  `25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`
+  (both archive copies independently hashed and confirmed matching while
+  preparing this entry).
+- **Exact Stage 1 scope (as released).** Implements **OL-032 Option 1
+  only**. Warning begins at raw measured total-origin localStorage usage
+  **≥35%**; critical begins at **≥45%**; classification uses the raw
+  fraction rather than rounded display output. When complete enumeration
+  succeeds, all readable same-origin localStorage key/value pairs are
+  enumerated exactly once — journal generations, heads, legacy state,
+  recovery data, drafts, and unrelated same-origin keys included. Null
+  keys, null values, and thrown reads are treated as incomplete
+  enumeration; every partial tally is discarded and the measurement uses
+  a deterministic estimate of one serialized current-state copy as the
+  fallback. That fallback is **not** claimed to be a lower bound, upper
+  bound, minimum, maximum, or directionally conservative estimate: actual
+  total-origin use may be higher or lower. Measurement refreshes after
+  verified journal authority advances, so paused memory-only changes do
+  not masquerade as committed storage growth. Pruning guidance is
+  truthfully availability-qualified, and export is described only as a
+  backup that does not release storage capacity.
+- **Invariants preserved (verified unchanged).** Stage 1 does not delete
+  anything automatically; does not raise the actual browser quota or
+  journal ceiling; does not add an emergency prune path; and does not
+  change persistence, journal, schema, migration, storage-key,
+  pruning-transaction, import, reset, export, recovery-download,
+  dependency, or backend semantics. No new runtime dependency and no
+  lockfile change: `package.json` and `package-lock.json` are unchanged
+  by DOS-STAB-002A Stage 1.
+- **Governance status after this closeout.**
+  - **DOS-STAB-002A Stage 1 is closed** at the revision containing this
+    closeout record: merged, deployed, independently reviewed,
+    live-verified, archived, and documented.
+  - **Option 2 remains rejected.**
+  - **Option 3 remains unimplemented.** The next authorized activity for
+    Option 3 is a **separate bounded planning package only** —
+    implementation is not authorized. Any such plan must preserve the
+    persist-first, verified-authority, crash-safe transaction boundary
+    and must require its own adversarial review.
+  - **Option 4 (IndexedDB) remains deferred and separately
+    approval-bound.**
+  - **OL-032 remains open** only for those separately tracked follow-on
+    directions; it is not reopened for Stage 1.
+  - **No implementation package is active after this documentation
+    closeout.** The next program action is preparation and review of the
+    separate Option 3 bounded plan, not code implementation.

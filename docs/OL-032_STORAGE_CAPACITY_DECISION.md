@@ -1,10 +1,16 @@
 # OL-032 — Storage Capacity Decision Packet
 
-> **DECISION RECORDED 2026-07-22 — see [§7](#7-decision-recorded-2026-07-22).**
+> **DECISION RECORDED 2026-07-22 — see [§7](#7-decision-recorded-2026-07-22).
+> STAGE 1 RELEASE COMPLETED 2026-07-23 — see
+> [§8](#8-stage-1-release-completed-2026-07-23).**
 > David selected **Option 5** (the staged combination). **Stage 1 = Option 1**
-> is implemented under DOS-STAB-002A. **Option 2 is rejected.** **Option 3** is
-> a separate follow-on plan to be scoped after Stage 1 is independently
-> reviewed. **Option 4** remains deferred and separately approval-bound.
+> was implemented under DOS-STAB-002A and is now **merged, deployed,
+> independently reviewed, live-verified, archived, documented, and closed**
+> (PR #27, squash-merge `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`) — see §8.
+> **Option 2 is rejected.** **Option 3** is still unimplemented; its next
+> authorized activity is a separate bounded planning package only. **Option 4**
+> remains deferred and separately approval-bound. OL-032 remains open for those
+> follow-on directions only.
 > Sections 1–6 below are the ORIGINAL decision packet, retained verbatim as the
 > pre-decision analysis snapshot that informed this choice; where they say "no
 > option has been selected" / "Requires David," read them as the state BEFORE
@@ -374,3 +380,106 @@ This section records the decision; it does not itself implement anything.
 OL-032 stays **open** in docs/OPEN_LOOPS.md for the tracking of the Option 3
 and Option 4 follow-on directions, but it no longer awaits David's product
 decision — that decision is the Option 5 selection recorded here.
+
+> **§7 is the decision-time record, preserved as written on 2026-07-22.** Its
+> statements about Stage 1's release status describe that date only. Stage 1's
+> current lifecycle status is recorded in **§8** below: Stage 1 has since been
+> merged, deployed, independently reviewed, live-verified, archived,
+> documented, and closed.
+
+## 8. Stage 1 release completed 2026-07-23
+
+Stage 1 of the Option 5 staged direction — **Option 1 only** — completed its
+full release lifecycle on 2026-07-23. This section supersedes §7's
+release-status statements; §1–§7 are retained unchanged as the historical
+pre-decision packet and decision-time record.
+
+### 8.1 Release evidence
+
+- **Package:** DOS-STAB-002A Stage 1 — Earlier Storage Capacity Warnings.
+- **Product PR:** #27 —
+  https://github.com/davidcolome9-byte/DavidOS/pull/27
+- **Approved candidate SHA:** `c3eaaba2f7947f9dd1c69534ed238138c84755ba`
+  (branch `feat/dos-stab-002a-stage1-storage-thresholds`).
+- **Squash-merge SHA:** `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`.
+- **Merge date:** 2026-07-23.
+- **Post-merge CI:** workflow `CI`, run ID `30051919118`, result success,
+  exact SHA `bfdc4a07fc7634c4f735893699c25a991cd8c1bc` —
+  https://github.com/davidcolome9-byte/DavidOS/actions/runs/30051919118
+- **GitHub Pages deployment:** workflow `Deploy to GitHub Pages`, run ID
+  `30051919108`, result success, exact SHA
+  `bfdc4a07fc7634c4f735893699c25a991cd8c1bc` —
+  https://github.com/davidcolome9-byte/DavidOS/actions/runs/30051919108
+- Both exact-SHA workflows ran `npm ci`, `npm run verify`, Chromium
+  installation, and the complete Playwright suite, and every gate passed in
+  each workflow. Exact current test totals are recorded only in
+  docs/CURRENT_STATE.md under its verification-status section (the single
+  source of exact counts) and are deliberately not duplicated here.
+- **Local post-merge verification:** `npm run verify` passed on canonical
+  `main` at the exact merge SHA; focused storage Playwright validation passed;
+  `package.json` and `package-lock.json` remained unchanged.
+- **Live production acceptance:** https://davidcolome9-byte.github.io/DavidOS/,
+  isolated browser contexts, mobile (375×812) and desktop (1440×900) coverage,
+  synthetic data only — **20/20 checks passed**.
+- **Evidence directory:**
+  `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\20260723-181712`
+- **Authoritative local archive:**
+  `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`
+- **Verified backup archive:**
+  `D:\DavidOS_Backups\DOS-STAB-002A\release\DOS-STAB-002A-Stage1-release-20260723-181712.zip`
+- **Archive SHA-256:**
+  `25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`
+- **Independent review:** final independent Codex verdict **APPROVE** — no
+  blocking findings, no non-blocking findings.
+
+### 8.2 What Stage 1 actually shipped
+
+Stage 1 implements **Option 1 only**. As released it:
+
+- begins warning at raw measured total-origin localStorage usage **≥35%**;
+- begins critical at raw measured total-origin localStorage usage **≥45%**;
+- classifies from the raw fraction rather than rounded display output;
+- enumerates all readable same-origin localStorage key/value pairs exactly once
+  when complete enumeration succeeds;
+- includes journal generations, heads, legacy state, recovery data, drafts, and
+  unrelated same-origin keys in that enumeration;
+- treats null keys, null values, and thrown reads as incomplete enumeration;
+- discards every partial tally when enumeration is incomplete;
+- uses a deterministic estimate of one serialized current-state copy as the
+  fallback;
+- does **not** claim that fallback is a lower bound, upper bound, minimum,
+  maximum, or directionally conservative estimate;
+- states that actual total-origin use may be higher **or** lower than the
+  fallback;
+- refreshes measurement after verified journal authority advances;
+- does not let paused memory-only changes masquerade as committed storage
+  growth;
+- uses truthful availability-qualified pruning guidance;
+- describes export only as a backup that does not release storage capacity;
+- does not delete anything automatically;
+- does not raise the actual browser quota or journal ceiling;
+- does not add an emergency prune path;
+- does not change persistence, journal, schema, migration, storage-key,
+  pruning-transaction, import, reset, export, recovery-download, dependency, or
+  backend semantics.
+
+### 8.3 Current staged-direction status
+
+- **Stage 1 is closed.** DOS-STAB-002A Stage 1 is merged, deployed,
+  independently reviewed, live-verified, archived, documented by this closeout,
+  and closed at the revision containing this closeout record. It produced **no
+  Option 3 implementation**.
+- **Option 2 remains rejected.** It is the only option that directly weakens
+  the single-step-fallback guarantee DOS-STAB-001A was built to add, and it is
+  not adopted at any stage.
+- **Option 3 is still unimplemented.** Its next authorized activity is a
+  **separate bounded planning package only** — Option 3 implementation is not
+  authorized by this closeout or by the Option 5 selection. Any such plan must
+  preserve the persist-first, verified-authority, crash-safe transaction
+  boundary and must require its own adversarial review.
+- **Option 4 (IndexedDB) remains deferred and separately approval-bound.**
+- **OL-032 remains open** in docs/OPEN_LOOPS.md for those follow-on directions
+  only — not for Stage 1, which is closed.
+- **No implementation package is active after this documentation closeout.**
+  The next program action is preparation and review of the separate Option 3
+  bounded plan, not code implementation.
