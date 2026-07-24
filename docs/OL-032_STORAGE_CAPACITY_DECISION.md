@@ -487,7 +487,14 @@ Stage 1 implements **Option 1 only**. As released it:
 - **No implementation package is active after this documentation closeout.**
   The next program action is preparation and review of the separate Option 3
   bounded plan, not code implementation.
+
 ## 9. Option 3 planning closed — bounded NO-GO (2026-07-24)
+
+This section supersedes the current-direction statements in Section 8.3
+that identified Option 3 planning as the next program action and described
+OL-032 as open for that follow-on direction. Section 8.3 is retained as
+the dated 2026-07-23 Stage 1 closeout record; this Section 9 is the
+authoritative disposition beginning 2026-07-24.
 
 DOS-STAB-002B was a **planning and independent-review effort only**. It
 produced three architecture revisions and repeated independent Codex
