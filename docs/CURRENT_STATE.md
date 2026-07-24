@@ -261,11 +261,14 @@ merged 2026-07-21) — see "Release history" below.
   effective storage ceiling (OL-032). The **product decision on that
   trade-off is made and Stage 1 has shipped** — David selected Option 5
   (staged), and Stage 1 = Option 1 (earlier warning thresholds) is
-  merged, deployed, and closed (PR #27, DOS-STAB-002A). The warning
-  thresholds are no longer an unresolved product decision. OL-032 stays
-  open only for the follow-on directions: Option 2 rejected, Option 3
-  unimplemented (next action is a bounded planning package only), Option
-  4 (IndexedDB) deferred and separately approval-bound.
+  merged, deployed, and closed (PR #27, DOS-STAB-002A). The warning thresholds are no longer an unresolved product decision.
+OL-032 remains open only because the verified localStorage capacity
+trade-off still exists. Option 2 is rejected; Option 3 planning and
+independent review are complete and closed with a bounded NO-GO
+implementation disposition under the current architecture and safety
+constraints; and Option 4 (IndexedDB) remains deferred and separately
+authorization-bound. No Option 3 work remains active, and no next storage
+implementation action is authorized or inferred.
 - **Storage capacity warnings (DOS-STAB-002A Stage 1, PR #27)**: warning
   begins at raw measured total-origin localStorage usage ≥35% and
   critical at ≥45%, classified from the raw fraction rather than rounded
@@ -517,10 +520,12 @@ Stage 1 release, not carried over from a prior release:
   `C:\dev\davidos-release-evidence\DOS-STAB-002A\release\20260723-181712`
   (ZIP `DOS-STAB-002A-Stage1-release-20260723-181712.zip`, SHA-256
   `25717656E71EDD65BDBB7F669DB1BFE0E118BCC5D32FD8E67474840B9621738A`,
-  backup copy under `D:\DavidOS_Backups\DOS-STAB-002A\release\`). OL-032
-  remains open only for Option 3 (planning package next, not
-  implementation) and Option 4 (deferred, approval-bound); Option 2 is
-  rejected.
+  backup copy under `D:\DavidOS_Backups\DOS-STAB-002A\release\`). OL-032 remains open only because the verified localStorage capacity
+trade-off still exists. Option 2 is rejected; Option 3 planning and
+review are closed with a bounded NO-GO implementation disposition; and
+Option 4 is deferred and separately authorization-bound. This
+release-history summary is superseded by the 2026-07-24 closure and does
+not identify or authorize a next storage package.
 - **PR #22 — Durable Journaled State Transactions (DOS-STAB-001A)**
   (merged 2026-07-21T14:23:59Z, squash-merge commit
   `d744e7d018d1c6c22ffcfdcf885cb568604f997c`; approved candidate
