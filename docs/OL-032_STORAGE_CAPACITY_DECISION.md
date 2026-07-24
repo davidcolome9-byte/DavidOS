@@ -497,8 +497,9 @@ the dated 2026-07-23 Stage 1 closeout record; this Section 9 is the
 authoritative disposition beginning 2026-07-24.
 
 DOS-STAB-002B was a **planning and independent-review effort only**. It
-produced three architecture revisions and repeated independent Codex
-reviews. No Option 3 source code, UI, tests, schema, migration, storage
+produced three architecture revisions. The independent Codex reviews
+repeatedly returned **REVISE**; none returned approval. No Option 3 source
+code, UI, tests, schema, migration, storage
 key, dependency, branch implementation, deployment, or runtime behavior
 was created or changed by that effort.
 

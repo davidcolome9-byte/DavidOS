@@ -1516,11 +1516,13 @@ records the completed release.
   - **No implementation package is active after this documentation
     closeout.** The next program action is preparation and review of the
     separate Option 3 bounded plan, not code implementation.
+
 ## 2026-07-24 — DOS-STAB-002B: OL-032 Option 3 planning closure / bounded NO-GO
 
 - **Scope was planning and independent review only.** Three primary
-  architecture revisions and repeated independent Codex reviews were
-  completed. No Option 3 source, UI, test, schema, migration, storage-key,
+  architecture revisions were completed. Independent Codex reviews
+  repeatedly returned **REVISE**; none returned approval. No Option 3
+  source, UI, test, schema, migration, storage-key,
   dependency, deployment, or runtime change was authorized or performed.
 - **The existing persistence guarantees remained protected throughout
   planning:** immutable write-once generations, predecessor retention,

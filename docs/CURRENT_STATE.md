@@ -700,21 +700,21 @@ The authoritative list with priorities lives in
   successfully; the repository copy of `docs/AI_TOOL_ROUTING.md` remains
   authoritative over it.
 - **Storage capacity (OL-032) — decided; Stage 1 shipped and closed.**
-  David selected **Option 5** (the staged direction).
-  **DOS-STAB-002A Stage 1 = Option 1** (earlier warning thresholds) is
-  merged, deployed, independently reviewed, live-verified, archived,
-  documented by this closeout, and **closed** (PR #27). No implementation
-  package is active after this documentation closeout. OL-032 stays open
-  only for the follow-on directions: **Option 2 is rejected**, **Option 3
-  (persist-first emergency prune-only recovery path) is unimplemented and
-  its next authorized activity is a separate bounded planning package
-  only — not implementation**, and **Option 4 (IndexedDB) remains
-  deferred and separately approval-bound**. Any Option 3 plan must
-  preserve the persist-first, verified-authority, crash-safe transaction
-  boundary and require its own adversarial review. The next program
-  action is preparation and review of that separate Option 3 bounded
-  plan, not code implementation. See docs/OPEN_LOOPS.md OL-032 and
-  docs/OL-032_STORAGE_CAPACITY_DECISION.md §8.
+  David selected **Option 5** as the staged direction.
+  **DOS-STAB-002A Stage 1 = Option 1** is merged, deployed,
+  independently reviewed, live-verified, archived, documented, and
+  **closed** (PR #27). **Option 2 remains rejected. Option 3 planning and
+  independent review are complete and closed with a bounded NO-GO
+  implementation disposition under the current localStorage architecture
+  and current safety constraints. Option 4 / IndexedDB remains deferred
+  and separately authorization-bound.** No Option 3 implementation was
+  authorized or performed. Export plus reset remains the supported
+  emergency recovery guidance when a persist-first save cannot fit;
+  export creates a backup but does not itself free browser storage. No
+  storage implementation package is active, and no next storage
+  implementation action is authorized or inferred. See
+  docs/OPEN_LOOPS.md OL-032 and
+  docs/OL-032_STORAGE_CAPACITY_DECISION.md §8–§9.
 
 ## Environment facts (David's machine)
 
