@@ -10,7 +10,12 @@ needed, and a status marker:
 - **Inferred** — probable, not fully reproduced
 - **Blocked** — waiting on something
 - **Requires David** — product/privacy decision needed before work
-- **Ready** — a coding agent can start without further clarification
+- **Ready** — technically bounded and sufficiently specified for package
+  selection; it is not standing authorization. A coding agent may start
+  only when the current Program Control package authorizes that work.
+  Live-provider, OAuth, credential, off-device data-flow, real-execution,
+  deployment, or automation work always requires David's separate
+  explicit authorization even if an older entry was marked Ready.
 - **Resolved** — implemented, merged to `main`, and deployed; kept for
   history in the "Resolved & deployed" section at the bottom
 - **Obsolete** — kept for history
@@ -169,7 +174,8 @@ listed; see git history and docs/DECISIONS.md.
 
 ### OL-008 · GIS script injects on Settings mount without user action
 - **Domain:** integrations/privacy · **Kind:** defect (privacy-posture) ·
-  **Status:** Verified + Ready
+  **Status:** Verified + Requires David (live-provider boundary; not
+  Ready)
 - **Problem:** when `VITE_GOOGLE_CLIENT_ID` is set, opening Settings
   loads a Google script with no user gesture (no data sent, but
   contrary to the "user gesture first" posture).
@@ -181,10 +187,13 @@ listed; see git history and docs/DECISIONS.md.
 - **Acceptance:** no accounts.google.com request until Connect clicked.
 - **Validation:** smoke test asserting no such network request on
   Settings load; `npm run verify:full`.
-- **Complexity:** S · **Approval:** no
+- **Complexity:** S · **Approval:** yes — a separate package must
+  authorize any Google Identity Services or live-provider work; no
+  provider connection is authorized by this backlog entry
 
 ### OL-009 · "Forget session" doesn't revoke the Google token
-- **Domain:** integrations · **Kind:** defect · **Status:** Verified + Ready
+- **Domain:** integrations · **Kind:** defect · **Status:** Verified +
+  Requires David (OAuth/live-provider boundary; not Ready)
 - **Problem:** the token is dropped from memory but stays valid at
   Google until expiry (≤1h); the audit entry implies more than happened.
 - **Evidence (re-verified 2026-07-17):** `src/components/Settings.tsx:195`
@@ -192,11 +201,13 @@ listed; see git history and docs/DECISIONS.md.
   (`src/lib/integrations/googleDriveClient.ts:39`).
 - **Approach:** call `revoke` best-effort, then clear; audit both
   outcomes honestly.
-- **Complexity:** S · **Approval:** no
+- **Complexity:** S · **Approval:** yes — OAuth execution, token use, and
+  provider connection require a separately authorized package
 
 ### OL-010 · drive.file scope can create duplicate "DavidOS" folder trees
 - **Domain:** integrations · **Kind:** environmental limitation (Drive
-  API semantics) · **Status:** Inferred
+  API semantics) · **Status:** Inferred + Requires David (provider
+  boundary)
 - **Problem:** manually-created Drive folders are invisible to the app's
   scope, so exports may create a parallel DavidOS/06_Exports tree; Drive
   allows same-name siblings.
@@ -205,7 +216,9 @@ listed; see git history and docs/DECISIONS.md.
 - **Approach:** document the behavior in Settings help text; optionally
   order query results (`orderBy: 'createdTime'`) for determinism. Do NOT
   widen the OAuth scope for this.
-- **Complexity:** S · **Approval:** no (scope widening would need YES)
+- **Complexity:** S · **Approval:** yes for any provider-facing change;
+  scope widening remains separately prohibited unless explicitly
+  authorized
 
 ### OL-013 · Router duplicates agent names/default workflows from seed
 - **Domain:** dead code/drift risk · **Kind:** maintenance ·
@@ -386,6 +399,12 @@ listed; see git history and docs/DECISIONS.md.
 - **Complexity:** S · **Approval:** no
 
 ## Roadmap-scale items (product decisions)
+
+Roadmap placement records possible sequencing only. None of the items in
+this section is an active or authorized package. Live providers, OAuth,
+credentials, off-device flows, real execution, deployment, and
+automation require separate explicit authorization and may not be
+inferred from a roadmap entry or prior foundation work.
 
 ### OL-023 · v0.2 deferred polish bundle
 - **Kind:** future capability · **Status:** Requires David (pick what

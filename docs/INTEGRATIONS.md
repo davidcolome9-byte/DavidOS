@@ -4,6 +4,12 @@ DavidOS is local-first: in the current version NO integration performs
 real external actions except the explicitly-gated Google Drive backup
 export foundation. Everything else is a typed, disabled stub.
 
+This document describes shipped capability and proposed architecture; it
+does not authorize provider access or implementation. A current Program
+Control package must separately and explicitly authorize any provider
+connection, OAuth execution, credential use, off-device flow, or
+integration change. DOS-GOV-003A authorizes none of those actions.
+
 ## The stub contract (protected behavior)
 
 Every adapter in `src/lib/integrations/` exports:
@@ -14,7 +20,7 @@ Every adapter in `src/lib/integrations/` exports:
 2. Stub methods returning `{ ok: false, message }` that clearly say no
    external call was made. **Stubs never simulate success.**
 
-When implementing a stub for real:
+If a future separately authorized package implements a stub for real:
 - Keep the same method signatures.
 - Route every write through `requiresApproval()` + ApprovalGate.
 - Audit-log every call.
@@ -53,4 +59,6 @@ v0.3 Drive sync → v0.4 Calendar read/draft → v0.5 Gmail read/draft
 (drafts never auto-send) → v0.6 AI provider APIs (keys paste-at-runtime
 or personal proxy, never bundled) → v0.7 Capacitor Android wrapper.
 Details: docs/roadmap.md. Each integration ships read-only/draft-first,
-with every write behind ApprovalGate.
+with every write behind ApprovalGate. This sequence and the ApprovalGate
+design are not package authorization; each integration requires David's
+separate explicit authorization before work or provider access begins.

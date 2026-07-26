@@ -81,9 +81,14 @@ Point-in-time status: [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).
 
 ## 3. Approval boundaries (what needs David's sign-off)
 
-Proceed freely: bug fixes with tests, docs updates, test additions,
-refactors that preserve behavior, items marked **Ready** in
-[docs/OPEN_LOOPS.md](docs/OPEN_LOOPS.md).
+Proceed only within the current explicitly authorized package: bounded
+bug fixes with tests, docs updates, test additions, and behavior-preserving
+refactors that the package actually includes. A **Ready** marker in
+[docs/OPEN_LOOPS.md](docs/OPEN_LOOPS.md) means the item is sufficiently
+specified for package selection; it is not standing authorization to
+start work. Provider, OAuth, credential, off-device, real-execution,
+deployment, and automation work always requires David's separate explicit
+authorization.
 
 Ask first (or leave as a proposal in OPEN_LOOPS.md):
 - Any new runtime dependency.

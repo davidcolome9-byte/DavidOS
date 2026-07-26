@@ -16,7 +16,9 @@ relevant to your task.
 
 ## 1. Picking work
 
-- Items marked **Ready** in OPEN_LOOPS.md need no further approval.
+- Items marked **Ready** in OPEN_LOOPS.md are sufficiently specified for
+  package selection, but may be started only when the current Program
+  Control package explicitly authorizes them.
 - Items marked **Requires David** must not be started — leave questions
   in the item's notes.
 - Never invent scope: no new domains, nav restructures, or dependencies

@@ -10,6 +10,20 @@ assets — with explicit safety gates before anything would ever leave the devic
 a static Vite bundle is more portable — PWA today, Capacitor wrapper later. See
 `docs/DECISIONS.md`.)
 
+## Program portfolio
+
+The active program portfolio is exactly:
+
+1. **DavidOS**
+2. **Operation David / Health & Fitness**
+3. **Social Assistant / Dating Assistant**
+
+Agent names and workflow domains inside DavidOS — including
+Work/Fraud/Cyber, Dogs/Home/Life Admin, Content/Side-Income, Calendar,
+Cooking, and Dating Wingman — are product routing categories, not
+additional active projects. The retired “Investing” label is historical
+only and is not a finance or investing project.
+
 > **AI coding agents:** start with [AGENTS.md](AGENTS.md) — rules,
 > architecture map, commands, and definition of done — which itself
 > points to [docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md), the
@@ -97,7 +111,9 @@ require approval + review. Financial/medical/legal actions are blocked outright.
 Integrations are **stubs that say so** — they never simulate success — with one
 gated exception: manual Google Drive backup export (v0.3 foundation) is live
 behind the ApprovalGate. Details: `docs/security-and-approval-model.md` and
-`docs/INTEGRATIONS.md`.
+`docs/INTEGRATIONS.md`. That shipped foundation is a product fact, not standing
+authorization to connect a provider, use credentials, execute OAuth, or begin
+additional integration work.
 
 ## Folder structure
 
@@ -150,4 +166,5 @@ mistakes automatically).
 
 v0.2 polish → **v0.3 Google Drive sync** → v0.4 Calendar read/draft → v0.5 Gmail
 read/draft → v0.6 AI provider APIs → v0.7 Capacitor Android wrapper.
-Full detail: `docs/roadmap.md`.
+This is possible sequencing only, not authorization for any package, provider,
+credential, deployment, or automation work. Full detail: `docs/roadmap.md`.
