@@ -368,42 +368,6 @@ must be separately selected and explicitly authorized.
   paths behave identically.
 - **Complexity:** S · **Approval:** no
 
-### OL-029 · Near-quota smoke seeding self-triggers stale-tab guard
-- **Domain:** test reliability / storage safeguards · **Kind:**
-  maintenance / environmental · **Status:** Verified + Ready
-- **Problem:** `tests/smoke/storageRetention.spec.ts`'s "near-quota state
-  raises the app-wide protection banner and Settings warning" test can
-  fail in some environments: its `seedArtifacts` helper writes directly
-  to `localStorage` via `page.evaluate` and reloads, which can self-
-  trigger the app's genuine cross-tab `storage`-event guard
-  (`src/state/store.tsx`, `StaleTabDialog.tsx`) — the test's own tab ends
-  up treated as stale, blocking the prune-dialog interaction the test is
-  trying to exercise.
-- **Evidence (found 2026-07-19, DOS-WF-002A Gate 2 non-regression
-  investigation):** reproduced 4/4 attempts on merged `main`
-  (`49c71caa7ad8af95afad3adc09893a0388810745`) and 1/1 on the
-  pre-DOS-WF-002A base (`4fefa3ce4ad25918234a00d2430575da5e5bd4db`) in an
-  independent local sandbox — identical failure line, identical disabled
-  prune-button state, identical active `⚠️ Updated in another tab` dialog
-  on both revisions; `tests/smoke/storageRetention.spec.ts`,
-  `src/state/store.tsx`, and `src/components/StaleTabDialog.tsx` are
-  byte-identical across both revisions, ruling out a DOS-WF-002A
-  regression. Did not reproduce on GitHub Actions (`ci.yml` run
-  `29701986395`, `deploy.yml` run `29701986418`, both green, both running
-  the full Playwright suite on a clean-provisioned runner) — sandbox/
-  environment-timing-sensitive, not a general failure.
-- **Approach:** evaluate the smallest existing-mechanism correction —
-  seed state before the app's storage-event listener mounts, or isolate
-  the harness's write so it cannot be mistaken for a second tab (e.g. an
-  explicit test-only marker the store already trusts, or seeding before
-  first mount rather than via a raw `localStorage.setItem` + reload).
-  Do not build a new test framework, browser harness, storage subsystem,
-  or stale-tab mechanism.
-- **Acceptance:** the near-quota test passes reliably across environments
-  without weakening its assertions or increasing its timeout; product
-  storage protection (OL-003) and stale-tab protection (OL-004) are
-  unchanged.
-- **Complexity:** S · **Approval:** no
 
 ## Roadmap-scale items (product decisions)
 
@@ -680,3 +644,8 @@ without new evidence.
   - Live online load, atomic service worker installation (scope `/DavidOS/`, build cache `a6e0c91ae5f4e9f56522`), and offline reload verification passed.
   - Android Path B (fresh install) offline verification passed on target device with repeated launches, local data preservation, and offline routing successful (no blank screens).
 - **Limitation:** The Android fresh-install test did not manually verify an upgrade of a PWA that had been installed before PR #10. Automated Build A to Build B coverage verifies the update lifecycle.
+
+### OL-029 · Near-quota smoke seeding self-triggers stale-tab guard — RESOLVED
+- **Resolved by:** DOS-TEST-001A (Gate 1 candidate).
+- **Current behavior:** seedCanonicalState writes the intended localStorage test state into sessionStorage and injects an initialization script via page.addInitScript(). On the next test reload, the init script transfers the state to localStorage before the React app boots and attaches its storage listener. This eliminates the race condition where page.evaluate modifying storage during an active app mount could self-trigger the stale-tab protection dialog.
+- **Tests:** 	ests/smoke/storageRetention.spec.ts, ootQuarantine.spec.ts.

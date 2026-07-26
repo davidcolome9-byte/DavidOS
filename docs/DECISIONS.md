@@ -1607,3 +1607,8 @@ records the completed release.
   real-execution, DOS-CTL Phase 1, health/dating engineering,
   side-project automation, push, pull-request, merge, deployment,
   release, or live-site work or action.
+
+## 2026-07-26: DOS-TEST-001A (OL-029 Near-Quota Harness Isolation)
+- **Decision:** Modified seedCanonicalState to use sessionStorage and page.addInitScript() to stage the localStorage setup before the React app boots.
+- **Reasoning:** In certain local timing environments, page.evaluate modifying localStorage in the test and immediately reloading caused a race condition where the storage event fired before the app unmounted, triggering the StaleTabDialog and breaking the near-quota test (OL-029). By staging state in sessionStorage and applying it via an init script, the test isolates the state injection strictly before the app's storage event listener mounts, fixing the test without altering any source/runtime files.
+- **Approval:** Explicitly authorized by David.

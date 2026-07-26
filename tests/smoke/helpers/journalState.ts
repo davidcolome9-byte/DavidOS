@@ -81,9 +81,25 @@ export async function waitForCanonicalState(page: Page): Promise<void> {
  * valid journal head exists — that is the intended production behavior.)
  */
 export async function seedCanonicalState(page: Page, raw: string): Promise<void> {
+  // Stage the intended state in sessionStorage to avoid touching localStorage while the app
+  // is mounted and its cross-tab 'storage' listener is active (OL-029).
   await page.evaluate(
     ([keys, blob]) => {
-      const k = keys as { legacy: string; prefix: string; heads: string[] };
+      window.sessionStorage.setItem('__playwright_seed_keys__', JSON.stringify(keys));
+      window.sessionStorage.setItem('__playwright_seed_blob__', blob as string);
+    },
+    [KEYS, raw] as const,
+  );
+
+  // Inject an initialization script that runs before the app code boots on the next reload,
+  // applying the staged state to localStorage before any React listener is attached.
+  await page.addInitScript(() => {
+    const keysStr = window.sessionStorage.getItem('__playwright_seed_keys__');
+    const blob = window.sessionStorage.getItem('__playwright_seed_blob__');
+    if (keysStr && blob) {
+      window.sessionStorage.removeItem('__playwright_seed_keys__');
+      window.sessionStorage.removeItem('__playwright_seed_blob__');
+      const k = JSON.parse(keysStr) as { legacy: string; prefix: string; heads: string[] };
       for (const headKey of k.heads) localStorage.removeItem(headKey);
       const doomed: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -91,10 +107,9 @@ export async function seedCanonicalState(page: Page, raw: string): Promise<void>
         if (key?.startsWith(k.prefix)) doomed.push(key);
       }
       for (const key of doomed) localStorage.removeItem(key);
-      localStorage.setItem(k.legacy, blob as string);
-    },
-    [KEYS, raw] as const,
-  );
+      localStorage.setItem(k.legacy, blob);
+    }
+  });
 }
 
 export { clearJournal };
