@@ -1554,3 +1554,35 @@ records the completed release.
   separately authorization-bound.
 - **No implementation package is activated by this decision.** Any future
   storage package requires a separate explicit authorization.
+
+## 2026-07-26 — DOS-GOV-003A Gate 1: Program Baseline and Authorization Reconciliation
+
+- **Authorization.** David authorized one documentation-only Gate 1
+  package from canonical `main` at
+  `c4ccd01d9f55f159930678137538abfc34fc904f`: local documentation
+  edits, documentation validation, one bounded local candidate commit,
+  and evidence preparation for independent read-only review.
+- **Current portfolio.** The active program portfolio is exactly:
+  DavidOS; Operation David / Health & Fitness; Social Assistant /
+  Dating Assistant. Agent/workflow labels and roadmap domains are not
+  additional active projects. The retired “Investing” label is
+  historical only.
+- **DOS-CTL baseline.** DOS-CTL-001A Phase 0 Revision 1 Correction Round
+  3 is complete, approved, Gate 1 closed, frozen, and synthetic-only.
+  Real DavidOS execution, credentials, live providers, deployment,
+  release, and DOS-CTL Phase 1 are not authorized.
+- **Authorization semantics.** `Ready` means technically bounded for
+  package selection, not agent-startable authority. Provider, OAuth,
+  credential, off-device, real-execution, deployment, and automation
+  work always requires a separate explicit authorization. Existing
+  integration foundations, roadmap sequencing, and the automatic Pages
+  workflow are product/repository facts, not standing authorization.
+- **Current package boundary.** DOS-GOV-003A changes governance
+  documentation only. It authorizes no source/runtime/test/dependency
+  work, health or dating engineering expansion, side-project
+  automation, push, pull request, merge, deployment, live-site testing,
+  credential use, provider/OAuth connection, real DavidOS execution, or
+  DOS-CTL Phase 1.
+- **Next gate.** After one local candidate commit, the only authorized
+  next action is independent read-only review. Push, pull request,
+  merge, and deployment remain unauthorized.

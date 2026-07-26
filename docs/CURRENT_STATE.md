@@ -11,6 +11,33 @@ documentation-only DOS-STAB-002B Option 3 planning closure. That closure
 changes no runtime behavior, dependency, schema, storage key, persistence
 logic, test, or deployed feature behavior.
 
+## Program Control baseline — 2026-07-26
+
+- **Active project portfolio:** exactly three projects: **DavidOS**;
+  **Operation David / Health & Fitness**; and **Social Assistant /
+  Dating Assistant**. Agent names, workflow domains, seed projects,
+  product surfaces, and roadmap headings are not additional active
+  portfolio projects. The retired “Investing” label is historical only
+  and is not a finance or investing project.
+- **DOS-CTL-001A:** Phase 0 Revision 1 Correction Round 3 is complete,
+  approved, Gate 1 closed, frozen, and synthetic-only. Real DavidOS
+  execution is not authorized. Credentials, live providers, deployment,
+  release, and DOS-CTL Phase 1 are not authorized.
+- **Current package:** DOS-GOV-003A Gate 1, a documentation-only Program
+  Baseline and Authorization Reconciliation based on canonical `main` at
+  `c4ccd01d9f55f159930678137538abfc34fc904f`. It authorizes local
+  documentation edits, documentation validation, one bounded local
+  candidate commit, and preparation for independent read-only review
+  only. It authorizes no source/runtime work, push, pull request, merge,
+  deployment, live-site testing, credentials, provider/OAuth connection,
+  real execution, DOS-CTL Phase 1, health/dating engineering expansion,
+  or side-project automation.
+- **Roadmap and automation facts are not authorization.** Existing
+  provider foundations and the repository's automatic Pages workflow are
+  historical/current product facts, not permission to connect a
+  provider, use credentials, push, merge, deploy, or begin a roadmap
+  package.
+
 ## Version
 
 **v0.2 + Earlier Storage Capacity Warnings release (PR #27,
@@ -697,7 +724,9 @@ The authoritative list with priorities lives in
   docs/google-drive-sync-plan.md).
 - Dating Wingman, Cooking & Meal Prep, and Daily Log surfaces exist as
   domains in David's life system but have no dedicated agents yet —
-  they currently route to the closest existing agent.
+  they currently route to the closest existing agent. These are product
+  domains, not additional active program-portfolio projects; the active
+  portfolio is recorded in the Program Control baseline above.
 - **AI Tool Routing Doctrine (DOS-GOV-002A) — closed.**
   `docs/AI_TOOL_ROUTING.md` establishes the authoritative model/tool
   routing, independence, quota-fallback, and two-gate policy for every AI

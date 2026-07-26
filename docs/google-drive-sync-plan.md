@@ -1,7 +1,12 @@
 # Google Drive Sync Plan (v0.3)
 
-Google Drive is the long-term source of truth for DavidOS. v1 does not touch
-Drive at all — this document is the contract for when it does.
+Google Drive is the long-term private record system for DavidOS. The
+gated manual backup-export foundation is already shipped; two-way vault
+sync and the remaining plan below are not implemented. This document is
+an architecture proposal, not an active or authorized package. It grants
+no permission to connect Drive, execute OAuth, use credentials, access
+private files, or implement sync. Every such action requires David's
+separate explicit authorization through Program Control.
 
 ## Why Drive
 - Already the user's storage hub (`G:\My Drive` on desktop)

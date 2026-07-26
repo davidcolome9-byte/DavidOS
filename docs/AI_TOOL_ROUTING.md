@@ -13,7 +13,7 @@ generations and should rarely change. Sections 4 and 13 are the CURRENT
 MAPPING — the specific model/tool bound to each stable role today — and
 are expected to change far more often as models are released, retired,
 or reassigned. **Current role mapping (§4) reviewed: 2026-07-21. Current
-strategic routing (§13) reviewed: 2026-07-24.** The two mapping sections
+strategic routing (§13) reviewed: 2026-07-26.** The two mapping sections
 carry their own dates and are reviewed independently — §13 typically
 moves whenever the active package changes, while §4 moves only when a
 model/role binding changes — so reviewing this document means
@@ -465,21 +465,29 @@ no Option 3 implementation occurred.
 
 ### Current active package
 
-**DOS-STAB-002B Closure Documentation — documentation only.**
+**DOS-GOV-003A Gate 1 — Program Baseline and Authorization
+Reconciliation; documentation only.**
 
-This bounded package may update only the authoritative records needed to
-close Option 3 planning, complete independent review, create a draft pull
-request, and stop before merge. It authorizes no source, test, dependency,
-schema, migration, storage-key, runtime, implementation, merge, or
-deployment change.
+David authorized this bounded package on 2026-07-26 from canonical
+`main` at
+`c4ccd01d9f55f159930678137538abfc34fc904f`. It may reconcile tracked
+governance documents, run local documentation validation, create one
+local candidate commit, and prepare evidence for independent read-only
+review.
+
+It authorizes no source, test, dependency, schema, migration,
+storage-key, runtime, provider, credential, OAuth, real-execution,
+DOS-CTL Phase 1, health/dating engineering, side-project automation,
+push, pull-request, merge, deployment, or live-site change or action.
 
 ### Next required action
 
-Complete independent Codex review of the exact committed documentation
-diff and draft pull request. If Gate 1 is approved, stop and request
-explicit Gate 2 authorization before merge.
+Prepare the exact local documentation candidate and submit that candidate
+for independent read-only review. Stop after the local candidate commit.
+Push, pull request, merge, deployment, and live-site verification remain
+unauthorized.
 
-### After this closure
+### Program baseline carried by this package
 
 - No implementation package is active.
 - No Option 3 work remains active.
@@ -488,10 +496,21 @@ explicit Gate 2 authorization before merge.
 - Option 4 remains deferred and separately approval-bound.
 - The next program package must be selected and explicitly authorized
   separately; it must not be inferred from OL-032.
+- The active project portfolio is exactly: DavidOS; Operation David /
+  Health & Fitness; Social Assistant / Dating Assistant. Product domains,
+  workflow labels, seed projects, and roadmap headings do not create
+  additional active projects.
+- DOS-CTL-001A Phase 0 Revision 1 Correction Round 3 is complete,
+  approved, Gate 1 closed, frozen, and synthetic-only. Real DavidOS
+  execution and DOS-CTL Phase 1 are not authorized.
+- A roadmap entry, `Ready` backlog marker, existing integration
+  foundation, or auto-deploy workflow is never standing package
+  authorization.
 - Program Control: GPT-5.6 Thinking
-- Independent closure review: Codex
+- Independent candidate review: read-only, separately assigned
 - Implementation: **not authorized**
-- Merge and release execution: **not authorized until Gate 2**
+- Push, pull request, merge, deployment, and live verification:
+  **not authorized**
 
 ---
 

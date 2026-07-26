@@ -8,6 +8,7 @@ list wins; fix the stale copy, never the authoritative one.
 
 | Data | Authoritative source | Notes |
 |---|---|---|
+| Current Program Control instruction and package authorization | David's latest explicit instruction | Highest current authority; tracked mirrors in `docs/CURRENT_STATE.md`, `docs/AI_TOOL_ROUTING.md`, and `docs/DECISIONS.md` must be corrected when stale |
 | AI model/tool routing, independence, execution gates | [docs/AI_TOOL_ROUTING.md](AI_TOOL_ROUTING.md) | A separate axis from data authority below; outranks conversational memory and prior chat-session instructions; material changes need David's approval |
 | Entity shapes | `src/lib/types.ts` | Every module imports from here |
 | Agent specs | `seed/agents/*.json` | Authored data; app never edits them |
@@ -106,6 +107,21 @@ binding on agents working in this repo:
 12. External writes, destructive actions, public releases, and sensitive
     disclosures require approval — in-app via ApprovalGate, in-repo via
     AGENTS.md §3.
+13. **The active project portfolio is exactly three projects:** DavidOS;
+    Operation David / Health & Fitness; Social Assistant / Dating
+    Assistant. Product domains, workflow names, seed projects, and
+    roadmap headings do not create additional active projects. The
+    retired “Investing” label is historical only.
+14. **DOS-CTL-001A Phase 0 Revision 1 Correction Round 3 is complete,
+    approved, Gate 1 closed, frozen, and synthetic-only.** Real DavidOS
+    execution, credentials, live providers, deployment, and DOS-CTL
+    Phase 1 require separate explicit authorization and are not inferred
+    from the Phase 0 record.
+15. **Roadmaps and capability facts are not authorization.** A roadmap
+    item, Ready backlog label, existing integration foundation, or
+    automatic deployment workflow never activates a package or grants
+    permission to connect providers, use credentials, execute OAuth,
+    push, merge, deploy, or automate work.
 
 ## Documentation
 

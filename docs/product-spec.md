@@ -14,6 +14,17 @@ AI-tool user (ChatGPT, Claude, Claude Code, Codex, Gemini) and uses the app
 primarily on Android, on the go. Personal specifics live in on-device
 context and the user's private backup, never in this public repo.
 
+## Program portfolio versus product domains
+
+The active program portfolio is exactly **DavidOS**, **Operation David /
+Health & Fitness**, and **Social Assistant / Dating Assistant**.
+DavidOS's agent names, workflow labels, seed projects, and future-domain
+headings are internal product organization; they do not create
+additional active projects. “Dating Wingman” is a product-domain label
+within Social Assistant / Dating Assistant, not a separate project. The
+retired “Investing” label is historical only and must not be interpreted
+as a finance or investing project.
+
 ## Core workflows (v1)
 | Workflow | Agent | What it produces |
 |---|---|---|
@@ -41,7 +52,9 @@ context and the user's private backup, never in this public repo.
 - No real AI API calls, OAuth, or external writes of any kind
   *(amended: the v0.3 foundation added exactly one gated external write —
   manual Google Drive backup export behind the ApprovalGate; see
-  docs/INTEGRATIONS.md)*
+  docs/INTEGRATIONS.md; this historical capability is not standing
+  authorization to connect a provider, use credentials, or perform
+  OAuth)*
 - No multi-user, no cloud backend, no accounts
 - No notifications/alarms
 - No native Android build (PWA first; Capacitor later)
@@ -50,3 +63,7 @@ context and the user's private backup, never in this public repo.
 ## Future roadmap
 See [roadmap.md](roadmap.md). Headline: Drive sync (v0.3) → Calendar read (v0.4)
 → Gmail read/draft (v0.5) → AI provider APIs (v0.6) → Capacitor wrapper (v0.7).
+This sequence is proposed product direction only. Every package,
+provider or credential action, off-device flow, real-execution feature,
+deployment, and automation change requires separate explicit
+authorization.
