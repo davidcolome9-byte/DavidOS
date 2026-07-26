@@ -1,4 +1,4 @@
-# Current State — 2026-07-24
+# Current State — 2026-07-26
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -23,15 +23,16 @@ logic, test, or deployed feature behavior.
   approved, Gate 1 closed, frozen, and synthetic-only. Real DavidOS
   execution is not authorized. Credentials, live providers, deployment,
   release, and DOS-CTL Phase 1 are not authorized.
-- **Current package:** DOS-GOV-003A Gate 1, a documentation-only Program
-  Baseline and Authorization Reconciliation based on canonical `main` at
-  `c4ccd01d9f55f159930678137538abfc34fc904f`. It authorizes local
-  documentation edits, documentation validation, one bounded local
-  candidate commit, and preparation for independent read-only review
-  only. It authorizes no source/runtime work, push, pull request, merge,
-  deployment, live-site testing, credentials, provider/OAuth connection,
-  real execution, DOS-CTL Phase 1, health/dating engineering expansion,
-  or side-project automation.
+- **DOS-GOV-003A:** Program Baseline and Authorization Reconciliation is
+  **COMPLETE / MERGED / LOCALLY CONFIRMED** through PR #30. Final
+  `main` SHA:
+  `2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`. Its former Gate 1
+  authorization is closed and grants no continuing authority.
+- **Current package:** no implementation package is active. The next
+  bounded package must be selected by Program Control and explicitly
+  authorized by David; it is not inferred from DOS-GOV-003A, a backlog
+  status, a roadmap entry, an integration foundation, or an automatic
+  workflow.
 - **Roadmap and automation facts are not authorization.** Existing
   provider foundations and the repository's automatic Pages workflow are
   historical/current product facts, not permission to connect a
@@ -652,9 +653,13 @@ Stage 1 release, not carried over from a prior release:
   2026-07-13); **PR #1 — Universal Operations Core** (merged
   2026-07-12).
 
-## Repository state (branches & worktrees, 2026-07-23)
+## Repository state (branches & worktrees, 2026-07-26)
 
-Stable production branch: `main`. The most recent product release is
+Stable production branch: `main`. The current governance baseline is
+PR #30, DOS-GOV-003A, merged at
+`2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`; it changed documentation
+only and is complete, locally confirmed, and closed. The most recent
+product release is
 DOS-STAB-002A Stage 1 through PR #27 (squash-merge commit
 `bfdc4a07fc7634c4f735893699c25a991cd8c1bc`, approved candidate
 `c3eaaba2f7947f9dd1c69534ed238138c84755ba`), documented and closed by
