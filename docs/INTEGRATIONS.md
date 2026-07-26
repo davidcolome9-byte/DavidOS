@@ -8,7 +8,9 @@ This document describes shipped capability and proposed architecture; it
 does not authorize provider access or implementation. A current Program
 Control package must separately and explicitly authorize any provider
 connection, OAuth execution, credential use, off-device flow, or
-integration change. DOS-GOV-003A authorizes none of those actions.
+integration change. DOS-GOV-003A is complete and closed; its former
+documentation-only authorization grants no continuing authority for any
+of those actions. No implementation package is active.
 
 ## The stub contract (protected behavior)
 

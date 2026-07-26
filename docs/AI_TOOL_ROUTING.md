@@ -439,7 +439,7 @@ A fresh room must read this doctrine before acting.
 
 ## 13. Current strategic routing
 
-*Current mapping reviewed: 2026-07-24. This whole section is the DATED
+*Current mapping reviewed: 2026-07-26. This whole section is the DATED
 package-level mapping (§4's note above applies here too) — expect it to
 change every time the active package changes, independent of the stable
 doctrine in the other sections.*
@@ -465,31 +465,26 @@ no Option 3 implementation occurred.
 
 ### Current active package
 
-**DOS-GOV-003A Gate 1 — Program Baseline and Authorization
-Reconciliation; documentation only.**
+**No implementation package is active.**
 
-David authorized this bounded package on 2026-07-26 from canonical
-`main` at
-`c4ccd01d9f55f159930678137538abfc34fc904f`. It may reconcile tracked
-governance documents, run local documentation validation, create one
-local candidate commit, and prepare evidence for independent read-only
-review.
-
-It authorizes no source, test, dependency, schema, migration,
-storage-key, runtime, provider, credential, OAuth, real-execution,
-DOS-CTL Phase 1, health/dating engineering, side-project automation,
-push, pull-request, merge, deployment, or live-site change or action.
+DOS-GOV-003A — Program Baseline and Authorization Reconciliation is
+**COMPLETE / MERGED / LOCALLY CONFIRMED** through PR #30. Its final
+`main` SHA is
+`2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`. Its former Gate 1
+authorization is closed and grants no continuing authority.
 
 ### Next required action
 
-Prepare the exact local documentation candidate and submit that candidate
-for independent read-only review. Stop after the local candidate commit.
-Push, pull request, merge, deployment, and live-site verification remain
-unauthorized.
+Program Control must select and David must explicitly authorize the next
+bounded package. No backlog status, roadmap entry, prior package,
+integration foundation, or automatic workflow activates that package.
 
 ### Program baseline carried by this package
 
 - No implementation package is active.
+- DOS-GOV-003A is complete, merged through PR #30 at
+  `2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`, locally confirmed, and
+  closed. Its former authorization does not carry forward.
 - No Option 3 work remains active.
 - Export plus reset remains the supported emergency recovery guidance
   when a persist-first save cannot fit.
@@ -507,7 +502,8 @@ unauthorized.
   foundation, or auto-deploy workflow is never standing package
   authorization.
 - Program Control: GPT-5.6 Thinking
-- Independent candidate review: read-only, separately assigned
+- Independent review: separately assigned when a future package requires
+  it
 - Implementation: **not authorized**
 - Push, pull request, merge, deployment, and live verification:
   **not authorized**

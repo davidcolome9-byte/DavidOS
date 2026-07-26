@@ -33,6 +33,13 @@ rev-parse origin/main` for the current tip. The prior reconciliation
 DOS-GOV-002A). Items fixed in the 2026-07-12 stabilization sprint are not
 listed; see git history and docs/DECISIONS.md.
 
+**Program-authorization reconciliation: 2026-07-26.** DOS-GOV-003A is
+complete, merged through PR #30 at
+`2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`, locally confirmed, and
+closed. No implementation package is active. This closeout does not
+change any backlog priority or status below; the next bounded package
+must be separately selected and explicitly authorized.
+
 ---
 
 ## P1 — data safety & core promises

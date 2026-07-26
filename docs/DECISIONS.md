@@ -1586,3 +1586,24 @@ records the completed release.
 - **Next gate.** After one local candidate commit, the only authorized
   next action is independent read-only review. Push, pull request,
   merge, and deployment remain unauthorized.
+
+## 2026-07-26 — DOS-GOV-003A merge closeout and authorization reset
+
+- **Package closed.** DOS-GOV-003A — Program Baseline and Authorization
+  Reconciliation is **COMPLETE / MERGED / LOCALLY CONFIRMED** through
+  PR #30. Final `main` SHA:
+  `2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`.
+- **Prior entry preserved as history.** The Gate 1 authorization above
+  accurately records the pre-merge package boundary at that time. This
+  append-only closeout supersedes its current-package and next-gate
+  statements; it does not rewrite the historical authorization.
+- **Authorization reset.** No implementation package is active.
+  DOS-GOV-003A's former authorization is closed and grants no continuing
+  authority. Program Control must select, and David must explicitly
+  authorize, the next bounded package.
+- **Boundaries preserved.** This closeout changes documentation only and
+  does not authorize source, test, dependency, schema, migration,
+  storage-key, runtime, provider, credential, OAuth, off-device,
+  real-execution, DOS-CTL Phase 1, health/dating engineering,
+  side-project automation, push, pull-request, merge, deployment,
+  release, or live-site work or action.
