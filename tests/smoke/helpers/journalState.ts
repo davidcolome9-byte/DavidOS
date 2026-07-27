@@ -79,6 +79,10 @@ export async function waitForCanonicalState(page: Page): Promise<void> {
  * legacy blob, so the next load migrates exactly this state into a fresh
  * initial generation. (Writing the legacy key alone would be IGNORED once a
  * valid journal head exists — that is the intended production behavior.)
+ *
+ * Note: this helper now stages the intended state in sessionStorage and uses
+ * an initialization script. A subsequent page navigation or reload is required
+ * for the seeded state to be applied to localStorage and recognized by the app.
  */
 export async function seedCanonicalState(page: Page, raw: string): Promise<void> {
   // Stage the intended state in sessionStorage to avoid touching localStorage while the app

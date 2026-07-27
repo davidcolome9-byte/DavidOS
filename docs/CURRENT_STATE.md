@@ -682,7 +682,7 @@ touched no package manifest, GitHub workflow, or seed file. No runtime
 source, tests, package manifests, GitHub workflows, or seed files were
 touched by PR #24, PR #25, PR #26, or this documentation closeout.
 
-- **`DOS-TEST-001A` (active candidate)**: Test-only seeding isolation for OL-029.
+**`DOS-TEST-001A` (active candidate)**: Test-only seeding isolation for OL-029.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove

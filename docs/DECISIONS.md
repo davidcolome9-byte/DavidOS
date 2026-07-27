@@ -1612,3 +1612,13 @@ records the completed release.
 - **Decision:** Modified seedCanonicalState to use sessionStorage and page.addInitScript() to stage the localStorage setup before the React app boots.
 - **Reasoning:** In certain local timing environments, page.evaluate modifying localStorage in the test and immediately reloading caused a race condition where the storage event fired before the app unmounted, triggering the StaleTabDialog and breaking the near-quota test (OL-029). By staging state in sessionStorage and applying it via an init script, the test isolates the state injection strictly before the app's storage event listener mounts, fixing the test without altering any source/runtime files.
 - **Approval:** Explicitly authorized by David.
+
+## 2026-07-26 — DOS-TEST-001A Gate 1 Correction Round
+- **Scope:** Bounded correction round to resolve issues found in independent review (which returned BLOCK).
+- **Corrections applied:**
+  - Resolved dirty working tree by committing pending documentation.
+  - Repaired corrupted test path text in `docs/OPEN_LOOPS.md` and restored the deleted OL-029 reproduction evidence.
+  - Ensured OL-029 is not marked as RESOLVED (as it is a local candidate only) and kept it in the P3 section with candidate status language.
+  - Added a docblock note in `tests/smoke/helpers/journalState.ts` clarifying that `seedCanonicalState` stages state and requires reload/navigation to apply.
+  - Recorded validation evidence clearly stating that Playwright smoke tests were run separately from `npm run verify`.
+- **Invariants preserved:** No `src/` changes, no package.json/lock changes, no deployment, no merging or pushing. The fix for OL-029 remains isolated to test harnesses.
