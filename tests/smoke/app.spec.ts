@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
+import { canonicalStateRaw } from './helpers/journalState';
 
 // Browser smoke tests: a thin safety net over the production build.
 // They assert the app boots, navigates, persists, and recovers — not
@@ -91,6 +92,19 @@ test('a saved project survives a reload (localStorage persistence)', async ({ pa
   await editCard.locator('input[type="text"]').first().fill('Smoke Test Project');
   await editCard.getByRole('button', { name: 'Save (local)' }).click();
   await expect(page.getByText('Smoke Test Project')).toBeVisible();
+
+  // Visible text is not proof of a durable save: the store enqueues the write
+  // from a passive effect (src/state/store.tsx), so the row can be in the DOM
+  // before the journal generation is committed. The assertion above therefore
+  // establishes no happens-before relationship with durability. In sampled
+  // runs the commit did land first (7.8-16.4ms after the DOM text appeared),
+  // so the reload was safe — but only by incidental scheduling margin, not by
+  // any condition the test enforced. Waiting for the committed canonical
+  // generation supplies that missing durability gate, and strengthens the
+  // test: the project must reach durable storage, not just the screen.
+  await expect
+    .poll(() => canonicalStateRaw(page).then((raw) => (raw ?? '').includes('Smoke Test Project')))
+    .toBe(true);
 
   await page.reload();
   await expect(page.getByText('Smoke Test Project')).toBeVisible();
