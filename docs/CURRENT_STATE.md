@@ -695,12 +695,19 @@ before reloading, instead of reloading on the visible row alone. No
 `src/` file changed. Local Gate 1 candidate on branch
 `feat/dos-test-001b-persistence-smoke-stabilization`; not pushed, no
 pull request, not merged, not deployed. **The flake this package was
-named for was never reproduced** — the unmodified test passed 20/20
-serial, 108/108 in the full suite, and 34/34 under CPU throttling; the
-defect corrected is a measured but latent timing margin (commit lands
-8–16 ms after paint, 1.7–15.7 ms before reload), not an observed
-failure. The only flake on record in this repo remains
-`tests/smoke/navigation.spec.ts:94`, which is unrelated and untouched.
+named for was never reproduced** — documented target/original-arm total
+43/43 (20 focused serial, 1 occurrence inside the full suite, 10 at 6×
+CPU throttle, 12 at 25× throttle/4 workers); the full Playwright suite
+passed 108/108 separately, which is a suite result containing one
+occurrence of this test rather than 108 executions of it. The defect
+corrected is a latent test-contract durability race: the UI visibility
+assertion created no happens-before relationship with committed journal
+durability. In 20 instrumented runs the DOM text was observed 7.8–16.4 ms
+before the journal-head write, and reload was dispatched 1.7–15.7 ms
+after that write — persistence completed before reload in every measured
+run, but only by incidental scheduling margin. The only flake on record
+in this repo remains `tests/smoke/navigation.spec.ts:94`, which is
+unrelated and untouched.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove

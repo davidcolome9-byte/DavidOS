@@ -1638,27 +1638,40 @@ records the completed release.
   the existing `canonicalStateRaw` helper. Test-only change; no `src/`
   file was modified.
 - **Reasoning:** The test previously reloaded on a UI signal alone. That
-  is not a durability signal: `src/state/store.tsx` enqueues the write
-  from a `useEffect`, so the journal commit provably lands *after* React
-  paints the row. In-page instrumentation (patched
-  `Storage.prototype.setItem` + `MutationObserver`, excluding CDP
-  latency) measured the commit landing 8–16 ms after the row became
-  visible, leaving only 1.7–15.7 ms of slack before the reload is
-  dispatched; 6.6–35.3 ms under 25× CPU throttling with 4 workers.
+  is not a durability signal: `src/state/store.tsx:176-178` enqueues the
+  write from a passive `useEffect`, which React runs after committing the
+  render to the DOM, so the visibility assertion established no
+  happens-before relationship with durable journal commitment. In-page
+  instrumentation (patched `Storage.prototype.setItem` +
+  `MutationObserver`, excluding CDP latency) sampled 20 serial runs: the
+  project DOM text was observed before the journal-head write in all 20,
+  by 7.8–16.4 ms, and reload was dispatched 1.7–15.7 ms *after* the
+  committed write. A separate 16-run instrumented set at 25× CPU
+  throttling with 4 workers measured 6.6–35.3 ms. `MutationObserver`
+  measures DOM-mutation observation, not browser paint; no paint-ordering
+  claim is made, and no measured run reloaded before the commit landed.
 - **Honest limitation — the premise was not corroborated.** The package
-  was authorized to fix a "flaky" test, but **no failing run was ever
-  observed**: the unmodified test passed 20/20 serial, in the full
-  108-test suite, 10/10 at 6× CPU throttle, and 24/24 at 25× throttle
-  with 4 workers. No failure of this test appears anywhere in this
-  repository's records; the only flake on record is
+  was authorized to fix a "flaky" test, but **no failing run of the
+  target test was ever observed.** Documented target/original-arm total:
+  **43/43** — 20 focused serial, 1 occurrence inside the 108-test full
+  suite, 10 at 6× CPU throttle, 12 at 25× throttle with 4 workers.
+  Documented throttled original-arm total **22/22**; 25× original arm
+  **12/12**. The full Playwright suite passed **108/108** separately;
+  that is a suite result containing one occurrence of this test, not 108
+  executions of it. Fixed-arm executions are counted separately and are
+  not included in these totals. No failure of this test appears anywhere
+  in this repository's records; the only flake on record is
   `tests/smoke/navigation.spec.ts:94`, a different and unrelated
   pre-existing item, deliberately left untouched. The upstream
   investigation that proposed this package reached its conclusion by
   static reading only and reported no observed failure either.
-  Conclusion: a real latent robustness defect (unguaranteed timing
-  margin), **not** a demonstrated flake. The original test's margin came
-  incidentally from Playwright's CDP round-trip latency exceeding commit
-  latency — a property of the harness, not a guarantee of the code.
+  Conclusion: the exact historical flake was not reproduced and no
+  repository record proves this test was historically flaky. What was
+  identified is a latent test-contract durability race — UI visibility
+  did not causally guarantee the saved project had reached a committed
+  journal generation before reload. In sampled measurements persistence
+  completed before reload, but only with a narrow incidental scheduling
+  margin rather than an enforced condition.
 - **Why this is a strengthening, not a workaround:** the test now fails
   if the project never reaches durable storage, a regression the previous
   visible-text assertion could miss. The original persistence assertion,
@@ -1675,3 +1688,42 @@ records the completed release.
   `package-lock.json` changes, no dependency install or upgrade, no
   Playwright config change, no unrelated test touched, no push, no pull
   request, no merge, no deployment.
+
+## 2026-07-27 — DOS-TEST-001B Correction Round 1
+- **Scope:** Bounded correction round responding to the independent Codex
+  rereview of candidate `502b18dec59ac6e80c3b3c4abe9ff03eccfd724c`
+  (verdict: REVISE, two Medium findings). Documentation and evidence
+  accuracy only — the functional durability predicate was not altered.
+- **Finding 1 (numerical accounting) — corrected.** The prior entry
+  inflated target-test execution counts by treating the 108-test full
+  suite as 108 executions of this one test and by counting fixed-arm
+  probe executions as unmodified-test executions. Corrected to the
+  authoritative run table: target/original-arm total **43/43**
+  (20 focused serial + 1 full-suite occurrence + 10 at 6× throttle + 12
+  at 25× throttle); throttled original arm **22/22**; 25× original arm
+  **12/12**; full suite **108/108**, reported separately. The claims
+  `150/150`, `0/150`, `24/24 at 25×`, and `34/34 under CPU throttling`
+  were removed as unsupported. The 20-run and 16-run instrumented
+  measurement sets are now kept separate from reproduction counts.
+- **Finding 2 (timing and root-cause precision) — corrected.** The prior
+  entry claimed the journal commit "provably lands after React paints the
+  row". That overstated the evidence: `store.tsx:176-178` establishes only
+  that React commits the render to the DOM before the passive effect runs,
+  and React's `useEffect` may run before paint for interaction-triggered
+  updates. The probe's `MutationObserver` measured DOM-mutation
+  observation, not browser paint. The prior wording also contradicted its
+  own data by saying the test reloaded while the commit was still in
+  flight, when the measured commit-to-reload slack was positive
+  (1.7–15.7 ms) in all 20 sampled runs. Corrected to: the DOM text was
+  observed before the journal-head write in all 20 sampled runs by
+  7.8–16.4 ms; reload was dispatched after the committed write in every
+  measured run; the defect is the missing causal durability gate and the
+  reliance on incidental scheduling margin. The unsupported claim that a
+  real user "cannot reload within ~10 ms of a paint" was removed.
+- **Test file:** only the explanatory comment in `tests/smoke/app.spec.ts`
+  was reworded for accuracy. The durability predicate, the genuine
+  `page.reload()`, and both visibility assertions are unchanged.
+- **Invariants preserved:** same four authorized repository files, no
+  fifth file, no `src/` change, no dependency change, no workflow change,
+  no retries, no sleeps, no timeout increases, no weakened assertions, no
+  push, no pull request, no merge, no deployment.
