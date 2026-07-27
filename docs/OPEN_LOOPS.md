@@ -413,6 +413,58 @@ must be separately selected and explicitly authorized.
   - `git diff --check`: Clean (no whitespace errors)
 - **Complexity:** S · **Approval:** no
 
+### OL-033 · Persistence smoke test reloaded on a UI signal, not a committed write
+- **Domain:** test reliability / storage · **Kind:** maintenance ·
+  **Status:** Verified + Ready (DOS-TEST-001B Gate 1 Candidate — local
+  candidate only; not merged, not deployed)
+- **Problem:** `tests/smoke/app.spec.ts` "a saved project survives a
+  reload (localStorage persistence)" asserted only that the project text
+  was visible, then immediately called `page.reload()`. Visible text does
+  not imply a durable write: `src/state/store.tsx` enqueues the write
+  from a `useEffect`, so the journal commit necessarily happens *after*
+  React has painted the row. The test therefore reloaded while the
+  commit was still in flight and depended on unguaranteed timing.
+- **Evidence (measured 2026-07-27, DOS-TEST-001B):** in-page
+  instrumentation (patched `Storage.prototype.setItem` + `MutationObserver`,
+  so no CDP latency is included) recorded, over 20 serial runs, the
+  journal head commit landing **8–16 ms after** the row became visible,
+  with only **1.7–15.7 ms** of slack before the point where `page.reload()`
+  is dispatched. Under 25× CPU throttling with 4 parallel workers (16
+  runs) that latency was 6.6–35.3 ms. The ordering (paint before commit)
+  is structural, not incidental.
+- **Important limitation — the flake was NOT reproduced:** no failing run
+  was observed at any point (20 serial + 108-test full suite + 10 runs at
+  6× throttle + 24 runs at 25× throttle/4 workers, all green on the
+  unmodified test). No failure of this test is recorded anywhere in this
+  repository's history either; the only flake on record is
+  `tests/smoke/navigation.spec.ts:94` (see docs/CURRENT_STATE.md and
+  docs/DECISIONS.md), which is a different, unrelated, pre-existing item
+  and was deliberately left untouched. **Supported conclusion:** the
+  original test's margin came incidentally from Playwright's own CDP
+  round-trip latency exceeding the ~7–35 ms commit latency. This is a
+  latent robustness defect, not a demonstrated flake.
+- **Correction:** wait for the committed canonical generation to contain
+  the project (existing `canonicalStateRaw` helper, the pattern already
+  used by `crashRecovery`/`crossTab`/`durableDestructive` specs) before
+  reloading. No sleeps, no retries, no timeout increases, no weakened
+  assertions, no production change. `waitForCanonicalState` alone would
+  NOT have worked here — canonical state is already committed by earlier
+  navigation, so the wait must be for the project specifically.
+- **Strengthening, not just stabilizing:** the test now fails if the
+  project never reaches durable storage. Previously that regression could
+  have passed on the visible-text assertion alone.
+- **Production-defect risk:** none identified. Asynchronous, lock-guarded
+  commit is the designed behavior (OL-031 / DOS-STAB-001A); a real user
+  cannot reload within ~10 ms of a paint. No production file was read as
+  defective and none was modified.
+- **Tests:** `tests/smoke/app.spec.ts`.
+- **Validation Evidence (Candidate):** focused test 40/40 serial and
+  20/20 at 6 workers; `tests/smoke/app.spec.ts` 9/9; full Playwright
+  suite 108/108, 0 flaky; `npm run verify` green (ESLint clean, 59
+  Vitest files / 926 tests, seed + privacy + docs validators OK,
+  TypeScript clean, production build OK).
+- **Complexity:** S · **Approval:** no
+
 ## Roadmap-scale items (product decisions)
 
 Roadmap placement records possible sequencing only. None of the items in

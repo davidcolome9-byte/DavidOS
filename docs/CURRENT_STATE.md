@@ -682,7 +682,25 @@ touched no package manifest, GitHub workflow, or seed file. No runtime
 source, tests, package manifests, GitHub workflows, or seed files were
 touched by PR #24, PR #25, PR #26, or this documentation closeout.
 
-**`DOS-TEST-001A` (active candidate)**: Test-only seeding isolation for OL-029.
+**`DOS-TEST-001A`**: Test-only seeding isolation for OL-029. Merged to
+`main` through PR #32 (merge SHA
+`0d8dffe9a8e462a1b473558703fc0fa5d240be77`); no longer an active
+candidate.
+
+**`DOS-TEST-001B` (active candidate — local only)**: Test-only
+stabilization of the persistence smoke test (OL-033). The "a saved
+project survives a reload" test in `tests/smoke/app.spec.ts` now waits
+for the committed canonical journal generation to contain the project
+before reloading, instead of reloading on the visible row alone. No
+`src/` file changed. Local Gate 1 candidate on branch
+`feat/dos-test-001b-persistence-smoke-stabilization`; not pushed, no
+pull request, not merged, not deployed. **The flake this package was
+named for was never reproduced** — the unmodified test passed 20/20
+serial, 108/108 in the full suite, and 34/34 under CPU throttling; the
+defect corrected is a measured but latent timing margin (commit lands
+8–16 ms after paint, 1.7–15.7 ms before reload), not an observed
+failure. The only flake on record in this repo remains
+`tests/smoke/navigation.spec.ts:94`, which is unrelated and untouched.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove

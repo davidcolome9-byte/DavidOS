@@ -1630,3 +1630,48 @@ records the completed release.
   - Restored the OL-029 Acceptance criteria block verbatim.
   - Reset the OL-029 Approval field to `no`.
 - **Invariants preserved:** Kept `OPEN_LOOPS.md` append-only correction; no runtime code or storage architecture modified.
+
+## 2026-07-27 — DOS-TEST-001B (OL-033 Persistence Smoke-Test Stabilization)
+- **Decision:** In `tests/smoke/app.spec.ts`, the "a saved project
+  survives a reload" test now waits for the committed canonical journal
+  generation to contain the project before calling `page.reload()`, using
+  the existing `canonicalStateRaw` helper. Test-only change; no `src/`
+  file was modified.
+- **Reasoning:** The test previously reloaded on a UI signal alone. That
+  is not a durability signal: `src/state/store.tsx` enqueues the write
+  from a `useEffect`, so the journal commit provably lands *after* React
+  paints the row. In-page instrumentation (patched
+  `Storage.prototype.setItem` + `MutationObserver`, excluding CDP
+  latency) measured the commit landing 8–16 ms after the row became
+  visible, leaving only 1.7–15.7 ms of slack before the reload is
+  dispatched; 6.6–35.3 ms under 25× CPU throttling with 4 workers.
+- **Honest limitation — the premise was not corroborated.** The package
+  was authorized to fix a "flaky" test, but **no failing run was ever
+  observed**: the unmodified test passed 20/20 serial, in the full
+  108-test suite, 10/10 at 6× CPU throttle, and 24/24 at 25× throttle
+  with 4 workers. No failure of this test appears anywhere in this
+  repository's records; the only flake on record is
+  `tests/smoke/navigation.spec.ts:94`, a different and unrelated
+  pre-existing item, deliberately left untouched. The upstream
+  investigation that proposed this package reached its conclusion by
+  static reading only and reported no observed failure either.
+  Conclusion: a real latent robustness defect (unguaranteed timing
+  margin), **not** a demonstrated flake. The original test's margin came
+  incidentally from Playwright's CDP round-trip latency exceeding commit
+  latency — a property of the harness, not a guarantee of the code.
+- **Why this is a strengthening, not a workaround:** the test now fails
+  if the project never reaches durable storage, a regression the previous
+  visible-text assertion could miss. The original persistence assertion,
+  the genuine `page.reload()`, and the ability to detect lost
+  `localStorage` state are all preserved. No retries, no `waitForTimeout`,
+  no timeout increases, no assertion weakening, no quarantine.
+- **Rejected alternative:** `waitForCanonicalState` alone — canonical
+  state is already committed by earlier navigation in this test, so it
+  would return immediately and close nothing.
+- **Production-defect finding:** none. Asynchronous, Web-Lock-guarded
+  commit is the designed behavior established by DOS-STAB-001A (OL-031).
+  No production persistence defect was found or concealed.
+- **Invariants preserved:** no `src/` changes, no `package.json` /
+  `package-lock.json` changes, no dependency install or upgrade, no
+  Playwright config change, no unrelated test touched, no push, no pull
+  request, no merge, no deployment.
