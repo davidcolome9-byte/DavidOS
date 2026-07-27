@@ -1622,3 +1622,11 @@ records the completed release.
   - Added a docblock note in `tests/smoke/helpers/journalState.ts` clarifying that `seedCanonicalState` stages state and requires reload/navigation to apply.
   - Recorded validation evidence clearly stating that Playwright smoke tests were run separately from `npm run verify`.
 - **Invariants preserved:** No `src/` changes, no package.json/lock changes, no deployment, no merging or pushing. The fix for OL-029 remains isolated to test harnesses.
+
+## 2026-07-26 — DOS-TEST-001A Gate 1 Correction Round 2
+- **Scope:** Bounded correction round 2 to resolve REVISE findings on the candidate.
+- **Corrections applied:**
+  - Restored the full OL-029 reproduction evidence block verbatim from the base commit, separating it from the candidate validation evidence.
+  - Restored the OL-029 Acceptance criteria block verbatim.
+  - Reset the OL-029 Approval field to `no`.
+- **Invariants preserved:** Kept `OPEN_LOOPS.md` append-only correction; no runtime code or storage architecture modified.

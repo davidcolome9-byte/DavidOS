@@ -379,7 +379,19 @@ must be separately selected and explicitly authorized.
   (`src/state/store.tsx`, `StaleTabDialog.tsx`) — the test's own tab ends
   up treated as stale, blocking the prune-dialog interaction the test is
   trying to exercise.
-- **Evidence:** 4/4 reproduction on main 49c71caa7ad8af95afad3adc09893a0388810745, 1/1 reproduction on 4fefa3ce4ad25918, CI runs 29701986395 / 29701986418.
+- **Evidence (found 2026-07-19, DOS-WF-002A Gate 2 non-regression
+  investigation):** reproduced 4/4 attempts on merged `main`
+  (`49c71caa7ad8af95afad3adc09893a0388810745`) and 1/1 on the
+  pre-DOS-WF-002A base (`4fefa3ce4ad25918234a00d2430575da5e5bd4db`) in an
+  independent local sandbox — identical failure line, identical disabled
+  prune-button state, identical active `⚠️ Updated in another tab` dialog
+  on both revisions; `tests/smoke/storageRetention.spec.ts`,
+  `src/state/store.tsx`, and `src/components/StaleTabDialog.tsx` are
+  byte-identical across both revisions, ruling out a DOS-WF-002A
+  regression. Did not reproduce on GitHub Actions (`ci.yml` run
+  `29701986395`, `deploy.yml` run `29701986418`, both green, both running
+  the full Playwright suite on a clean-provisioned runner) — sandbox/
+  environment-timing-sensitive, not a general failure.
 - **Approach:** evaluate the smallest existing-mechanism correction —
   seed state before the app's storage-event listener mounts, or isolate
   the harness's write so it cannot be mistaken for a second tab (e.g. an
@@ -387,6 +399,10 @@ must be separately selected and explicitly authorized.
   first mount rather than via a raw `localStorage.setItem` + reload).
   Do not build a new test framework, browser harness, storage subsystem,
   or stale-tab mechanism.
+- **Acceptance:** the near-quota test passes reliably across environments
+  without weakening its assertions or increasing its timeout; product
+  storage protection (OL-003) and stale-tab protection (OL-004) are
+  unchanged.
 - **Current behavior (DOS-TEST-001A Candidate):** `seedCanonicalState` writes the intended `localStorage` test state into `sessionStorage` and injects an initialization script via `page.addInitScript()`. On the next test reload, the init script transfers the state to `localStorage` before the React app boots and attaches its `storage` listener. This eliminates the race condition where `page.evaluate` modifying storage during an active app mount could self-trigger the stale-tab protection dialog.
 - **Tests:** `tests/smoke/storageRetention.spec.ts`, `tests/smoke/bootQuarantine.spec.ts`.
 - **Validation Evidence (Candidate):**
@@ -395,9 +411,7 @@ must be separately selected and explicitly authorized.
   - `npm run verify`: 926/926 tests passed
   - `npm run validate:docs`: Docs/metadata consistency OK
   - `git diff --check`: Clean (no whitespace errors)
-- **Complexity:** S · **Approval:** Gate 1 Candidate pending review
-
-
+- **Complexity:** S · **Approval:** no
 
 ## Roadmap-scale items (product decisions)
 
