@@ -370,7 +370,7 @@ must be separately selected and explicitly authorized.
 
 ### OL-029 · Near-quota smoke seeding self-triggers stale-tab guard
 - **Domain:** test reliability / storage safeguards · **Kind:**
-  maintenance / environmental · **Status:** Verified + Ready
+  maintenance / environmental · **Status:** Verified + Ready (DOS-TEST-001A Gate 1 Candidate)
 - **Problem:** `tests/smoke/storageRetention.spec.ts`'s "near-quota state
   raises the app-wide protection banner and Settings warning" test can
   fail in some environments: its `seedArtifacts` helper writes directly
@@ -403,6 +403,14 @@ must be separately selected and explicitly authorized.
   without weakening its assertions or increasing its timeout; product
   storage protection (OL-003) and stale-tab protection (OL-004) are
   unchanged.
+- **Current behavior (DOS-TEST-001A Candidate):** `seedCanonicalState` writes the intended `localStorage` test state into `sessionStorage` and injects an initialization script via `page.addInitScript()`. On the next test reload, the init script transfers the state to `localStorage` before the React app boots and attaches its `storage` listener. This eliminates the race condition where `page.evaluate` modifying storage during an active app mount could self-trigger the stale-tab protection dialog.
+- **Tests:** `tests/smoke/storageRetention.spec.ts`, `tests/smoke/bootQuarantine.spec.ts`.
+- **Validation Evidence (Candidate):**
+  - Repeated `storageRetention` smoke test: `npx playwright test tests/smoke/storageRetention.spec.ts` (x3 passes, 0 stale-tab dialogs), run separately from `npm run verify`
+  - `bootQuarantine` smoke test: `npx playwright test tests/smoke/bootQuarantine.spec.ts` (1/1 passed), run separately from `npm run verify`
+  - `npm run verify`: 926/926 tests passed
+  - `npm run validate:docs`: Docs/metadata consistency OK
+  - `git diff --check`: Clean (no whitespace errors)
 - **Complexity:** S · **Approval:** no
 
 ## Roadmap-scale items (product decisions)
