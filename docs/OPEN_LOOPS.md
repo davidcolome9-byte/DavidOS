@@ -33,12 +33,16 @@ rev-parse origin/main` for the current tip. The prior reconciliation
 DOS-GOV-002A). Items fixed in the 2026-07-12 stabilization sprint are not
 listed; see git history and docs/DECISIONS.md.
 
-**Program-authorization reconciliation: 2026-07-26.** DOS-GOV-003A is
+**Program-authorization reconciliation: 2026-07-27.** DOS-GOV-003A is
 complete, merged through PR #30 at
 `2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`, locally confirmed, and
-closed. No implementation package is active. This closeout does not
-change any backlog priority or status below; the next bounded package
-must be separately selected and explicitly authorized.
+closed. DOS-TEST-001B is complete, merged through PR #33 at its
+historical closeout SHA
+`b6cd6786c233f7ed474dfd9241f246d5db4e93fd`, deployed, verified, cleaned
+up, and closed. No implementation package is active. This closeout
+changes only OL-033's completed status; it does not change any unrelated
+backlog priority or status. The next bounded package must be separately
+selected and explicitly authorized.
 
 ---
 
@@ -413,70 +417,6 @@ must be separately selected and explicitly authorized.
   - `git diff --check`: Clean (no whitespace errors)
 - **Complexity:** S · **Approval:** no
 
-### OL-033 · Persistence smoke test reloaded on a UI signal, not a committed write
-- **Domain:** test reliability / storage · **Kind:** maintenance ·
-  **Status:** Verified + Ready (DOS-TEST-001B Gate 1 Candidate — local
-  candidate only; not merged, not deployed)
-- **Problem:** `tests/smoke/app.spec.ts` "a saved project survives a
-  reload (localStorage persistence)" asserted only that the project text
-  was visible, then called `page.reload()`. Visible text does not imply a
-  durable write: `src/state/store.tsx:176-178` enqueues the write from a
-  passive `useEffect`, which React runs after committing the render to the
-  DOM. The visibility assertion therefore established **no happens-before
-  relationship** with durable journal commitment — the test had no causal
-  durability gate and relied on incidental scheduling margin.
-- **Evidence (measured 2026-07-27, DOS-TEST-001B):** in-page
-  instrumentation (patched `Storage.prototype.setItem` +
-  `MutationObserver`, so no CDP latency is included) sampled 20 serial
-  runs. In all 20, the project DOM text was observed **before** the
-  journal-head write, by **7.8–16.4 ms**. Reload was dispatched
-  **1.7–15.7 ms after** the committed write — i.e. in every measured run
-  persistence completed before reload, with a narrow margin. A separate
-  16-run instrumented set at 25× CPU throttling with 4 parallel workers
-  measured DOM-text-to-head-write intervals of 6.6–35.3 ms. Note:
-  `MutationObserver` measures **DOM-mutation observation, not browser
-  paint**; no claim is made about paint ordering.
-- **Important limitation — the flake was NOT reproduced:** no failing run
-  of the target test was observed. Documented target/original-arm total:
-  **43/43** (20 focused serial + 1 occurrence inside the 108-test full
-  suite + 10 at 6× throttle + 12 at 25× throttle/4 workers); documented
-  throttled original-arm total **22/22**; 25× original arm **12/12**. The
-  full Playwright suite passed **108/108** separately — that is a suite
-  result containing one occurrence of this test, not 108 executions of it.
-  No failure of this test is recorded anywhere in this repository's
-  history either; the only flake on record is
-  `tests/smoke/navigation.spec.ts:94` (see docs/CURRENT_STATE.md and
-  docs/DECISIONS.md), which is a different, unrelated, pre-existing item
-  and was deliberately left untouched. **Supported conclusion:** the exact
-  historical flake was not reproduced and no repository record proves this
-  test was historically flaky. What was identified is a latent test-
-  contract durability race — UI visibility did not causally guarantee the
-  saved project had reached a committed journal generation before reload.
-  The added predicate closes that missing durability gate.
-- **Correction:** wait for the committed canonical generation to contain
-  the project (existing `canonicalStateRaw` helper, the pattern already
-  used by `crashRecovery`/`crossTab`/`durableDestructive` specs) before
-  reloading. No sleeps, no retries, no timeout increases, no weakened
-  assertions, no production change. `waitForCanonicalState` alone would
-  NOT have worked here — canonical state is already committed by earlier
-  navigation, so the wait must be for the project specifically.
-- **Strengthening, not just stabilizing:** the test now fails if the
-  project never reaches durable storage. Previously that regression could
-  have passed on the visible-text assertion alone.
-- **Production-defect risk:** none identified. Asynchronous, lock-guarded
-  commit is the designed behavior (OL-031 / DOS-STAB-001A). In every
-  sampled run the write landed, bounded by 35.3 ms, with no failure,
-  uncertainty, or reconciliation. No production file was read as
-  defective and none was modified.
-- **Tests:** `tests/smoke/app.spec.ts`.
-- **Validation Evidence (Candidate, corrected arm):** these are executions
-  of the **corrected** test and are not part of the original-arm counts
-  above — focused test 40/40 serial and 20/20 at 6 workers;
-  `tests/smoke/app.spec.ts` 9/9; full Playwright suite 108/108, 0 flaky;
-  `npm run verify` green (ESLint clean, 59 Vitest files / 926 tests, seed
-  + privacy + docs validators OK, TypeScript clean, production build OK).
-- **Complexity:** S · **Approval:** no
-
 ## Roadmap-scale items (product decisions)
 
 Roadmap placement records possible sequencing only. None of the items in
@@ -514,11 +454,91 @@ inferred from a roadmap entry or prior foundation work.
 
 ---
 
-## Resolved & deployed (closed 2026-07-19 reconciliation)
+## Resolved & deployed
 
-Each item below was independently re-verified as implemented on `main`
-@ `7077dac7a9e50f84e39b0f58bf7665b358a1e577` and live on GitHub Pages. Kept for history; do not reopen
+Unless a later item-specific closeout says otherwise, the items below
+were independently re-verified as implemented on `main` at
+`7077dac7a9e50f84e39b0f58bf7665b358a1e577` and live on GitHub Pages
+during the 2026-07-19 reconciliation. Kept for history; do not reopen
 without new evidence.
+
+### OL-033 · Persistence smoke test reloaded on a UI signal, not a committed write — RESOLVED
+- **Domain:** test reliability / storage · **Kind:** maintenance ·
+  **Status:** Resolved by DOS-TEST-001B; merged through PR #33, deployed,
+  verified, cleaned up, and closed on 2026-07-27
+- **Problem:** `tests/smoke/app.spec.ts` "a saved project survives a
+  reload (localStorage persistence)" asserted only that the project text
+  was visible, then called `page.reload()`. Visible text does not imply a
+  durable write: `src/state/store.tsx:176-178` enqueues the write from a
+  passive `useEffect`, which React runs after committing the render to the
+  DOM. The visibility assertion therefore established **no happens-before
+  relationship** with durable journal commitment — the test had no causal
+  durability gate and relied on incidental scheduling margin.
+- **Evidence (measured 2026-07-27, DOS-TEST-001B):** in-page
+  instrumentation (patched `Storage.prototype.setItem` +
+  `MutationObserver`, so no CDP latency is included) sampled 20 serial
+  runs. In all 20, the project DOM text was observed **before** the
+  journal-head write, by **7.8–16.4 ms**. Reload was dispatched
+  **1.7–15.7 ms after** the committed write — i.e. in every measured run
+  persistence completed before reload, with a narrow margin. A separate
+  16-run instrumented set at 25× CPU throttling with 4 parallel workers
+  measured DOM-text-to-head-write intervals of 6.6–35.3 ms. Note:
+  `MutationObserver` measures **DOM-mutation observation, not browser
+  paint**; no claim is made about paint ordering.
+- **Important limitation — the flake was NOT reproduced:** no failing run
+  of the target test was observed. Documented target/original-arm total:
+  **43/43** (20 focused serial + 1 occurrence inside the 108-test full
+  suite + 10 at 6× throttle + 12 at 25× throttle/4 workers); documented
+  throttled original-arm total **22/22**; 25× original arm **12/12**. The
+  full Playwright suite passed **108/108** separately — that is a suite
+  result containing one occurrence of this test, not 108 executions of it.
+  No failure of this test is recorded anywhere in this repository's
+  history either. The unrelated pre-existing flake in
+  `tests/smoke/navigation.spec.ts:94` was deliberately left untouched.
+  **Supported conclusion:** the exact historical flake was not reproduced
+  and no repository record proves this test was historically flaky. What
+  was identified is a latent test-contract durability race — UI visibility
+  did not causally guarantee the saved project had reached a committed
+  journal generation before reload. The added predicate closes that
+  missing durability gate.
+- **Correction:** wait for the committed canonical generation to contain
+  the project (existing `canonicalStateRaw` helper, the pattern already
+  used by `crashRecovery`/`crossTab`/`durableDestructive` specs) before
+  reloading. No sleeps, no retries, no timeout increases, no weakened
+  assertions, no production change. `waitForCanonicalState` alone would
+  NOT have worked here — canonical state is already committed by earlier
+  navigation, so the wait must be for the project specifically.
+- **Strengthening, not just stabilizing:** the test now fails if the
+  project never reaches durable storage. Previously that regression could
+  have passed on the visible-text assertion alone.
+- **Production-defect risk:** none identified. Asynchronous, lock-guarded
+  commit is the designed behavior (OL-031 / DOS-STAB-001A). In every
+  sampled run the write landed, bounded by 35.3 ms, with no failure,
+  uncertainty, or reconciliation. No production file was read as
+  defective and none was modified.
+- **Tests:** `tests/smoke/app.spec.ts`.
+- **Validation Evidence (approved candidate, corrected arm):** these are
+  executions of the **corrected** test and are not part of the
+  original-arm counts above — focused test 40/40 serial and 20/20 at 6
+  workers; `tests/smoke/app.spec.ts` 9/9; full Playwright suite 108/108,
+  0 flaky; `npm run verify` green (ESLint clean, 59 Vitest files / 926
+  tests, seed + privacy + docs validators OK, TypeScript clean,
+  production build OK).
+- **Final closeout evidence:** baseline
+  `0d8dffe9a8e462a1b473558703fc0fa5d240be77`; approved candidate
+  `46d82358773331271591ce749653bd1d605f2ccb`;
+  [PR #33](https://github.com/davidcolome9-byte/DavidOS/pull/33); merge
+  and historical canonical closeout SHA
+  `b6cd6786c233f7ed474dfd9241f246d5db4e93fd`;
+  [CI run 30291754039](https://github.com/davidcolome9-byte/DavidOS/actions/runs/30291754039);
+  [Pages deployment run 30291753411](https://github.com/davidcolome9-byte/DavidOS/actions/runs/30291753411);
+  [live site](https://davidcolome9-byte.github.io/DavidOS/) HTTP 200.
+  The remote and local candidate branches were deleted, package worktrees
+  were removed, and Gate 1 evidence was preserved at
+  `C:\dev\davidos-program-control-reviews\DOS-TEST-001B-GATE1-20260727-010041`.
+  No production behavior changed. No implementation package remains
+  active or authorized after this closeout.
+- **Complexity:** S · **Approval:** no
 
 ### OL-031 · DOS-STAB-001A Durable Destructive Flows / State Journal — RESOLVED
 - **Resolved by:** PR #22 (squash-merged 2026-07-21T14:23:59Z, merge SHA

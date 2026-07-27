@@ -1727,3 +1727,37 @@ records the completed release.
   fifth file, no `src/` change, no dependency change, no workflow change,
   no retries, no sleeps, no timeout increases, no weakened assertions, no
   push, no pull request, no merge, no deployment.
+
+## 2026-07-27 — DOS-TEST-001B Gate 2 Closeout
+- **Decision:** David authorized Gate 2 for DOS-TEST-001B — Persistence
+  Smoke-Test Durability Race Correction. Approved candidate
+  `46d82358773331271591ce749653bd1d605f2ccb`, based on
+  `0d8dffe9a8e462a1b473558703fc0fa5d240be77`, was merged through
+  [PR #33](https://github.com/davidcolome9-byte/DavidOS/pull/33). The
+  merge and historical canonical DOS-TEST-001B closeout SHA is
+  `b6cd6786c233f7ed474dfd9241f246d5db4e93fd`; it records this package's
+  result and is not a permanent claim about the moving tip of `main`.
+- **Post-merge verification:** merge-SHA
+  [CI run 30291754039](https://github.com/davidcolome9-byte/DavidOS/actions/runs/30291754039)
+  succeeded. The
+  [Pages deployment run 30291753411](https://github.com/davidcolome9-byte/DavidOS/actions/runs/30291753411)
+  succeeded. The deployed
+  [DavidOS site](https://davidcolome9-byte.github.io/DavidOS/) returned
+  HTTP 200.
+- **Cleanup and evidence:** the remote candidate branch and local
+  candidate branch were deleted, package worktrees were removed, and the
+  Gate 1 evidence folder was preserved at
+  `C:\dev\davidos-program-control-reviews\DOS-TEST-001B-GATE1-20260727-010041`.
+- **Non-blocking workflow observations:** the successful Pages workflow
+  reported one flaky warning for the inline-cancellation keyboard
+  activation test in `tests/smoke/supervisedExecution.spec.ts`, and
+  GitHub Actions warned that several actions still target deprecated
+  Node.js 20 and are being forced onto Node.js 24. Neither warning failed
+  CI or deployment. Both are outside DOS-TEST-001B; this decision does
+  not resolve them, change an unrelated open-loop priority, or authorize
+  maintenance work.
+- **Closure:** DOS-TEST-001B is complete, merged, deployed, verified,
+  cleaned up, and closed. No production behavior changed. No active
+  implementation package remains authorized; Program Control must select
+  and David must explicitly authorize any next bounded implementation
+  package.

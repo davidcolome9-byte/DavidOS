@@ -1,4 +1,4 @@
-# Current State — 2026-07-26
+# Current State — 2026-07-27
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -28,11 +28,18 @@ logic, test, or deployed feature behavior.
   `main` SHA:
   `2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`. Its former Gate 1
   authorization is closed and grants no continuing authority.
+- **DOS-TEST-001B — Persistence Smoke-Test Durability Race
+  Correction:** complete, merged through PR #33, deployed, verified,
+  cleaned up, and closed. Its historical merge and closeout SHA is
+  `b6cd6786c233f7ed474dfd9241f246d5db4e93fd`; this records the package
+  result and is not a permanent claim about the moving tip of `main`.
+  The package changed test and documentation evidence only; no
+  production behavior changed.
 - **Current package:** no implementation package is active. The next
   bounded package must be selected by Program Control and explicitly
-  authorized by David; it is not inferred from DOS-GOV-003A, a backlog
-  status, a roadmap entry, an integration foundation, or an automatic
-  workflow.
+  authorized by David; it is not inferred from DOS-GOV-003A,
+  DOS-TEST-001B, a backlog status, a roadmap entry, an integration
+  foundation, or an automatic workflow.
 - **Roadmap and automation facts are not authorization.** Existing
   provider foundations and the repository's automatic Pages workflow are
   historical/current product facts, not permission to connect a
@@ -653,10 +660,30 @@ Stage 1 release, not carried over from a prior release:
   2026-07-13); **PR #1 — Universal Operations Core** (merged
   2026-07-12).
 
-## Repository state (branches & worktrees, 2026-07-26)
+## Repository state (branches & worktrees, 2026-07-27)
 
-Stable production branch: `main`. The current governance baseline is
-PR #30, DOS-GOV-003A, merged at
+Stable production branch: `main`. DOS-TEST-001B — Persistence Smoke-Test
+Durability Race Correction — started from baseline
+`0d8dffe9a8e462a1b473558703fc0fa5d240be77`; approved candidate
+`46d82358773331271591ce749653bd1d605f2ccb` was merged through
+[PR #33](https://github.com/davidcolome9-byte/DavidOS/pull/33) at
+historical package closeout SHA
+`b6cd6786c233f7ed474dfd9241f246d5db4e93fd`. That merge SHA records the
+verified DOS-TEST-001B result; it is not a claim that the SHA will remain
+the repository tip after later merges. Merge-SHA
+[CI run 30291754039](https://github.com/davidcolome9-byte/DavidOS/actions/runs/30291754039)
+and
+[Pages deployment run 30291753411](https://github.com/davidcolome9-byte/DavidOS/actions/runs/30291753411)
+succeeded. The
+[live site](https://davidcolome9-byte.github.io/DavidOS/) returned HTTP
+200. The remote and local candidate branches were deleted, package
+worktrees were removed, and the Gate 1 evidence folder was preserved at
+`C:\dev\davidos-program-control-reviews\DOS-TEST-001B-GATE1-20260727-010041`.
+The package is complete, merged, deployed, verified, cleaned up, and
+closed. It changed no production behavior, and no implementation package
+is currently active or authorized.
+
+The current governance baseline is PR #30, DOS-GOV-003A, merged at
 `2c4de769b5f3ea5144b5432c3f6cc519157ccbf8`; it changed documentation
 only and is complete, locally confirmed, and closed. The most recent
 product release is
@@ -687,27 +714,33 @@ touched by PR #24, PR #25, PR #26, or this documentation closeout.
 `0d8dffe9a8e462a1b473558703fc0fa5d240be77`); no longer an active
 candidate.
 
-**`DOS-TEST-001B` (active candidate — local only)**: Test-only
-stabilization of the persistence smoke test (OL-033). The "a saved
-project survives a reload" test in `tests/smoke/app.spec.ts` now waits
-for the committed canonical journal generation to contain the project
-before reloading, instead of reloading on the visible row alone. No
-`src/` file changed. Local Gate 1 candidate on branch
-`feat/dos-test-001b-persistence-smoke-stabilization`; not pushed, no
-pull request, not merged, not deployed. **The flake this package was
-named for was never reproduced** — documented target/original-arm total
-43/43 (20 focused serial, 1 occurrence inside the full suite, 10 at 6×
-CPU throttle, 12 at 25× throttle/4 workers); the full Playwright suite
-passed 108/108 separately, which is a suite result containing one
-occurrence of this test rather than 108 executions of it. The defect
-corrected is a latent test-contract durability race: the UI visibility
-assertion created no happens-before relationship with committed journal
-durability. In 20 instrumented runs the DOM text was observed 7.8–16.4 ms
-before the journal-head write, and reload was dispatched 1.7–15.7 ms
+**`DOS-TEST-001B` (complete / merged / deployed / verified / cleaned up /
+closed)**: Test-only correction of the persistence smoke-test durability
+race (OL-033), merged through PR #33 at historical closeout SHA
+`b6cd6786c233f7ed474dfd9241f246d5db4e93fd`. The "a saved project
+survives a reload" test in `tests/smoke/app.spec.ts` now waits for the
+committed canonical journal generation to contain the project before
+reloading, instead of reloading on the visible row alone. No production
+behavior or `src/` file changed. **The flake this package was named for
+was never reproduced** — documented target/original-arm total 43/43 (20
+focused serial, 1 occurrence inside the full suite, 10 at 6× CPU
+throttle, 12 at 25× throttle/4 workers); the full Playwright suite passed
+108/108 separately, which is a suite result containing one occurrence of
+this test rather than 108 executions of it. The defect corrected is a
+latent test-contract durability race: the UI visibility assertion
+created no happens-before relationship with committed journal
+durability. In 20 instrumented runs the DOM text was observed 7.8–16.4
+ms before the journal-head write, and reload was dispatched 1.7–15.7 ms
 after that write — persistence completed before reload in every measured
 run, but only by incidental scheduling margin. The only flake on record
-in this repo remains `tests/smoke/navigation.spec.ts:94`, which is
-unrelated and untouched.
+before this closeout was `tests/smoke/navigation.spec.ts:94`, which is
+unrelated and untouched. The successful DOS-TEST-001B Pages workflow
+also reported a non-blocking flaky warning for the inline-cancellation
+keyboard activation test in `tests/smoke/supervisedExecution.spec.ts`
+and a GitHub Actions warning that several actions targeting deprecated
+Node.js 20 were being forced onto Node.js 24. Neither warning failed CI
+or deployment; both remain outside this package, unresolved, and
+unauthorized for implementation.
 
 Historical evidence branches — merged; tips preserved on purpose;
 their worktrees under `C:\dev\davidos-worktrees\` are safe to remove
