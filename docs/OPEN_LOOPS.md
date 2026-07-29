@@ -426,8 +426,8 @@ automation require separate explicit authorization and may not be
 inferred from a roadmap entry or prior foundation work.
 
 ### DOS-EXEC-001A · Bakery Idea-to-Execution Pilot
-- **Kind:** proposed flagship workflow · **Status:** Proposed;
-  specification complete; inactive; Requires David; not Ready
+- **Kind:** intended flagship workflow · **Status:** Requires David; not
+  Ready
 - **Boundary:** synthetic-only planning or evaluation at most. No real
   prospect research or execution is authorized. Activation requires a
   separate explicit authorization defining scope, data mode, tools,

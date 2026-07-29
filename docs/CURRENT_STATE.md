@@ -46,7 +46,7 @@ logic, test, or deployed feature behavior.
   provider, use credentials, push, merge, deploy, or begin a roadmap
   package.
 
-## Adopted product direction — 2026-07-28 (planning only)
+## Product direction adopted by David — 2026-07-28 (planning only)
 
 - **Primary interface:** ChatGPT is the conversational front door.
   DavidOS is intended to become a thin execution and orchestration layer,
