@@ -1,4 +1,4 @@
-# Current State — 2026-07-27
+# Current State — 2026-07-29
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -45,6 +45,23 @@ logic, test, or deployed feature behavior.
   historical/current product facts, not permission to connect a
   provider, use credentials, push, merge, deploy, or begin a roadmap
   package.
+
+## Product direction adopted by David — 2026-07-28 (planning only)
+
+- **Primary interface:** ChatGPT is the conversational front door.
+  DavidOS is intended to become a thin execution and orchestration layer,
+  not a replacement chat experience.
+- **Near-term proof:** turn a rough command into a bounded plan, working
+  and verified assets, an organized result, and one approval bundle
+  before any external or irreversible action. One or two complete
+  workflows take priority over broader platform machinery.
+- **Current capability:** the deployed DavidOS does not yet provide this
+  real command-to-outcome execution loop. The direction is a product
+  target, not a claim about current behavior.
+- **Authorization boundary:** DOS-GOV-004A adopts documentation only. No
+  implementation package is active after it closes. DOS-CTL Phase 1,
+  real execution, credentials, live providers, deployment, and release
+  remain unauthorized.
 
 ## Version
 

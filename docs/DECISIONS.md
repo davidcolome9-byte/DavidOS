@@ -1761,3 +1761,40 @@ records the completed release.
   implementation package remains authorized; Program Control must select
   and David must explicitly authorize any next bounded implementation
   package.
+
+## 2026-07-28 — DOS-GOV-004A: ChatGPT-first product direction adopted
+
+- **Product direction.** On July 28, 2026, David adopted DavidOS as a
+  ChatGPT-first execution system: ChatGPT is the primary interface, while
+  DavidOS is intended to become a thin bounded execution and
+  orchestration layer that turns rough commands into completed, verified,
+  usable work. A replacement DavidOS chat interface is deferred until
+  real execution value is proven.
+- **Near-term priority.** Prove one or two complete command-to-outcome
+  workflows before expanding breadth. Produce working, verified assets
+  rather than prompts alone, minimize David's routine input, and reuse
+  specialist tools and existing systems instead of rebuilding them.
+- **Provider strategy.** OpenAI-first is adopted for future product
+  planning: OpenAI is the first planned reasoning and orchestration
+  provider. Multi-provider and adaptive provider routing are deferred
+  until a working first workflow provides measured evidence of a
+  specific quality, cost, privacy, or reliability need.
+  This future product-provider strategy does not alter
+  `docs/AI_TOOL_ROUTING.md`, which continues to govern development,
+  implementation, review, and arbitration tool roles.
+- **Approval model.** “Prepare everything, ask once” is the intended
+  pattern: make reversible internal progress only inside an explicitly
+  authorized bounded workflow, verify and organize the result, then
+  present one approval bundle before any external or irreversible action.
+- **First proposed workflow.** DOS-EXEC-001A — Bakery
+  Idea-to-Execution Pilot is the proposed flagship workflow. Its
+  specification was accepted outside the repository as adoption input,
+  not as a separate active repository authority; the workflow remains
+  inactive and separately authorization-bound, and no specification file
+  is created here.
+- **No execution authority.** This decision authorizes no implementation,
+  API call, provider connection, credential use, data transfer, spending,
+  real prospect research, outreach, DOS-CTL change, DOS-CTL Phase 1,
+  real execution, push, pull request, merge, deployment, or release.
+  Synthetic-only planning or evaluation requires its own explicit
+  authorization.
