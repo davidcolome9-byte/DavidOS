@@ -425,6 +425,19 @@ credentials, off-device flows, real execution, deployment, and
 automation require separate explicit authorization and may not be
 inferred from a roadmap entry or prior foundation work.
 
+### DOS-EXEC-001A · Bakery Idea-to-Execution Pilot
+- **Kind:** proposed flagship workflow · **Status:** Proposed;
+  specification complete; inactive; Requires David; not Ready
+- **Boundary:** synthetic-only planning or evaluation at most. No real
+  prospect research or execution is authorized. Activation requires a
+  separate explicit authorization defining scope, data mode, tools,
+  credentials, budget, stop conditions, and permitted external actions.
+- **Intended proof:** turn one rough bakery-opportunity command into an
+  evidence-backed opportunity package, a working local static-site
+  prototype, validation results, outreach preparation, and one final
+  approval bundle. No contact, publishing, hosting, spending, credentials,
+  provider APIs, production integrations, or private business data.
+
 ### OL-023 · v0.2 deferred polish bundle
 - **Kind:** future capability · **Status:** Requires David (pick what
   still matters) · Router weight tuning, multi-intent detection, "did
