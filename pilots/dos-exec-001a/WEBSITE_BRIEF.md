@@ -112,8 +112,8 @@ into a theme park.
 | Plum | Deep `#5B273D` | Premium warmth, readable contrast, strong calls to action |
 | Cream | Soft `#FFF9ED` | Bakery paper and daylight warmth |
 | Gold | `#F4B75E` | Crust, glow, focus visibility, small moments of delight |
-| Burnt orange | `#C86D3E` | Section labels and appetite cue |
-| Sage | `#6F7D5B` | Quiet secondary accent |
+| Burnt orange | `#C86D3E` accent / `#9A3E25` normal text | Appetite cue with AA-readable labels on cream/paper |
+| Sage | `#6F7D5B` accent / `#4D5B39` normal text | Quiet accent with AA-readable product labels |
 | Display type | System Georgia serif | Editorial warmth with zero font download |
 | Body type | System UI sans serif | Clear instructions and resilient local rendering |
 | Shape | Rounded cards + restrained star/loaf marks | Friendly recognition without stock imagery |
@@ -148,8 +148,9 @@ If separately authorized for a real bakery:
 - Form labels remain visible; status output uses `aria-live="polite"`.
 - The skip link appears on focus.
 - Focus styling uses a high-visibility gold outline.
-- Navigation and calls to action remain at least 44 CSS pixels high on
-  compact screens.
+- Navigation targets are measured at least 44 CSS pixels high across
+  all 16 validated widths; calls to action retain equivalent compact
+  sizing.
 - Native `details`/`summary` preserves keyboard FAQ operation.
 - Motion is removed when `prefers-reduced-motion` is active.
 - Decorative images use empty alternative text; the meaningful concept
@@ -162,5 +163,8 @@ If separately authorized for a real bakery:
 - Mobile changes navigation to a two-column pill grid, stacks every
   major layout, expands calls to action, and preserves readable padding.
 - No essential information depends on hover.
-- The design targets 375×812 and 1440×900 as representative validation
-  sizes while acknowledging broader-device limitations.
+- The design is measured at 320, 360, 375, 390, 414, 480, 540, 600,
+  620, 640, 768, 800, 820, 900, 1024, and 1440 CSS pixels, plus
+  representative 125% and 150% text-zoom cases. The 375×812 and
+  1440×900 states are retained as full-page visual evidence while
+  broader browser/device limitations remain acknowledged.

@@ -7,8 +7,10 @@
   --plum-dark: #3c1728;
   --berry: #a4435f;
   --orange: #c86d3e;
+  --orange-dark: #9a3e25;
   --gold: #f4b75e;
   --sage: #6f7d5b;
+  --sage-dark: #4d5b39;
   --line: #decfbc;
   --muted: #6d5b60;
   --shadow: 0 18px 50px rgba(75, 38, 47, 0.13);
@@ -138,6 +140,10 @@ nav {
 
 nav a {
   position: relative;
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   color: var(--plum-dark);
   font-size: 0.9rem;
   font-weight: 750;
@@ -181,11 +187,15 @@ nav a:focus-visible::after {
 
 .eyebrow {
   margin: 0 0 14px;
-  color: var(--orange);
+  color: var(--orange-dark);
   font-size: 0.76rem;
   font-weight: 850;
   letter-spacing: 0.13em;
   text-transform: uppercase;
+}
+
+.visit-section .eyebrow {
+  color: var(--gold);
 }
 
 h1,
@@ -340,7 +350,7 @@ h3 {
 }
 
 .card-kicker {
-  color: var(--orange);
+  color: var(--orange-dark);
   font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -491,7 +501,7 @@ h3 {
 
 .product-type {
   margin-bottom: 8px;
-  color: var(--sage);
+  color: var(--sage-dark);
   font-size: 0.72rem;
   font-weight: 850;
   letter-spacing: 0.12em;
@@ -647,6 +657,15 @@ h3 {
 .field small,
 .estimator .fine-print {
   color: #eadce1;
+}
+
+.no-script-note {
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
 }
 
 .estimator .button-primary {
@@ -831,7 +850,31 @@ blockquote footer {
   }
 
   .hero-art {
-    min-height: 500px;
+    display: flex;
+    min-height: 650px;
+    flex-direction: column;
+    gap: 28px;
+    align-items: center;
+    justify-content: center;
+    padding: 44px 24px;
+  }
+
+  .display-card {
+    position: relative;
+  }
+
+  .display-card-main {
+    width: min(340px, calc(100% - 40px));
+    flex: 0 0 auto;
+    transform: rotate(-2deg);
+  }
+
+  .display-card-note {
+    right: auto;
+    bottom: auto;
+    align-self: flex-end;
+    margin-right: 8%;
+    transform: rotate(2deg);
   }
 
   .product-grid {
@@ -919,16 +962,19 @@ blockquote footer {
   }
 
   .hero-art {
-    min-height: 430px;
+    min-height: 610px;
+    padding: 38px 18px;
   }
 
   .display-card-main {
+    width: min(340px, calc(100% - 16px));
     min-height: 330px;
+    padding: 36px 24px;
   }
 
   .display-card-note {
-    right: 4%;
-    bottom: 4%;
+    align-self: center;
+    margin-right: 0;
   }
 
   .promise-strip {

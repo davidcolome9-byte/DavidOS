@@ -1,19 +1,19 @@
-/* global document, HTMLFormElement, HTMLSelectElement, HTMLInputElement, HTMLElement */
+/* global document, HTMLButtonElement, HTMLSelectElement, HTMLInputElement, HTMLElement */
 
 const estimator = document.querySelector('#pickup-estimator');
 const product = document.querySelector('#product');
 const quantity = document.querySelector('#quantity');
+const calculate = document.querySelector('#calculate-estimate');
 const output = document.querySelector('#estimate-output');
 
 if (
-  estimator instanceof HTMLFormElement &&
+  estimator instanceof HTMLElement &&
   product instanceof HTMLSelectElement &&
   quantity instanceof HTMLInputElement &&
+  calculate instanceof HTMLButtonElement &&
   output instanceof HTMLElement
 ) {
-  estimator.addEventListener('submit', (event) => {
-    event.preventDefault();
-
+  calculate.addEventListener('click', () => {
     const selected = product.selectedOptions[0];
     const productName = selected?.dataset.name ?? 'sample item';
     const unitPrice = Number(product.value);

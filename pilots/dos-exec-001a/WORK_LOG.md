@@ -75,8 +75,8 @@ Authored package and implementation files (13):
 11. `pilots/dos-exec-001a/site/styles.css` — responsive presentation,
     focus states, reduced-motion support, and print behavior.
 12. `pilots/dos-exec-001a/site/script.js` — small progressive
-    enhancement for navigation state and the fictional preorder
-    estimator; no network or storage.
+    enhancement for the fictional preorder estimator; no navigation
+    state, network, or storage behavior.
 13. `pilots/dos-exec-001a/site/assets/logo.svg` — local, original
     vector brand mark with no external asset or license dependency.
 
@@ -154,8 +154,10 @@ Stop without implementation if any of the following becomes true:
   non-local requests, working local navigation, correct `$36`
   estimator result, keyboard FAQ operation, loaded assets, and generated
   screenshots.
-- Visual inspection of both screenshots confirmed a coherent,
-  bakery-specific desktop and mobile experience.
+- The initial builder inspection incorrectly described both screenshots
+  as fully coherent. Independent review later identified hero oven-note
+  overlap/truncation at compact and intermediate widths. That original
+  claim is withdrawn and preserved here as correction history.
 - Initial `git diff --cached --check` identified Markdown hard-break
   trailing spaces; they were removed and the check passed.
 - Standalone `npm run validate:docs` and `npm run validate:privacy`
@@ -183,3 +185,65 @@ Stop without implementation if any of the following becomes true:
 - No real research, credential, provider activity, email, messaging,
   publication, hosting, payment, spending, push, pull request, merge, or
   deployment occurred.
+
+## Correction Round 1
+
+### Authorization and ancestry
+
+- Narrow correction authorization was received after independent review
+  returned `CHANGES REQUIRED` and assessed user value at 77/100.
+- Authorized base remained
+  `497fab9abb06df86e20ef1e9fe4585d7c7274ab9`.
+- The original candidate remained intact at
+  `bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1`; this correction is being
+  prepared as exactly one child commit.
+- Canonical `main`, `origin/main`, the pilot worktree, branch, and
+  cumulative 15-file allowlist matched the authorization at correction
+  preflight.
+
+### Authorized corrections made
+
+- Changed only responsive CSS positioning/reflow so the decorative oven
+  note enters normal flow at 900 CSS pixels and below.
+- Darkened the light-surface eyebrow/card-kicker color to `#9A3E25`,
+  darkened product-type text to `#4D5B39`, and retained gold on the dark
+  visit section.
+- Made navigation links explicit 44 CSS pixel minimum-height targets.
+- Replaced submit-capable form markup with a non-submitting estimator
+  control group, an explicit `type="button"` trigger, and a visible
+  `<noscript>` inactive-state disclosure.
+- Expanded `validate.mjs` to measure all authorized widths, hero
+  occlusion/clipping, 44 CSS pixel navigation targets, two text-zoom
+  samples, no-JavaScript behavior, and byte-identical screenshot
+  regeneration.
+- Clarified that the `$58` Midnight Berry Cake sample-menu item and the
+  `$62` Tiny Constellation Cake resale bundle are different fictional
+  products.
+- Reworked the independent-review packet into a focused delta review
+  with an explicit 20-category deliverable map.
+
+### Measured correction evidence
+
+- Widths passed: 320, 360, 375, 390, 414, 480, 540, 600, 620, 640,
+  768, 800, 820, 900, 1024, and 1440 CSS pixels.
+- Representative text zoom passed at 375 CSS pixels / 125% and 800 CSS
+  pixels / 150%.
+- Every width had zero horizontal overflow, no oven-note intersection
+  with the hero product name or descriptor, no name/descriptor clipping,
+  and primary-navigation targets at least 44 CSS pixels high.
+- No-JavaScript Chromium showed the inactive disclosure; clicking the
+  estimator trigger did not change its output, reload the page, or add a
+  query string.
+- Normal-text contrast ratios: eyebrow on cream 6.48:1, card kicker on
+  paper 6.69:1, product type on the darkest card endpoint 4.83:1, and
+  visit eyebrow on plum 6.54:1.
+- Regenerated screenshot SHA-256 values:
+  `evidence/mobile.png`
+  `BE285BDBED577835789C1A185E5FA09ADEAEDBE9758F3F89B527FB5B376CCEDF`;
+  `evidence/desktop.png`
+  `C759B1363E48576FD2BCF46F638DD91B815738304F57A8C3FDC8FA9553C67E89`.
+- Visual inspection of the corrected captures confirmed that the 375
+  CSS pixel hero name, descriptor, and oven note are separate and
+  readable, while the 1440 CSS pixel composition retains its intended
+  offset layout. This claim is limited to those two rendered evidence
+  captures; the measured sweep supplies the broader width evidence.

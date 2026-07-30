@@ -183,6 +183,12 @@ margin before labor, overhead, spoilage, tax, fees, and fulfillment.
 | Tiny Constellation Cake | Mark a small occasion | 6-inch cake, inscription card | $62 | $23 | 63% | Strong: visible celebration entry point |
 | Bake-at-Home Star Buns | Create a weekend activity | 6 frozen shaped buns + glaze | $32 | $12 | 63% | Defer: food-safety and instruction burden |
 
+The `$58` **Midnight berry cake** shown in the fictional website's
+sample menu is a standalone menu item. The `$62` **Tiny Constellation
+Cake** above is a separate fictional resale bundle with a specified
+6-inch format and inscription card. The prices do not describe the same
+product.
+
 ### Recommended resale sequence
 
 1. Prototype **Weekend Glow Box** and **Tiny Constellation Cake** first:

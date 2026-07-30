@@ -1,6 +1,7 @@
 /* global process, URL, document, HTMLElement, window, console */
 
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -38,6 +39,96 @@ const errors = [];
 const expectBrowser = (condition, message) => {
   if (!condition) throw new Error(message);
 };
+
+const relativeLuminance = (hex) => {
+  const channels = hex
+    .replace('#', '')
+    .match(/.{2}/g)
+    .map((channel) => Number.parseInt(channel, 16) / 255)
+    .map((channel) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+};
+const contrastRatio = (foreground, background) => {
+  const first = relativeLuminance(foreground);
+  const second = relativeLuminance(background);
+  return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05);
+};
+
+const testedWidths = [320, 360, 375, 390, 414, 480, 540, 600, 620, 640, 768, 800, 820, 900, 1024, 1440];
+
+async function assertResponsiveGeometry(page, label) {
+  const geometry = await page.evaluate(() => {
+    const rectangle = (selector) => {
+      const element = document.querySelector(selector);
+      if (!(element instanceof HTMLElement)) return undefined;
+      const box = element.getBoundingClientRect();
+      return {
+        top: box.top,
+        right: box.right,
+        bottom: box.bottom,
+        left: box.left,
+        width: box.width,
+        height: box.height,
+      };
+    };
+    const overlaps = (first, second) =>
+      first &&
+      second &&
+      first.left < second.right &&
+      first.right > second.left &&
+      first.top < second.bottom &&
+      first.bottom > second.top;
+    const main = rectangle('.display-card-main');
+    const productName = rectangle('.display-card-main strong');
+    const descriptor = rectangle('.display-card-main small');
+    const note = rectangle('.display-card-note');
+    const navHeights = [...document.querySelectorAll('nav a')].map(
+      (link) => link.getBoundingClientRect().height,
+    );
+    return {
+      scrollWidth: document.documentElement.scrollWidth,
+      clientWidth: document.documentElement.clientWidth,
+      main,
+      productName,
+      descriptor,
+      note,
+      noteOverlapsName: overlaps(note, productName),
+      noteOverlapsDescriptor: overlaps(note, descriptor),
+      navHeights,
+    };
+  });
+
+  expectBrowser(
+    geometry.scrollWidth <= geometry.clientWidth,
+    `${label}: horizontal overflow ${geometry.scrollWidth}px > ${geometry.clientWidth}px`,
+  );
+  expectBrowser(geometry.main?.width > 0 && geometry.main.height > 0, `${label}: main display card is not visible`);
+  expectBrowser(
+    geometry.productName?.width > 0 && geometry.productName.height > 0,
+    `${label}: product name is not visible`,
+  );
+  expectBrowser(
+    geometry.descriptor?.width > 0 && geometry.descriptor.height > 0,
+    `${label}: product descriptor is not visible`,
+  );
+  expectBrowser(geometry.note?.width > 0 && geometry.note.height > 0, `${label}: oven note is not visible`);
+  expectBrowser(!geometry.noteOverlapsName, `${label}: oven note overlaps the product name`);
+  expectBrowser(!geometry.noteOverlapsDescriptor, `${label}: oven note overlaps the product descriptor`);
+  expectBrowser(
+    geometry.productName.top >= geometry.main.top - 1 &&
+      geometry.productName.bottom <= geometry.main.bottom + 1,
+    `${label}: product name is clipped by its card`,
+  );
+  expectBrowser(
+    geometry.descriptor.top >= geometry.main.top - 1 &&
+      geometry.descriptor.bottom <= geometry.main.bottom + 1,
+    `${label}: product descriptor is clipped by its card`,
+  );
+  expectBrowser(
+    geometry.navHeights.every((height) => height >= 44),
+    `${label}: primary navigation has a touch target shorter than 44px`,
+  );
+}
 
 async function runBrowserValidation() {
   const localRequire = createRequire(join(repoRoot, 'package.json'));
@@ -94,12 +185,15 @@ async function runBrowserValidation() {
   mkdirSync(evidenceRoot, { recursive: true });
 
   let browser;
+  const screenshotHashes = {};
   try {
     browser = await chromium.launch({ headless: true });
-    const viewports = [
-      { name: 'mobile', width: 375, height: 812 },
-      { name: 'desktop', width: 1440, height: 900 },
-    ];
+    const viewports = testedWidths.map((width) => ({
+      name: width === 375 ? 'mobile' : width === 1440 ? 'desktop' : `width-${width}`,
+      width,
+      height: width === 375 ? 812 : 900,
+      screenshot: width === 375 || width === 1440,
+    }));
 
     for (const viewport of viewports) {
       const context = await browser.newContext({
@@ -136,58 +230,111 @@ async function runBrowserValidation() {
         `${viewport.name}: at least one local image did not load`,
       );
 
-      const geometry = await page.evaluate(() => ({
-        scrollWidth: document.documentElement.scrollWidth,
-        clientWidth: document.documentElement.clientWidth,
-      }));
-      expectBrowser(
-        geometry.scrollWidth <= geometry.clientWidth,
-        `${viewport.name}: horizontal overflow ${geometry.scrollWidth}px > ${geometry.clientWidth}px`,
-      );
+      await assertResponsiveGeometry(page, `${viewport.width}px`);
 
-      await page.evaluate(() => {
-        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-      });
-      await page.keyboard.press('Tab');
-      expectBrowser(
-        (await page.locator(':focus').textContent())?.includes('Skip to main content'),
-        `${viewport.name}: skip link is not the first keyboard target`,
-      );
+      if (viewport.screenshot) {
+        await page.evaluate(() => {
+          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+        });
+        await page.keyboard.press('Tab');
+        expectBrowser(
+          (await page.locator(':focus').textContent())?.includes('Skip to main content'),
+          `${viewport.name}: skip link is not the first keyboard target`,
+        );
 
-      await page.getByRole('link', { name: 'Plan a pickup box' }).click();
-      expectBrowser(new URL(page.url()).hash === '#preorder', `${viewport.name}: preorder navigation did not resolve`);
-      await page.getByLabel('Sample product').selectOption('12');
-      await page.getByLabel('Quantity').fill('3');
-      await page.getByRole('button', { name: 'Calculate fictional estimate' }).click();
-      const estimate = await page.getByRole('status').textContent();
-      expectBrowser(estimate?.includes('3 × Honey hearth loaf: $36'), `${viewport.name}: estimator result is incorrect`);
-      expectBrowser(estimate?.includes('nothing was ordered, sent, or saved'), `${viewport.name}: estimator boundary is missing`);
+        await page.getByRole('link', { name: 'Plan a pickup box' }).click();
+        expectBrowser(new URL(page.url()).hash === '#preorder', `${viewport.name}: preorder navigation did not resolve`);
+        await page.getByLabel('Sample product').selectOption('12');
+        await page.getByLabel('Quantity').fill('3');
+        await page.getByRole('button', { name: 'Calculate fictional estimate' }).click();
+        const estimate = await page.getByRole('status').textContent();
+        expectBrowser(estimate?.includes('3 × Honey hearth loaf: $36'), `${viewport.name}: estimator result is incorrect`);
+        expectBrowser(
+          estimate?.includes('nothing was ordered, sent, or saved'),
+          `${viewport.name}: estimator boundary is missing`,
+        );
 
-      const firstQuestion = page.locator('details').first();
-      const summary = firstQuestion.locator('summary');
-      await summary.focus();
-      await page.keyboard.press('Enter');
-      expectBrowser(await firstQuestion.evaluate((details) => details.open), `${viewport.name}: FAQ is not keyboard operable`);
+        const firstQuestion = page.locator('details').first();
+        const summary = firstQuestion.locator('summary');
+        await summary.focus();
+        await page.keyboard.press('Enter');
+        expectBrowser(
+          await firstQuestion.evaluate((details) => details.open),
+          `${viewport.name}: FAQ is not keyboard operable`,
+        );
+      }
 
       expectBrowser(consoleErrors.length === 0, `${viewport.name}: console errors: ${consoleErrors.join(' | ')}`);
       expectBrowser(pageErrors.length === 0, `${viewport.name}: page errors: ${pageErrors.join(' | ')}`);
       expectBrowser(failedRequests.length === 0, `${viewport.name}: failed requests: ${failedRequests.join(' | ')}`);
       expectBrowser(externalRequests.length === 0, `${viewport.name}: external requests: ${externalRequests.join(' | ')}`);
 
-      await page.evaluate(() => {
-        if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
-        window.scrollTo(0, 0);
-      });
-      await page.screenshot({
-        path: join(evidenceRoot, `${viewport.name}.png`),
-        fullPage: true,
-      });
+      if (viewport.screenshot) {
+        await page.evaluate(() => {
+          if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+          window.scrollTo(0, 0);
+        });
+        const screenshotPath = join(evidenceRoot, `${viewport.name}.png`);
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        const regenerated = await page.screenshot({ fullPage: true });
+        const saved = readFileSync(screenshotPath);
+        expectBrowser(saved.equals(regenerated), `${viewport.name}: regenerated screenshot is not byte-identical`);
+        screenshotHashes[`${viewport.name}.png`] = createHash('sha256').update(saved).digest('hex').toUpperCase();
+      }
       await context.close();
     }
+
+    for (const zoomCase of [
+      { width: 375, percent: 125 },
+      { width: 800, percent: 150 },
+    ]) {
+      const context = await browser.newContext({
+        viewport: { width: zoomCase.width, height: 900 },
+        reducedMotion: 'reduce',
+      });
+      const page = await context.newPage();
+      await page.goto(baseUrl, { waitUntil: 'networkidle' });
+      await page.evaluate((percent) => {
+        document.documentElement.style.fontSize = `${percent}%`;
+      }, zoomCase.percent);
+      await assertResponsiveGeometry(page, `${zoomCase.width}px at ${zoomCase.percent}% text zoom`);
+      await context.close();
+    }
+
+    const noScriptContext = await browser.newContext({
+      viewport: { width: 375, height: 812 },
+      javaScriptEnabled: false,
+    });
+    const noScriptPage = await noScriptContext.newPage();
+    await noScriptPage.goto(baseUrl, { waitUntil: 'networkidle' });
+    const initialUrl = noScriptPage.url();
+    const initialOutput = await noScriptPage.getByRole('status').textContent();
+    const noScriptNote = noScriptPage.locator('.no-script-note');
+    expectBrowser(await noScriptNote.isVisible(), 'no-JS: inactive estimator disclosure is not visible');
+    expectBrowser(
+      (await noScriptNote.textContent())?.includes('this local estimator is inactive'),
+      'no-JS: inactive estimator disclosure is incomplete',
+    );
+    await noScriptPage.getByRole('button', { name: 'Calculate fictional estimate' }).click();
+    expectBrowser(noScriptPage.url() === initialUrl, 'no-JS: estimator changed or reloaded the URL');
+    expectBrowser(!new URL(noScriptPage.url()).search, 'no-JS: estimator added a query string');
+    expectBrowser(
+      (await noScriptPage.getByRole('status').textContent()) === initialOutput,
+      'no-JS: estimator appeared to calculate or submit',
+    );
+    await noScriptContext.close();
   } finally {
     await browser?.close();
     await new Promise((resolveClose) => server.close(resolveClose));
   }
+  const validationReport = readFileSync(join(packageRoot, 'VALIDATION_REPORT.md'), 'utf8');
+  for (const [file, hash] of Object.entries(screenshotHashes)) {
+    expectBrowser(
+      validationReport.includes(hash),
+      `${file}: regenerated SHA-256 does not match the expected hash in VALIDATION_REPORT.md`,
+    );
+  }
+  return screenshotHashes;
 }
 
 const text = (file) => readFileSync(join(packageRoot, file), 'utf8');
@@ -254,6 +401,13 @@ if (!errors.length) {
     if (!html.includes(`for="${control}"`)) errors.push(`site/index.html is missing a label for ${control}`);
   }
   if (!html.includes('aria-live="polite"')) errors.push('estimator output must expose polite live status');
+  if (html.includes('<form class="estimator"')) errors.push('estimator must not expose no-JS form submission behavior');
+  if (!html.includes('id="calculate-estimate" type="button"')) {
+    errors.push('estimator trigger must be an explicit non-submit button');
+  }
+  if (!html.includes('<noscript>') || !html.includes('this local estimator is inactive')) {
+    errors.push('estimator must explain its honest no-JS inactive state');
+  }
   if (!html.includes('Skip to main content')) errors.push('site/index.html is missing its skip link');
   if (!html.includes('Synthetic concept quote—not a customer testimonial')) {
     errors.push('synthetic quote is not clearly labeled');
@@ -261,6 +415,15 @@ if (!errors.length) {
   if (!html.includes('Fictional contact details')) errors.push('fictional contact block is not labeled');
   if (!css.includes(':focus-visible')) errors.push('site/styles.css is missing visible focus styling');
   if (!css.includes('prefers-reduced-motion')) errors.push('site/styles.css is missing reduced-motion handling');
+  for (const [foreground, background, label] of [
+    ['#9a3e25', '#fff9ed', 'eyebrow on cream'],
+    ['#9a3e25', '#fffdf8', 'card kicker on paper'],
+    ['#4d5b39', '#e9cad4', 'product type on darkest product-card background'],
+    ['#f4b75e', '#5b273d', 'visit eyebrow on plum'],
+  ]) {
+    const ratio = contrastRatio(foreground, background);
+    if (ratio < 4.5) errors.push(`${label} contrast must be at least 4.5:1; found ${ratio.toFixed(2)}:1`);
+  }
 
   const localRefs = [...html.matchAll(/(?:href|src)="([^"]+)"/g)].map((match) => match[1]);
   const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
@@ -332,7 +495,11 @@ if (!errors.length) {
 
 if (!errors.length && browserMode) {
   try {
-    await runBrowserValidation();
+    const screenshotHashes = await runBrowserValidation();
+    console.log(
+      `Responsive widths passed: ${testedWidths.join(', ')}px; text zoom passed: 375px/125%, 800px/150%; ` +
+        `screenshot SHA-256: mobile=${screenshotHashes['mobile.png']}, desktop=${screenshotHashes['desktop.png']}`,
+    );
   } catch (error) {
     errors.push(`browser validation failed: ${error instanceof Error ? error.message : String(error)}`);
   }
@@ -348,5 +515,5 @@ console.log(
   `DOS-EXEC-001A pilot validation OK — ${authoredFiles.length} authored files` +
     `${finalMode ? ` + ${evidenceFiles.length} generated evidence files` : ''}; ` +
     'synthetic labels, required sections, local links/assets, accessibility hooks, scope, and credential checks passed' +
-    `${browserMode ? '; Chromium mobile/desktop interaction and screenshots passed' : ''}.`,
+    `${browserMode ? '; Chromium 16-width responsive, zoom, no-JS, interaction, and screenshot checks passed' : ''}.`,
 );

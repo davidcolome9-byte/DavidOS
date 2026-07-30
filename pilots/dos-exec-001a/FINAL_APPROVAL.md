@@ -5,9 +5,17 @@
 > business identity, publish a site, send outreach, accept orders, spend
 > money, connect a provider, or claim a commercial result.
 
-**Current disposition:** **READY FOR LOCAL CANDIDATE COMMIT AND
-INDEPENDENT REVIEW.** This is the builder's Gate 1 readiness assessment,
-not an independent approval and not Gate 2 authorization.
+**Current disposition:** **CORRECTION ROUND 1 READY FOR A LOCAL
+CORRECTION COMMIT AND FOCUSED INDEPENDENT REREVIEW.** This is the
+builder's Gate 1 readiness assessment, not an independent approval and
+not Gate 2 authorization.
+
+The original candidate
+`bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1` received a `CHANGES
+REQUIRED` verdict and 77/100 independent user-value assessment because
+of hero-card overlap/truncation and inaccurate visual-evidence claims.
+That verdict remains the controlling independent result until a reviewer
+examines this correction.
 
 ## Package result
 
@@ -25,7 +33,7 @@ synthetic starting point, not real commercial performance.
 | Question | Score | Evidence | Final judgment |
 |---|---:|---|---|
 | Is the final package understandable? | 5/5 | README map, consolidated briefs, and explicit boundaries make every required output easy to locate. | Yes |
-| Is the website credible? | 4/5 | Bakery-specific voice, coherent responsive design, original local mark, and working estimator passed visual/browser checks. Real photography and facts are intentionally absent. | Yes, as an adaptation starting point |
+| Is the website credible? | 4/5 | Bakery-specific voice, corrected hero reflow, original local mark, and working estimator passed the exact 16-width and visual checks. Real photography and facts are intentionally absent. | Yes, subject to focused rereview |
 | Is the offer usable? | 4/5 | Named outcome, scope, exclusions, acceptance, responsibilities, and synthetic fee support a real discovery conversation. | Yes, after fact and price validation |
 | Is the outreach usable? | 4/5 | Honest draft, discovery questions, walkthrough, and small next step avoid fabricated familiarity or results. | Yes, after prospect-specific authorization |
 | Is the package more valuable than the effort required to create it? | 5/5 | One folder covers prospect analysis through review preparation with no platform or dependency work. | Yes |
@@ -43,14 +51,19 @@ Completed readiness conditions:
 
 - all required authored and generated evidence files exist;
 - repository and pilot validation pass;
-- screenshots confirm credible desktop and mobile presentation;
+- corrected screenshots show readable, non-overlapping hero content at
+  375×812 and the intended composition at 1440×900;
+- exact 16-width geometry, representative text zoom, normal-text
+  contrast, 44 CSS pixel navigation targets, and no-JavaScript fallback
+  checks pass;
 - exact file count and allowlist pass;
 - known limitations remain visible;
 - independent review remains a separate next step, not a self-issued
   final approval.
 
-Remaining Gate 1 packaging steps are the intentional candidate commit,
-annotated candidate tag, and verified Git bundle with SHA-256.
+Remaining Gate 1 packaging steps are the intentional correction commit,
+corrected annotated candidate tag, verified Git bundle with SHA-256,
+and focused independent rereview.
 
 ## Known limitations
 
@@ -59,8 +72,8 @@ annotated candidate tag, and verified Git bundle with SHA-256.
 - The name has no real-use availability or trademark clearance.
 - The local estimator is not ordering, payment, inventory, or
   fulfillment.
-- Basic accessibility and representative viewport checks are not a
-  formal audit.
+- Basic accessibility, one-browser exact-width checks, and two
+  representative text-zoom cases are not a formal audit.
 - No real customer or operator has evaluated usefulness.
 - A real adaptation would require new authorization and verified facts.
 
@@ -70,6 +83,6 @@ Gate 2 remains unauthorized. The candidate must stop before push, pull
 request, merge, deployment, publication, domain work, provider activity,
 credentials, spending, contact, or outreach.
 
-**Builder recommendation:** prepare the local candidate and review
-bundle, then stop for independent read-only review. Do not interpret this
-summary as independent approval.
+**Builder recommendation:** prepare the corrected local candidate and
+review bundle, then stop for focused independent read-only rereview. Do
+not interpret this summary or its builder score as independent approval.
