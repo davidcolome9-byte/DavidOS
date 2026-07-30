@@ -5,12 +5,12 @@
 > business, production system, live service, published site, customer
 > claim, or commercial result.
 
-**Candidate state:** Gate 1 Correction Round 2 on Round 1 candidate
-`e6939ebcd38bb9946bdb5170c6a195e07d39f5f6`, cumulative exact 15-file
-allowlist
+**Candidate state:** Gate 1 Correction Round 2 re-verification coverage
+fix on candidate `3a53349b7288996e08101f17cb1119939884e930`,
+cumulative exact 15-file allowlist
 
-**Validation status:** **PASS — ready for a Round 2 local candidate
-commit and focused independent rereview.**
+**Validation status:** **PASS — ready for a local re-verification
+coverage fix commit and focused independent rereview.**
 
 ## Correction history
 
@@ -49,6 +49,21 @@ documents and deterministic document checks only. It adds practical
 decision aids without altering the site, website brief, assets,
 screenshots, dependencies, or architecture.
 
+### Correction Round 2 re-verification coverage fix
+
+The first Round 2 audit confirmed six decision-readiness gaps closed but
+found the re-verification map incomplete. This append-only fix adds
+explicit blocked routes for the `$3,800` service fee, two-week delivery
+assumption, `$3,800`/50-50 commercial assumption, brand direction,
+stable-anchor feasibility, pickup-first fulfillment, client evidence
+availability, and static-prototype usefulness. Each route states its
+synthetic value or category, verifier, required evidence, affected
+artifacts, and real-use blocking status.
+
+The final validator now requires all eight rows, parses the map table,
+requires all five decision fields for every required material item, and
+requires each row to keep real use blocked.
+
 ## Business-readiness validation
 
 **PASS for the authorized Round 2 document checks.**
@@ -60,7 +75,7 @@ screenshots, dependencies, or architecture.
 | Do-nothing alternative | Explicitly covers unchanged conditions, remaining synthetic risks, avoided costs, manual alternatives, and rational reasons to defer |
 | Revision policy | Two rounds; included corrections, exclusions, client-supplied facts/photos/menu/hours/approvals, and new-estimate triggers are named |
 | Manual measurement | Seven paper/local-spreadsheet measures; every baseline says `Synthetic placeholder`; no analytics, account, credential, service, or infrastructure required |
-| Re-verification | Every material item has current synthetic value/category, verifier, evidence, artifact updates, and real-use blocking status |
+| Re-verification | Every material item, including all eight coverage-fix assumptions, has current synthetic value/category, verifier, evidence, artifact updates, and real-use blocking status |
 | Output traceability | Original rough command is quoted; all 20 required outputs map to exact artifacts and headings |
 
 Cross-document review confirmed that the new sections retain the same

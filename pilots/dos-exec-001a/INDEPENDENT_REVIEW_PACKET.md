@@ -1,4 +1,4 @@
-# DOS-EXEC-001A Gate 1 Correction Round 2 — Independent Rereview Packet
+# DOS-EXEC-001A Gate 1 Correction Round 2 Fix — Independent Rereview Packet
 
 > **Review target:** One fictional, synthetic-only, local bakery pilot.
 > Starwhisk Bakehouse is not real. No evidence in this package should be
@@ -26,37 +26,41 @@
 **Original candidate:**
 `bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1`
 
-**Correction Round 1 candidate / required parent:**
+**Correction Round 1 candidate:**
 `e6939ebcd38bb9946bdb5170c6a195e07d39f5f6`
 
-**Corrected candidate ref:** annotated tag
-`dos-exec-001a-gate1-correction-2-candidate`
+**Correction Round 2 candidate / required fix parent:**
+`3a53349b7288996e08101f17cb1119939884e930`
+
+**Corrected candidate selector:** current branch `HEAD`; record the exact
+immutable SHA from the correction handoff before review.
 
 Resolve and record the exact candidate SHA before review:
 
 ```powershell
 Set-Location 'C:\dev\davidos-worktrees\dos-exec-001a'
-git rev-parse 'dos-exec-001a-gate1-correction-2-candidate^{}'
-git rev-parse 'dos-exec-001a-gate1-correction-2-candidate^'
+git rev-parse HEAD
+git rev-parse HEAD^
 git status --short --branch
 ```
 
 The corrected candidate must be exactly one commit whose parent is the
-Round 1 candidate above. The candidate SHA cannot be embedded inside the
-commit that it identifies without changing that SHA. The peeled
-annotated tag is the authoritative in-repository candidate selector; the
-correction handoff reports its immutable SHA and verified bundle hash.
+Round 2 candidate above. The candidate SHA cannot be embedded inside the
+commit that it identifies without changing that SHA. No tag is created
+or moved for this fix; the correction handoff reports the immutable SHA
+and verified bundle hash.
 
 ## Objective
 
-Determine whether the single Round 2 correction commit closes the seven
-remaining business-usefulness and decision-readiness gaps identified by
-the 82/100 `REVISE` rereview: Monday actions, objection handling,
-do-nothing alternative, revision policy, manual measurement,
-re-verification, and exact required-output traceability. Confirm that it
-keeps earlier history intact, changes documents only, preserves the
-exact cumulative allowlist, and introduces no scope expansion or
-unsupported real-world claim.
+Determine whether the single append-only fix commit completes the
+re-verification gap remaining after the Round 2 audit. Confirm explicit
+blocked routes for the `$3,800` service fee, two-week delivery
+assumption, `$3,800` commercial assumption, brand-direction preference,
+stable-anchor feasibility, pickup-first fulfillment, client evidence
+availability, and static-prototype usefulness. Confirm that the fix
+keeps earlier history intact, changes only existing allowlisted
+documents/validation, and introduces no scope expansion or unsupported
+real-world claim.
 
 ## Files to inspect
 
@@ -115,10 +119,10 @@ it without relying on unexplained category wording.
 
 ```powershell
 Set-Location 'C:\dev\davidos-worktrees\dos-exec-001a'
-git rev-list --parents -n 1 dos-exec-001a-gate1-correction-2-candidate
-git diff --stat e6939ebcd38bb9946bdb5170c6a195e07d39f5f6..dos-exec-001a-gate1-correction-2-candidate
-git diff --name-only e6939ebcd38bb9946bdb5170c6a195e07d39f5f6..dos-exec-001a-gate1-correction-2-candidate
-git diff --check 497fab9abb06df86e20ef1e9fe4585d7c7274ab9..dos-exec-001a-gate1-correction-2-candidate
+git rev-list --parents -n 1 HEAD
+git diff --stat 3a53349b7288996e08101f17cb1119939884e930..HEAD
+git diff --name-only 3a53349b7288996e08101f17cb1119939884e930..HEAD
+git diff --check 497fab9abb06df86e20ef1e9fe4585d7c7274ab9..HEAD
 node pilots/dos-exec-001a/validate.mjs --final
 npm run validate:docs
 npm run validate:privacy
@@ -143,7 +147,7 @@ confirm those files are byte-identical to the Round 1 parent.
 ### Ancestry and scope
 
 - Is the corrected candidate exactly one child of
-  `e6939ebcd38bb9946bdb5170c6a195e07d39f5f6` with no amended or
+  `3a53349b7288996e08101f17cb1119939884e930` with no amended or
   rewritten earlier history?
 - Is the correction delta a subset of the authorized 15 files, and is
   the cumulative base-to-candidate set still exactly those 15 files?
@@ -183,7 +187,8 @@ confirm those files are byte-identical to the Round 1 parent.
 ### Re-verification and traceability
 
 - Does the map cover every authorized material item from bakery name
-  through prohibited testimonials/ratings/awards/press/customer counts?
+  through prohibited testimonials/ratings/awards/press/customer counts,
+  including all eight assumptions named in this fix?
 - Does each row identify current synthetic value/category, verifier,
   evidence, artifacts to update, and whether real use is blocked?
 - Does `README.md` quote the original rough command and map all 20

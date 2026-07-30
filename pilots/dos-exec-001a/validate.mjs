@@ -445,7 +445,7 @@ if (!errors.length) {
     if (!measurementPlan.includes(marker)) errors.push(`manual measurement plan is missing: ${marker}`);
   }
   const verificationMap = section(businessPackage, 'Re-verification map before real use');
-  for (const marker of [
+  const requiredVerificationItems = [
     'Bakery name',
     'Owner identity',
     'Address',
@@ -462,9 +462,46 @@ if (!errors.length) {
     'Margins',
     'Customer segments',
     'Operational bottlenecks',
+    'Service fee',
+    'Delivery assumption',
+    'Commercial assumption',
+    'Brand-direction preference',
+    'Stable-anchor feasibility',
+    'Pickup-first fulfillment',
+    'Client evidence availability',
+    'Static-prototype usefulness',
     'Testimonials, ratings, awards, press, and customer counts',
-  ]) {
-    if (!verificationMap.includes(marker)) errors.push(`re-verification map is missing: ${marker}`);
+  ];
+  const verificationRows = verificationMap
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith('|') && line.endsWith('|'))
+    .map((line) => line.slice(1, -1).split('|').map((cell) => cell.trim()))
+    .filter(
+      (cells) =>
+        cells.length === 6 &&
+        cells[0] !== 'Material item' &&
+        !cells[0].startsWith('---'),
+    );
+  for (const item of requiredVerificationItems) {
+    const row = verificationRows.find((cells) => cells[0] === item);
+    if (!row) {
+      errors.push(`re-verification map is missing: ${item}`);
+      continue;
+    }
+    const fieldNames = [
+      'synthetic value or category',
+      'verifier',
+      'required evidence',
+      'affected artifacts',
+    ];
+    for (const [index, fieldName] of fieldNames.entries()) {
+      if (!row[index + 1]) {
+        errors.push(`re-verification map ${item} is missing ${fieldName}`);
+      }
+    }
+    if (!/^Yes\b/.test(row[5])) {
+      errors.push(`re-verification map ${item} must keep real use blocked`);
+    }
   }
   for (const objection of [
     'We already have Instagram.',

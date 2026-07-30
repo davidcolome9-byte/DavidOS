@@ -316,3 +316,43 @@ screenshots remain outside the Round 2 delta.
   inventory, exact five-action and seven-baseline counts, objection and
   revision-policy coverage, 20-row traceability, no new files, and the
   preferred eight-file Round 2 delta.
+
+## Correction Round 2 re-verification coverage fix
+
+### Authorization and preflight
+
+- David authorized one append-only fix commit on top of
+  `3a53349b7288996e08101f17cb1119939884e930`, limited to missing
+  re-verification coverage and its existing validation/rereview records.
+- HEAD, required parent, canonical `main`, `origin/main`, branch,
+  cleanliness, cumulative 15-file allowlist, and unchanged
+  `package.json`/`package-lock.json` were verified before editing.
+- No site, website brief, style, script, logo, screenshot, dependency,
+  DOS-CTL, provider, credential, network, analytics, account, outreach,
+  spending, publication, or deployment change was authorized.
+
+### Coverage additions
+
+- Added separate blocked verification routes for the illustrative
+  `$3,800` service fee and the `$3,800`/50-50 commercial assumption so
+  neither can be mistaken for an approved quote or payment term.
+- Added a blocked route for the two-week delivery assumption, requiring
+  complete inputs, dependency and reviewer availability, a delivery
+  plan, and dated schedule approval.
+- Added routes for brand-direction preference, stable-anchor
+  feasibility, pickup-first fulfillment, client evidence availability,
+  and static-prototype usefulness.
+- Every added row identifies the current synthetic value/category,
+  verifier, required evidence, affected artifacts, and whether real use
+  remains blocked.
+- Strengthened `validate.mjs` to require each added item, parse the
+  six-column table rows, reject missing decision fields, and reject any
+  required row that does not keep real use blocked.
+
+### Rereview preparation
+
+- Updated the existing rereview packet to treat
+  `3a53349b7288996e08101f17cb1119939884e930` as the required parent and
+  the new branch HEAD as the immutable candidate reported by the
+  correction handoff.
+- No existing tag was changed or reused for the new candidate.
