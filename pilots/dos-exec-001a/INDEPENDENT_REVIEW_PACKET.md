@@ -1,0 +1,267 @@
+# DOS-EXEC-001A Gate 1 Correction Round 2 Fix — Independent Rereview Packet
+
+> **Review target:** One fictional, synthetic-only, local bakery pilot.
+> Starwhisk Bakehouse is not real. No evidence in this package should be
+> interpreted as a real customer, business, market, price, metric, quote,
+> address, contact, or commercial result.
+
+## Review stage and authority
+
+- Gate 1 focused correction rereview only.
+- Review is read-only.
+- Gate 2 remains unauthorized.
+- Do not edit, push, create a pull request, merge, deploy, publish,
+  contact, purchase, connect a provider, or use credentials.
+- A self-review by the builder does not satisfy the repository's
+  independence requirement.
+
+## Exact review target
+
+**Repository:** `C:\dev\davidos-worktrees\dos-exec-001a`
+
+**Branch:** `feat/dos-exec-001a-synthetic-bakery-pilot`
+
+**Base SHA:** `497fab9abb06df86e20ef1e9fe4585d7c7274ab9`
+
+**Original candidate:**
+`bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1`
+
+**Correction Round 1 candidate:**
+`e6939ebcd38bb9946bdb5170c6a195e07d39f5f6`
+
+**Correction Round 2 candidate / required fix parent:**
+`3a53349b7288996e08101f17cb1119939884e930`
+
+**Corrected candidate selector:** current branch `HEAD`; record the exact
+immutable SHA from the correction handoff before review.
+
+Resolve and record the exact candidate SHA before review:
+
+```powershell
+Set-Location 'C:\dev\davidos-worktrees\dos-exec-001a'
+git rev-parse HEAD
+git rev-parse HEAD^
+git status --short --branch
+```
+
+The corrected candidate must be exactly one commit whose parent is the
+Round 2 candidate above. The candidate SHA cannot be embedded inside the
+commit that it identifies without changing that SHA. No tag is created
+or moved for this fix; the correction handoff reports the immutable SHA
+and verified bundle hash.
+
+## Objective
+
+Determine whether the single append-only fix commit completes the
+re-verification gap remaining after the Round 2 audit. Confirm explicit
+blocked routes for the `$3,800` service fee, two-week delivery
+assumption, `$3,800` commercial assumption, brand-direction preference,
+stable-anchor feasibility, pickup-first fulfillment, client evidence
+availability, and static-prototype usefulness. Confirm that the fix
+keeps earlier history intact, changes only existing allowlisted
+documents/validation, and introduces no scope expansion or unsupported
+real-world claim.
+
+## Files to inspect
+
+1. `pilots/dos-exec-001a/WORK_LOG.md`
+2. `pilots/dos-exec-001a/README.md`
+3. `pilots/dos-exec-001a/BUSINESS_PACKAGE.md`
+4. `pilots/dos-exec-001a/WEBSITE_BRIEF.md`
+5. `pilots/dos-exec-001a/OUTREACH_AND_PROPOSAL.md`
+6. `pilots/dos-exec-001a/VALIDATION_REPORT.md`
+7. `pilots/dos-exec-001a/FINAL_APPROVAL.md`
+8. `pilots/dos-exec-001a/INDEPENDENT_REVIEW_PACKET.md`
+9. `pilots/dos-exec-001a/validate.mjs`
+10. `pilots/dos-exec-001a/site/index.html`
+11. `pilots/dos-exec-001a/site/styles.css`
+12. `pilots/dos-exec-001a/site/script.js`
+13. `pilots/dos-exec-001a/site/assets/logo.svg`
+14. `pilots/dos-exec-001a/evidence/desktop.png`
+15. `pilots/dos-exec-001a/evidence/mobile.png`
+
+No file outside this allowlist should differ from the base.
+
+The correction commit need not touch every allowlisted file. Its exact
+delta must remain a subset of this cumulative 15-file allowlist.
+
+## Directly verifiable 20-category deliverable map
+
+`README.md` → `Original command and required-output traceability`
+contains the authoritative exact-file-and-section map and quotes the
+original rough command. The summary below lets the reviewer cross-check
+it without relying on unexplained category wording.
+
+| # | Required output category | Primary evidence |
+|---:|---|---|
+| 1 | Executive summary | `README.md` |
+| 2 | Fictional bakery profile | `BUSINESS_PACKAGE.md` |
+| 3 | Synthetic evidence record | `BUSINESS_PACKAGE.md` |
+| 4 | Opportunity analysis | `BUSINESS_PACKAGE.md` |
+| 5 | Weakness and improvement assessment | `BUSINESS_PACKAGE.md` |
+| 6 | Recommended service offer | `BUSINESS_PACKAGE.md` |
+| 7 | Resale-product ideas | `BUSINESS_PACKAGE.md` |
+| 8 | Website strategy | `WEBSITE_BRIEF.md` |
+| 9 | Working local website | `site/index.html`, `site/styles.css`, `site/script.js`, `site/assets/logo.svg` |
+| 10 | Website copy | `WEBSITE_BRIEF.md`, `site/index.html` |
+| 11 | Branding and imagery plan | `WEBSITE_BRIEF.md`, `site/assets/logo.svg` |
+| 12 | Accessibility validation | `VALIDATION_REPORT.md`, `validate.mjs` |
+| 13 | Responsiveness validation | `VALIDATION_REPORT.md`, `validate.mjs`, `evidence/*.png` |
+| 14 | Technical validation | `VALIDATION_REPORT.md`, `validate.mjs` |
+| 15 | Draft outreach email | `OUTREACH_AND_PROPOSAL.md` |
+| 16 | Call or meeting talking points | `OUTREACH_AND_PROPOSAL.md` |
+| 17 | Proposal outline | `OUTREACH_AND_PROPOSAL.md` |
+| 18 | Assumptions and limitations | `BUSINESS_PACKAGE.md` |
+| 19 | Final local approval summary | `FINAL_APPROVAL.md` |
+| 20 | Exact local preview instructions | `README.md` |
+
+## Independent commands
+
+```powershell
+Set-Location 'C:\dev\davidos-worktrees\dos-exec-001a'
+git rev-list --parents -n 1 HEAD
+git diff --stat 3a53349b7288996e08101f17cb1119939884e930..HEAD
+git diff --name-only 3a53349b7288996e08101f17cb1119939884e930..HEAD
+git diff --check 497fab9abb06df86e20ef1e9fe4585d7c7274ab9..HEAD
+node pilots/dos-exec-001a/validate.mjs --final
+npm run validate:docs
+npm run validate:privacy
+npm run verify
+```
+
+Preview separately:
+
+```powershell
+& 'C:\dev\davidos\node_modules\.bin\vite.cmd' 'pilots/dos-exec-001a/site' --host 127.0.0.1 --port 4175
+```
+
+Open `http://127.0.0.1:4175/` only in an isolated local browser context.
+Do not navigate to a public host or use real browser data.
+
+## Required review questions
+
+Browser validation is intentionally omitted in Round 2 because no site,
+website brief, asset, or screenshot file may change. The reviewer should
+confirm those files are byte-identical to the Round 1 parent.
+
+### Ancestry and scope
+
+- Is the corrected candidate exactly one child of
+  `3a53349b7288996e08101f17cb1119939884e930` with no amended or
+  rewritten earlier history?
+- Is the correction delta a subset of the authorized 15 files, and is
+  the cumulative base-to-candidate set still exactly those 15 files?
+- Did the correction avoid dependencies, network/provider behavior,
+  real data, generalized framework work, and any file outside scope?
+
+### Monday-morning usability
+
+- Are there no more than five actions, each understandable without
+  Codex and realistically doable in about 15 minutes?
+- Does each name the required artifact/information, its synthetic or
+  client-supplied status, and its later verification boundary?
+- Can the list be followed without triggering outreach, spending,
+  deployment, credentials, or provider activity?
+
+### Decision choices and objections
+
+- Do the Instagram, maintenance-time, and spending objections avoid
+  pressure, unsupported revenue claims, and confusion between the
+  synthetic pilot and a future proposal?
+- Does each preserve a manual or do-nothing path?
+- Does the do-nothing alternative state unchanged conditions,
+  remaining synthetic risks, avoided costs, manual options, and rational
+  reasons to defer?
+
+### Commercial and operating boundaries
+
+- Is the two-round revision policy specific about included corrections,
+  exclusions, client-supplied facts/assets/approvals, and triggers for a
+  new estimate or separate scope?
+- Are all manual-measurement baselines explicitly synthetic, and can
+  every measure be collected without analytics, credentials, services,
+  or new infrastructure?
+- Are the measures bakery-specific and careful not to imply causation,
+  revenue, or success thresholds?
+
+### Re-verification and traceability
+
+- Does the map cover every authorized material item from bakery name
+  through prohibited testimonials/ratings/awards/press/customer counts,
+  including all eight assumptions named in this fix?
+- Does each row identify current synthetic value/category, verifier,
+  evidence, artifacts to update, and whether real use is blocked?
+- Does `README.md` quote the original rough command and map all 20
+  outputs to exact files and headings?
+- Are the new sections consistent with the offer, outreach, proposal,
+  approval summary, exclusions, and Gate 1 boundary?
+
+### User value
+
+- Is the diagnosis specific enough to inform a real future discovery?
+- Is the offer clear enough to discuss?
+- Are the resale ideas plausible but honestly bounded?
+- Is the outreach draft direct, truthful, and usable?
+- Is the website credible enough to adapt after fact verification?
+- Is the outcome larger than the implementation machinery?
+
+### Website quality
+
+- Does the page feel bakery-specific rather than templated?
+- Do local navigation, assets, FAQ, and estimator work?
+- Is every authorized width free of horizontal overflow?
+- Can a keyboard user reach and operate every primary interaction?
+- Are focus, form labels, headings, landmarks, and status output sound?
+- Does every synthetic price, quote, schedule, contact, and commercial
+  assumption remain clearly framed?
+
+### Scope and safety
+
+- Did any real bakery identity or detail enter the package?
+- Is there any secret, API, network request, storage, tracking, provider,
+  message, checkout, payment, deployment, or publication behavior?
+- Did any DavidOS runtime, dependency, workflow, configuration, or
+  unrelated file change?
+- Is the work still one package for one fictional bakery and one site?
+
+### Evidence quality
+
+- Do reported commands and counts match independent results?
+- Do screenshots match the candidate?
+- Are known limitations material and visible?
+- Is any success claim based only on passing tests rather than user
+  value?
+- Do the full required command suite and screenshot byte-regeneration
+  check pass independently?
+
+## Expected review report
+
+Report:
+
+1. exact repository;
+2. exact branch;
+3. exact original-parent SHA;
+4. exact peeled corrected-candidate SHA;
+5. exact correction-delta and cumulative file lists;
+6. files inspected;
+7. commands independently run and outcomes;
+8. confirmation that website/assets/screenshots are unchanged from the
+   Round 1 parent;
+9. findings for each of the seven Round 2 gaps;
+10. internal-consistency and synthetic-boundary findings;
+11. blocking findings;
+12. non-blocking findings;
+13. evidence gaps;
+14. user-value reassessment against the 85-point threshold;
+15. one allowed stage-appropriate verdict;
+16. explicit statement that no edits or live actions occurred.
+
+Stage-appropriate verdicts are:
+
+- `APPROVE WITH NON-BLOCKING NOTES`
+- `CHANGES REQUIRED`
+- `NOT READY`
+- `INSUFFICIENT EVIDENCE`
+
+This packet prepares review; it does not claim that independent review
+has already occurred.
