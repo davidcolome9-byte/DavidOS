@@ -5,17 +5,20 @@
 > business identity, publish a site, send outreach, accept orders, spend
 > money, connect a provider, or claim a commercial result.
 
-**Current disposition:** **CORRECTION ROUND 1 READY FOR A LOCAL
+**Current disposition:** **CORRECTION ROUND 2 READY FOR A LOCAL
 CORRECTION COMMIT AND FOCUSED INDEPENDENT REREVIEW.** This is the
 builder's Gate 1 readiness assessment, not an independent approval and
 not Gate 2 authorization.
 
-The original candidate
-`bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1` received a `CHANGES
-REQUIRED` verdict and 77/100 independent user-value assessment because
-of hero-card overlap/truncation and inaccurate visual-evidence claims.
-That verdict remains the controlling independent result until a reviewer
-examines this correction.
+Correction Round 1 candidate
+`e6939ebcd38bb9946bdb5170c6a195e07d39f5f6` received a `REVISE`
+focused-rereview verdict and 82/100 independent user-value assessment.
+The rereview confirmed that both original blocking defects were fully
+corrected with no regression. The remaining gaps were business
+decision-readiness: first actions, objections, a do-nothing option,
+revision boundaries, manual measurement, complete synthetic-fact
+re-verification, and exact output traceability. The 82/100 result remains
+controlling until this Round 2 correction is independently rereviewed.
 
 ## Package result
 
@@ -40,10 +43,30 @@ synthetic starting point, not real commercial performance.
 | Would David reasonably reuse this as a starting point? | 4/5 | Strategy, copy patterns, product packaging, proposal structure, and site source are directly adaptable after factual discovery. | Yes |
 | Did the implementation remain smaller than the result it produced? | 5/5 | Exactly 15 output files, zero dependency, zero runtime integration, one plain static site. | Yes |
 
-**Total:** 31/35 (89%). The result clears the user-value bar for a
-synthetic Gate 1 candidate. The one-point deductions preserve honesty:
-real facts, operator feedback, customer evidence, photography, and
-commercial validation do not exist in this pilot.
+**Builder total:** 31/35 (89%). This is a self-assessment and does not
+override the independent 82/100 score or establish acceptance. Real
+facts, operator feedback, customer evidence, photography, and commercial
+validation do not exist in this pilot.
+
+## Round 2 decision-readiness additions
+
+- A five-action Monday-morning list tells a stranger what artifact to
+  gather, who supplies it, and what remains synthetic or blocked.
+- Bakery-owner objection responses preserve Instagram, manual
+  operations, delayed spending, and the do-nothing option without
+  pressure or revenue claims.
+- The no-action comparison records unchanged conditions, remaining
+  synthetic risks, avoided costs, manual alternatives, and rational
+  reasons to defer.
+- A two-round revision policy distinguishes fact/copy corrections from
+  new pages, functions, providers, publishing, and rediscovery.
+- Seven manual measures use paper or a local spreadsheet, with every
+  baseline explicitly synthetic until owner records replace it.
+- A material-assumption map assigns verifier, evidence, update
+  locations, and real-use blocking status for every required business
+  fact and prohibited proof claim.
+- The original rough command and all 20 required outputs map to exact
+  files and headings in `README.md`.
 
 ## Approval conditions
 
@@ -57,13 +80,18 @@ Completed readiness conditions:
   contrast, 44 CSS pixel navigation targets, and no-JavaScript fallback
   checks pass;
 - exact file count and allowlist pass;
+- business-readiness sections are internally consistent with the
+  fictional offer, outreach, proposal, exclusions, and approval
+  boundary;
+- every material synthetic assumption has a named verifier, required
+  evidence, update destination, and blocked/unblocked decision;
 - known limitations remain visible;
 - independent review remains a separate next step, not a self-issued
   final approval.
 
-Remaining Gate 1 packaging steps are the intentional correction commit,
-corrected annotated candidate tag, verified Git bundle with SHA-256,
-and focused independent rereview.
+Remaining Gate 1 packaging steps are the intentional Round 2 correction
+commit, corrected annotated candidate tag, verified Git bundle with
+SHA-256, and focused independent rereview.
 
 ## Known limitations
 
@@ -75,6 +103,10 @@ and focused independent rereview.
 - Basic accessibility, one-browser exact-width checks, and two
   representative text-zoom cases are not a formal audit.
 - No real customer or operator has evaluated usefulness.
+- Manual-measurement baselines are all synthetic zero-record
+  placeholders and establish no actual performance.
+- The revision policy is a fictional proposal term, not an accepted
+  client agreement.
 - A real adaptation would require new authorization and verified facts.
 
 ## Gate boundary
@@ -83,6 +115,6 @@ Gate 2 remains unauthorized. The candidate must stop before push, pull
 request, merge, deployment, publication, domain work, provider activity,
 credentials, spending, contact, or outreach.
 
-**Builder recommendation:** prepare the corrected local candidate and
+**Builder recommendation:** prepare the Round 2 local candidate and
 review bundle, then stop for focused independent read-only rereview. Do
 not interpret this summary or its builder score as independent approval.

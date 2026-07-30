@@ -41,6 +41,58 @@ deployment configuration.
 | [INDEPENDENT_REVIEW_PACKET.md](INDEPENDENT_REVIEW_PACKET.md) | Read-only review instructions, evidence map, and verdict criteria |
 | [WORK_LOG.md](WORK_LOG.md) | Preflight, allowlist, work notes, command outcomes, and package boundaries |
 
+## Original command and required-output traceability
+
+The Gate 1 authorization's rough command was:
+
+> Create the smallest working proof that turns one rough fictional
+> bakery opportunity into a complete local business package containing:
+>
+> - Synthetic prospect analysis
+> - Recommended service offer
+> - Plausible resale-product ideas
+> - Working responsive static website prototype
+> - Validation results
+> - Draft outreach
+> - Proposal outline
+> - Final local approval summary
+>
+> This package must prove user value. It must not build a generalized
+> execution platform.
+
+The executive summary above states the resulting path and boundary.
+Every required output is located by exact artifact and heading below;
+“all required categories” is not used as a substitute for traceability.
+
+| # | Required output | Exact artifact and section |
+|---:|---|---|
+| 1 | Executive summary | `README.md` → `Executive summary` |
+| 2 | Fictional bakery profile | `BUSINESS_PACKAGE.md` → `Fictional bakery profile` |
+| 3 | Synthetic evidence record | `BUSINESS_PACKAGE.md` → `Synthetic evidence record` |
+| 4 | Opportunity analysis | `BUSINESS_PACKAGE.md` → `Opportunity analysis` |
+| 5 | Weakness and improvement assessment | `BUSINESS_PACKAGE.md` → `Weakness and improvement assessment` |
+| 6 | Recommended service offer | `BUSINESS_PACKAGE.md` → `Recommended service offer` |
+| 7 | Resale-product ideas | `BUSINESS_PACKAGE.md` → `Resale-product ideas` |
+| 8 | Website strategy | `WEBSITE_BRIEF.md` → `Website strategy` |
+| 9 | Working responsive static website | `site/index.html` → complete semantic document; `site/styles.css` → responsive presentation; `site/script.js` → local estimator; `site/assets/logo.svg` → local mark |
+| 10 | Website copy | `WEBSITE_BRIEF.md` → `Website copy`; implemented in `site/index.html` |
+| 11 | Branding and imagery plan | `WEBSITE_BRIEF.md` → `Branding and imagery plan` |
+| 12 | Accessibility validation | `VALIDATION_REPORT.md` → `Accessibility validation` |
+| 13 | Responsiveness validation | `VALIDATION_REPORT.md` → `Responsiveness validation`; captures in `evidence/` |
+| 14 | Technical validation | `VALIDATION_REPORT.md` → `Technical validation` |
+| 15 | Draft outreach email | `OUTREACH_AND_PROPOSAL.md` → `Draft outreach email` |
+| 16 | Call or meeting talking points | `OUTREACH_AND_PROPOSAL.md` → `Call or meeting talking points` |
+| 17 | Proposal outline | `OUTREACH_AND_PROPOSAL.md` → `Proposal outline` |
+| 18 | Assumptions and limitations | `BUSINESS_PACKAGE.md` → `Assumptions and limitations` |
+| 19 | Final approval summary | `FINAL_APPROVAL.md` → complete document, especially `Package result` and `User-value scorecard` |
+| 20 | Clear local preview instructions | `README.md` → `Local preview instructions` |
+
+The additional Round 2 decision aids are in
+`BUSINESS_PACKAGE.md` → `Monday-morning action list`, `Do-nothing
+alternative`, `Manual measurement plan`, and `Re-verification map before
+real use`; objection handling and the revision policy are in
+`OUTREACH_AND_PROPOSAL.md`.
+
 ## Local preview instructions
 
 Prerequisites: the existing repository dependencies must already be

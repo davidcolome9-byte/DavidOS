@@ -5,11 +5,11 @@
 > business, production system, live service, published site, customer
 > claim, or commercial result.
 
-**Candidate state:** Gate 1 Correction Round 1 on original candidate
-`bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1`, cumulative exact 15-file
+**Candidate state:** Gate 1 Correction Round 2 on Round 1 candidate
+`e6939ebcd38bb9946bdb5170c6a195e07d39f5f6`, cumulative exact 15-file
 allowlist
 
-**Validation status:** **PASS — ready for a corrected local candidate
+**Validation status:** **PASS — ready for a Round 2 local candidate
 commit and focused independent rereview.**
 
 ## Correction history
@@ -38,6 +38,37 @@ record instead of rewriting it:
 
 The original broad visual claim was inaccurate and is superseded by the
 measured and visually inspected results below.
+
+### Correction Round 2
+
+The Round 1 focused rereview returned `REVISE` with an 82/100
+user-value assessment while confirming that both original blockers,
+responsive behavior, screenshots, contrast, touch targets, no-JavaScript
+behavior, ancestry, bundle, and validation were correct. Round 2 changes
+documents and deterministic document checks only. It adds practical
+decision aids without altering the site, website brief, assets,
+screenshots, dependencies, or architecture.
+
+## Business-readiness validation
+
+**PASS for the authorized Round 2 document checks.**
+
+| Gap | Verifiable result |
+|---|---|
+| Monday-morning actions | Exactly five actions; each states a ≤15-minute task, required artifact/information, source class, and real-verification boundary |
+| Objection handling | Instagram, maintenance-time, and spending objections each preserve manual/no-action choices and contain no revenue or pressure claim |
+| Do-nothing alternative | Explicitly covers unchanged conditions, remaining synthetic risks, avoided costs, manual alternatives, and rational reasons to defer |
+| Revision policy | Two rounds; included corrections, exclusions, client-supplied facts/photos/menu/hours/approvals, and new-estimate triggers are named |
+| Manual measurement | Seven paper/local-spreadsheet measures; every baseline says `Synthetic placeholder`; no analytics, account, credential, service, or infrastructure required |
+| Re-verification | Every material item has current synthetic value/category, verifier, evidence, artifact updates, and real-use blocking status |
+| Output traceability | Original rough command is quoted; all 20 required outputs map to exact artifacts and headings |
+
+Cross-document review confirmed that the new sections retain the same
+fictional `$3,800` offer assumption, two-week timeline assumption,
+five-section website scope, six-product ceiling, client fact/asset
+responsibilities, provider/publication exclusions, and Gate 1 boundary.
+No arithmetic was added other than counts stated directly in the
+documents; resale-product arithmetic remains unchanged.
 
 ## Validation scope
 
@@ -111,7 +142,7 @@ localization, assistive technologies, or arbitrary zoom combinations.
 
 | Command/check | Outcome |
 |---|---|
-| `node pilots/dos-exec-001a/validate.mjs --browser` | PASS — 16 exact widths, two text-zoom cases, two interaction captures, no-JS behavior, touch targets, occlusion/clipping, and byte-identical screenshot regeneration |
+| Round 1 `node pilots/dos-exec-001a/validate.mjs --browser` evidence | Retained PASS — 16 exact widths, two text-zoom cases, two interaction captures, no-JS behavior, touch targets, occlusion/clipping, and byte-identical screenshot regeneration |
 | `node pilots/dos-exec-001a/validate.mjs --final` | PASS — 13 authored + 2 generated files; exact allowlist and count |
 | `git diff --check` | PASS — no whitespace errors |
 | `npm run validate:docs` | PASS — 28 JSON files, 56 relative links, version and 40 documented commands consistent |
@@ -119,6 +150,7 @@ localization, assistive technologies, or arbitrary zoom combinations.
 | `npm run verify` | PASS — ESLint; 59 Vitest files / 926 tests; seed, privacy, and docs validators; TypeScript; Vite production build; service-worker stamp |
 | Local link/asset check | PASS — every same-page target and referenced local asset resolves |
 | Local runtime check | PASS — zero console errors, page errors, failed requests, or non-local requests at all 16 widths |
+| Round 2 parent-delta check | PASS — only the eight preferred document/validator files changed; site, website brief, logo, and screenshots are byte-identical to Round 1 |
 
 The isolated worktree reused the canonical clean repository's existing
 `node_modules` through a temporary local junction. No install ran and no
@@ -166,7 +198,10 @@ production behavior, or real-world performance.
 
 ## Limitations of validation
 
-The exact width sweep materially improves responsive evidence but
+Round 2 did not rerun browser validation because no website or evidence
+file changed; the validator instead requires those files to be unchanged
+from the already browser-validated Round 1 parent. The exact width sweep
+materially improves responsive evidence but
 remains bounded to headless Chromium, system fonts available on this
 machine, 125% and 150% text-zoom samples, and English synthetic copy.
 The checks cannot establish formal accessibility conformance,

@@ -12,6 +12,7 @@ import { fileURLToPath } from 'node:url';
 const packageRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(packageRoot, '..', '..');
 const authorizedBase = '497fab9abb06df86e20ef1e9fe4585d7c7274ab9';
+const roundOneCandidate = 'e6939ebcd38bb9946bdb5170c6a195e07d39f5f6';
 const finalMode = process.argv.includes('--final');
 const browserMode = process.argv.includes('--browser');
 
@@ -34,6 +35,16 @@ const evidenceFiles = ['evidence/desktop.png', 'evidence/mobile.png'];
 const allowlist = [...authoredFiles, ...evidenceFiles].map((file) =>
   `pilots/dos-exec-001a/${file}`.replaceAll('\\', '/'),
 );
+const roundTwoAllowlist = [
+  'BUSINESS_PACKAGE.md',
+  'OUTREACH_AND_PROPOSAL.md',
+  'FINAL_APPROVAL.md',
+  'README.md',
+  'INDEPENDENT_REVIEW_PACKET.md',
+  'VALIDATION_REPORT.md',
+  'WORK_LOG.md',
+  'validate.mjs',
+].map((file) => `pilots/dos-exec-001a/${file}`);
 const errors = [];
 
 const expectBrowser = (condition, message) => {
@@ -364,6 +375,10 @@ if (!errors.length) {
     'Weakness and improvement assessment',
     'Recommended service offer',
     'Resale-product ideas',
+    'Monday-morning action list',
+    'Do-nothing alternative',
+    'Manual measurement plan',
+    'Re-verification map before real use',
     'Assumptions and limitations',
   ];
   for (const marker of businessMarkers) requireText('BUSINESS_PACKAGE.md', marker);
@@ -371,14 +386,106 @@ if (!errors.length) {
   for (const marker of ['Website strategy', 'Website copy', 'Branding and imagery plan']) {
     requireText('WEBSITE_BRIEF.md', marker);
   }
-  for (const marker of ['Draft outreach email', 'Call or meeting talking points', 'Proposal outline']) {
+  for (const marker of [
+    'Draft outreach email',
+    'Call or meeting talking points',
+    'Bakery-owner objection handling',
+    'Proposal outline',
+    'Fictional revision policy',
+  ]) {
     requireText('OUTREACH_AND_PROPOSAL.md', marker);
   }
   for (const marker of ['Accessibility validation', 'Responsiveness validation', 'Technical validation']) {
     requireText('VALIDATION_REPORT.md', marker);
   }
-  for (const marker of ['User-value scorecard', 'Gate 2 remains unauthorized']) {
+  for (const marker of ['User-value scorecard', 'Round 2 decision-readiness additions', 'Gate 2 remains unauthorized']) {
     requireText('FINAL_APPROVAL.md', marker);
+  }
+  requireText('README.md', 'Original command and required-output traceability');
+
+  const businessPackage = text('BUSINESS_PACKAGE.md');
+  const outreachProposal = text('OUTREACH_AND_PROPOSAL.md');
+  const readme = text('README.md');
+  const section = (documentText, heading) =>
+    documentText.split(`## ${heading}`)[1]?.split(/\n## /)[0] ?? '';
+  const mondayActions = section(businessPackage, 'Monday-morning action list');
+  const actionRows = mondayActions.match(/^\| [1-5] \|/gm) ?? [];
+  if (actionRows.length !== 5) {
+    errors.push(`Monday-morning action list must contain exactly five actions; found ${actionRows.length}`);
+  }
+  const actionTimes = mondayActions.match(/≤15 min/g) ?? [];
+  if (actionTimes.length !== 5) {
+    errors.push(`each Monday-morning action must state a ≤15 minute limit; found ${actionTimes.length}`);
+  }
+  for (const marker of [
+    'What remains unchanged',
+    'Risks that remain',
+    'Costs avoided',
+    'Low-effort manual alternatives',
+    'Why no action may be reasonable',
+  ]) {
+    if (!section(businessPackage, 'Do-nothing alternative').includes(marker)) {
+      errors.push(`do-nothing alternative is missing: ${marker}`);
+    }
+  }
+  const measurementPlan = section(businessPackage, 'Manual measurement plan');
+  const syntheticBaselines = measurementPlan.match(/Synthetic placeholder:/g) ?? [];
+  if (syntheticBaselines.length !== 7) {
+    errors.push(`manual measurement plan must contain seven synthetic baselines; found ${syntheticBaselines.length}`);
+  }
+  for (const marker of [
+    'Custom-order inquiries',
+    'Wholesale conversations',
+    'Phone calls mentioning the website',
+    'Counter questions about featured products',
+    'Order counts recorded manually',
+    'Day-old inventory counts',
+    'Repeat catering inquiries',
+  ]) {
+    if (!measurementPlan.includes(marker)) errors.push(`manual measurement plan is missing: ${marker}`);
+  }
+  const verificationMap = section(businessPackage, 'Re-verification map before real use');
+  for (const marker of [
+    'Bakery name',
+    'Owner identity',
+    'Address',
+    'Phone number',
+    'Email',
+    'Website domain',
+    'Business hours',
+    'Product names',
+    'Product prices',
+    'Ingredient and allergen information',
+    'Wholesale terms',
+    'Lead times',
+    'Capacity',
+    'Margins',
+    'Customer segments',
+    'Operational bottlenecks',
+    'Testimonials, ratings, awards, press, and customer counts',
+  ]) {
+    if (!verificationMap.includes(marker)) errors.push(`re-verification map is missing: ${marker}`);
+  }
+  for (const objection of [
+    'We already have Instagram.',
+    'I do not have time to manage another system.',
+    'I cannot justify spending money on this yet.',
+  ]) {
+    if (!outreachProposal.includes(objection)) errors.push(`objection handling is missing: ${objection}`);
+  }
+  for (const marker of [
+    'Included rounds:',
+    'A revision means:',
+    'Not a revision:',
+    'Client-supplied inputs:',
+    'New estimate or separate scope:',
+  ]) {
+    if (!outreachProposal.includes(marker)) errors.push(`revision policy is missing: ${marker}`);
+  }
+  const traceability = section(readme, 'Original command and required-output traceability');
+  const traceabilityRows = traceability.match(/^\| (?:[1-9]|1[0-9]|20) \|/gm) ?? [];
+  if (traceabilityRows.length !== 20) {
+    errors.push(`required-output traceability must contain 20 mapped rows; found ${traceabilityRows.length}`);
   }
 
   const html = text('site/index.html');
@@ -482,6 +589,15 @@ if (!errors.length) {
   const unexpected = changedFiles.filter((file) => !allowlist.includes(file));
   if (unexpected.length) errors.push(`changed files outside allowlist: ${unexpected.join(', ')}`);
 
+  const untrackedFiles = execFileSync('git', ['ls-files', '--others', '--exclude-standard'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  })
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((file) => file.replaceAll('\\', '/'));
+  if (untrackedFiles.length) errors.push(`new untracked files are forbidden: ${untrackedFiles.join(', ')}`);
+
   if (finalMode) {
     const missingFromChangeSet = allowlist.filter((file) => !changedFiles.includes(file));
     if (missingFromChangeSet.length) {
@@ -490,6 +606,18 @@ if (!errors.length) {
     if (changedFiles.length !== allowlist.length) {
       errors.push(`final changed-file count must be ${allowlist.length}; found ${changedFiles.length}`);
     }
+    const roundTwoChangedFiles = execFileSync('git', ['diff', '--name-only', roundOneCandidate], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+    })
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((file) => file.replaceAll('\\', '/'));
+    const unexpectedRoundTwo = roundTwoChangedFiles.filter((file) => !roundTwoAllowlist.includes(file));
+    if (unexpectedRoundTwo.length) {
+      errors.push(`Round 2 changed files outside its document allowlist: ${unexpectedRoundTwo.join(', ')}`);
+    }
+    if (!roundTwoChangedFiles.length) errors.push('Round 2 correction delta is empty');
   }
 }
 
@@ -515,5 +643,6 @@ console.log(
   `DOS-EXEC-001A pilot validation OK — ${authoredFiles.length} authored files` +
     `${finalMode ? ` + ${evidenceFiles.length} generated evidence files` : ''}; ` +
     'synthetic labels, required sections, local links/assets, accessibility hooks, scope, and credential checks passed' +
+    '; business actions, objections, no-action option, revisions, measurement, re-verification, and traceability passed' +
     `${browserMode ? '; Chromium 16-width responsive, zoom, no-JS, interaction, and screenshot checks passed' : ''}.`,
 );

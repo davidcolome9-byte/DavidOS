@@ -1,4 +1,4 @@
-# DOS-EXEC-001A Gate 1 Correction Round 1 — Independent Rereview Packet
+# DOS-EXEC-001A Gate 1 Correction Round 2 — Independent Rereview Packet
 
 > **Review target:** One fictional, synthetic-only, local bakery pilot.
 > Starwhisk Bakehouse is not real. No evidence in this package should be
@@ -23,35 +23,40 @@
 
 **Base SHA:** `497fab9abb06df86e20ef1e9fe4585d7c7274ab9`
 
-**Original candidate / required parent:**
+**Original candidate:**
 `bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1`
 
+**Correction Round 1 candidate / required parent:**
+`e6939ebcd38bb9946bdb5170c6a195e07d39f5f6`
+
 **Corrected candidate ref:** annotated tag
-`dos-exec-001a-gate1-correction-1-candidate`
+`dos-exec-001a-gate1-correction-2-candidate`
 
 Resolve and record the exact candidate SHA before review:
 
 ```powershell
 Set-Location 'C:\dev\davidos-worktrees\dos-exec-001a'
-git rev-parse 'dos-exec-001a-gate1-correction-1-candidate^{}'
-git rev-parse 'dos-exec-001a-gate1-correction-1-candidate^'
+git rev-parse 'dos-exec-001a-gate1-correction-2-candidate^{}'
+git rev-parse 'dos-exec-001a-gate1-correction-2-candidate^'
 git status --short --branch
 ```
 
 The corrected candidate must be exactly one commit whose parent is the
-original candidate above. The candidate SHA cannot be embedded inside
-the commit that it identifies without changing that SHA. The peeled
+Round 1 candidate above. The candidate SHA cannot be embedded inside the
+commit that it identifies without changing that SHA. The peeled
 annotated tag is the authoritative in-repository candidate selector; the
 correction handoff reports its immutable SHA and verified bundle hash.
 
 ## Objective
 
-Determine whether the single correction commit fixes the two blocking
-hero/evidence findings, keeps the original candidate history intact,
-addresses the authorized related findings, preserves the exact
-cumulative allowlist, and introduces no scope expansion or new defect.
-The broader package should be reconsidered only where the correction
-changes its evidence or quality.
+Determine whether the single Round 2 correction commit closes the seven
+remaining business-usefulness and decision-readiness gaps identified by
+the 82/100 `REVISE` rereview: Monday actions, objection handling,
+do-nothing alternative, revision policy, manual measurement,
+re-verification, and exact required-output traceability. Confirm that it
+keeps earlier history intact, changes documents only, preserves the
+exact cumulative allowlist, and introduces no scope expansion or
+unsupported real-world claim.
 
 ## Files to inspect
 
@@ -77,6 +82,11 @@ The correction commit need not touch every allowlisted file. Its exact
 delta must remain a subset of this cumulative 15-file allowlist.
 
 ## Directly verifiable 20-category deliverable map
+
+`README.md` → `Original command and required-output traceability`
+contains the authoritative exact-file-and-section map and quotes the
+original rough command. The summary below lets the reviewer cross-check
+it without relying on unexplained category wording.
 
 | # | Required output category | Primary evidence |
 |---:|---|---|
@@ -105,11 +115,10 @@ delta must remain a subset of this cumulative 15-file allowlist.
 
 ```powershell
 Set-Location 'C:\dev\davidos-worktrees\dos-exec-001a'
-git rev-list --parents -n 1 dos-exec-001a-gate1-correction-1-candidate
-git diff --stat bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1..dos-exec-001a-gate1-correction-1-candidate
-git diff --name-only bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1..dos-exec-001a-gate1-correction-1-candidate
-git diff --check 497fab9abb06df86e20ef1e9fe4585d7c7274ab9..dos-exec-001a-gate1-correction-1-candidate
-node pilots/dos-exec-001a/validate.mjs --browser
+git rev-list --parents -n 1 dos-exec-001a-gate1-correction-2-candidate
+git diff --stat e6939ebcd38bb9946bdb5170c6a195e07d39f5f6..dos-exec-001a-gate1-correction-2-candidate
+git diff --name-only e6939ebcd38bb9946bdb5170c6a195e07d39f5f6..dos-exec-001a-gate1-correction-2-candidate
+git diff --check 497fab9abb06df86e20ef1e9fe4585d7c7274ab9..dos-exec-001a-gate1-correction-2-candidate
 node pilots/dos-exec-001a/validate.mjs --final
 npm run validate:docs
 npm run validate:privacy
@@ -127,36 +136,60 @@ Do not navigate to a public host or use real browser data.
 
 ## Required review questions
 
+Browser validation is intentionally omitted in Round 2 because no site,
+website brief, asset, or screenshot file may change. The reviewer should
+confirm those files are byte-identical to the Round 1 parent.
+
 ### Ancestry and scope
 
 - Is the corrected candidate exactly one child of
-  `bc8dc3fcc617b8651ef2de9d02f7aa943dbef4f1` with no amended or
-  rewritten original history?
+  `e6939ebcd38bb9946bdb5170c6a195e07d39f5f6` with no amended or
+  rewritten earlier history?
 - Is the correction delta a subset of the authorized 15 files, and is
   the cumulative base-to-candidate set still exactly those 15 files?
 - Did the correction avoid dependencies, network/provider behavior,
   real data, generalized framework work, and any file outside scope?
 
-### Blocking corrections
+### Monday-morning usability
 
-- At each of 320, 360, 375, 390, 414, 480, 540, 600, 620, 640, 768,
-  800, 820, 900, 1024, and 1440 CSS pixels, is the hero product name and
-  descriptor fully readable without oven-note overlap or truncation?
-- Do `evidence/mobile.png` and `evidence/desktop.png` match the corrected
-  candidate and the hashes recorded in `VALIDATION_REPORT.md`?
-- Does the report explicitly withdraw/supersede the inaccurate original
-  visual claim and state representative limitations honestly?
+- Are there no more than five actions, each understandable without
+  Codex and realistically doable in about 15 minutes?
+- Does each name the required artifact/information, its synthetic or
+  client-supplied status, and its later verification boundary?
+- Can the list be followed without triggering outreach, spending,
+  deployment, credentials, or provider activity?
 
-### Authorized related corrections
+### Decision choices and objections
 
-- Do the recorded normal-text contrast calculations meet WCAG AA?
-- Are primary navigation targets measured at least 44 CSS pixels high?
-- With JavaScript disabled, is the estimator visibly inactive and
-  incapable of submitting, reloading, or adding a query string?
-- Does `WORK_LOG.md` accurately limit `script.js` to the estimator?
-- Is the 20-category requirement mapped directly above?
-- Is the distinction between the `$58` menu cake and `$62` resale bundle
-  clear?
+- Do the Instagram, maintenance-time, and spending objections avoid
+  pressure, unsupported revenue claims, and confusion between the
+  synthetic pilot and a future proposal?
+- Does each preserve a manual or do-nothing path?
+- Does the do-nothing alternative state unchanged conditions,
+  remaining synthetic risks, avoided costs, manual options, and rational
+  reasons to defer?
+
+### Commercial and operating boundaries
+
+- Is the two-round revision policy specific about included corrections,
+  exclusions, client-supplied facts/assets/approvals, and triggers for a
+  new estimate or separate scope?
+- Are all manual-measurement baselines explicitly synthetic, and can
+  every measure be collected without analytics, credentials, services,
+  or new infrastructure?
+- Are the measures bakery-specific and careful not to imply causation,
+  revenue, or success thresholds?
+
+### Re-verification and traceability
+
+- Does the map cover every authorized material item from bakery name
+  through prohibited testimonials/ratings/awards/press/customer counts?
+- Does each row identify current synthetic value/category, verifier,
+  evidence, artifacts to update, and whether real use is blocked?
+- Does `README.md` quote the original rough command and map all 20
+  outputs to exact files and headings?
+- Are the new sections consistent with the offer, outreach, proposal,
+  approval summary, exclusions, and Gate 1 boundary?
 
 ### User value
 
@@ -207,13 +240,14 @@ Report:
 5. exact correction-delta and cumulative file lists;
 6. files inspected;
 7. commands independently run and outcomes;
-8. hero results at every authorized width;
-9. screenshot hash comparison and visual findings;
-10. contrast, touch-target, no-JS, and documentation findings;
+8. confirmation that website/assets/screenshots are unchanged from the
+   Round 1 parent;
+9. findings for each of the seven Round 2 gaps;
+10. internal-consistency and synthetic-boundary findings;
 11. blocking findings;
 12. non-blocking findings;
 13. evidence gaps;
-14. user-value reassessment;
+14. user-value reassessment against the 85-point threshold;
 15. one allowed stage-appropriate verdict;
 16. explicit statement that no edits or live actions occurred.
 

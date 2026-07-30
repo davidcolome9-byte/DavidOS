@@ -99,6 +99,24 @@ Draft only; no message was sent
 - Do not schedule, publish, buy, connect, or contact anyone based on this
   fictional package.
 
+## Bakery-owner objection handling
+
+These are calm responses for a future, separately authorized
+conversation. They do not convert this synthetic pilot into a real
+proposal, imply a financial return, or remove the owner's option to do
+nothing.
+
+| Realistic objection | Concise response |
+|---|---|
+| “We already have Instagram.” | “Keeping Instagram may be the right choice. This fictional pilot only tests whether stable menu, pickup, and cake information would benefit from one owner-controlled reference point. We can first use a pinned weekly menu and paper question tally; if that solves the problem, there is no need to add a website.” |
+| “I do not have time to manage another system.” | “Then a new system would be the wrong recommendation. The local concept has no backend and proves no maintenance workflow. A future scope should proceed only if one person can own a small fact-update checklist; otherwise current channels and a printed pickup card are reasonable.” |
+| “I cannot justify spending money on this yet.” | “You do not need to. The `$3,800` figure is synthetic, not a quote or a claim of payback. Keep the do-nothing option, use the manual alternatives, and record real inquiry, order, and day-old counts before considering any separately estimated work.” |
+
+Additional bakery-specific responses should follow the same pattern:
+identify the operational concern, separate verified facts from the
+pilot, offer the smallest manual test, and make stopping an acceptable
+decision.
+
 ## Proposal outline
 
 ### 1. Context
@@ -176,3 +194,27 @@ hosting, publication, and ongoing maintenance.
 Any live form, payment, inventory, provider, analytics, hosting,
 publication, messaging, or off-device data flow becomes a separately
 estimated and explicitly authorized package.
+
+### 11. Fictional revision policy
+
+- **Included rounds:** Two consolidated revision rounds after the owner
+  supplies the initial verified fact and asset set.
+- **A revision means:** Corrections or bounded choices within the agreed
+  five-section site and messaging brief—for example replacing an
+  approved product, correcting hours or a price, refining one headline,
+  or selecting among supplied owned photos.
+- **Not a revision:** New pages, new product categories beyond the
+  agreed six, photography production, brand renaming, legal or allergen
+  analysis, rewritten operating policy, live forms, commerce, inventory,
+  accounts, analytics, hosting, publication, or provider integration.
+- **Client-supplied inputs:** The owner or authorized approver supplies
+  corrected business facts, owned/licensed photos, final menu items,
+  prices, hours, lead times, ingredient/allergen source material, and
+  one consolidated approval per round. The builder does not invent or
+  independently approve those facts.
+- **New estimate or separate scope:** A third revision round,
+  incomplete or contradictory source material requiring rediscovery,
+  changed objectives, new functionality, new channel or provider work,
+  or any item in the exclusion list requires a new estimate and
+  explicit authorization. The owner may instead stop with the current
+  approved local materials.

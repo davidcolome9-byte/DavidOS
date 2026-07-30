@@ -247,3 +247,72 @@ Stop without implementation if any of the following becomes true:
   readable, while the 1440 CSS pixel composition retains its intended
   offset layout. This claim is limited to those two rendered evidence
   captures; the measured sweep supplies the broader width evidence.
+
+## Correction Round 2
+
+### Authorization and preflight
+
+- Narrow business-readiness correction authorization was received after
+  the Round 1 focused rereview returned `REVISE` and 82/100.
+- The rereview confirmed both original blockers were fixed and found no
+  regression in the site, screenshots, responsive behavior, contrast,
+  touch targets, no-JavaScript behavior, validation, ancestry, or
+  bundle.
+- Authorized base remained
+  `497fab9abb06df86e20ef1e9fe4585d7c7274ab9`.
+- Round 1 candidate and required parent remained
+  `e6939ebcd38bb9946bdb5170c6a195e07d39f5f6`.
+- Canonical `main`, `origin/main`, the pilot branch, and both worktrees
+  were clean; the cumulative diff remained the exact existing 15-file
+  allowlist.
+- No browser validation was planned because Round 2 authorizes document
+  corrections only and leaves the website, website brief, assets, and
+  screenshots byte-identical to the browser-validated Round 1 parent.
+
+### Exact Round 2 file allowlist
+
+1. `pilots/dos-exec-001a/BUSINESS_PACKAGE.md`
+2. `pilots/dos-exec-001a/OUTREACH_AND_PROPOSAL.md`
+3. `pilots/dos-exec-001a/FINAL_APPROVAL.md`
+4. `pilots/dos-exec-001a/README.md`
+5. `pilots/dos-exec-001a/INDEPENDENT_REVIEW_PACKET.md`
+6. `pilots/dos-exec-001a/VALIDATION_REPORT.md`
+7. `pilots/dos-exec-001a/WORK_LOG.md`
+8. `pilots/dos-exec-001a/validate.mjs`
+
+No file was added. The site, `WEBSITE_BRIEF.md`, logo, and evidence
+screenshots remain outside the Round 2 delta.
+
+### Business-readiness corrections
+
+- Added exactly five Monday-morning preparation actions. Each is
+  understandable without Codex, bounded to about 15 minutes, identifies
+  the source artifact, and distinguishes synthetic, client-supplied, and
+  later-verified information.
+- Added calm responses to the Instagram, maintenance-time, and spending
+  objections. Each preserves manual operation and the do-nothing option,
+  makes no revenue claim, and does not treat the synthetic pilot as a
+  real proposal.
+- Added a bakery-specific no-action comparison covering unchanged
+  conditions, remaining synthetic risks, avoided costs, manual
+  alternatives, and reasonable reasons to defer.
+- Added a two-round fictional revision policy defining included
+  corrections, exclusions, owner-supplied facts/photos/menu/hours and
+  approvals, and new-estimate/separate-scope triggers.
+- Added seven manual measures for inquiries, wholesale conversations,
+  website-mentioned calls, counter questions, featured-product order
+  counts, day-old inventory, and repeat catering interest. Every
+  baseline is explicitly a synthetic placeholder.
+- Added a material-assumption re-verification table covering identity,
+  contact, domain, hours, products, pricing, ingredient/allergen facts,
+  wholesale, lead times, capacity, margins, segments, bottlenecks, and
+  prohibited proof claims. Every row names the verifier, evidence,
+  affected artifacts, and blocked status.
+- Quoted the original rough Gate 1 command and mapped every one of the
+  20 required outputs to an exact artifact and section.
+- Updated the approval and rereview materials to preserve the
+  independent 82/100 result as controlling until Round 2 rereview.
+- Extended deterministic validation to enforce the new section
+  inventory, exact five-action and seven-baseline counts, objection and
+  revision-policy coverage, 20-row traceability, no new files, and the
+  preferred eight-file Round 2 delta.
