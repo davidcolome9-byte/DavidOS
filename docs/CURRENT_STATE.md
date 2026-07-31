@@ -1,4 +1,4 @@
-# Current State — 2026-07-29
+# Current State — 2026-07-30
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -11,7 +11,7 @@ documentation-only DOS-STAB-002B Option 3 planning closure. That closure
 changes no runtime behavior, dependency, schema, storage key, persistence
 logic, test, or deployed feature behavior.
 
-## Program Control baseline — 2026-07-26
+## Program Control baseline — 2026-07-30
 
 - **Active project portfolio:** exactly three projects: **DavidOS**;
   **Operation David / Health & Fitness**; and **Social Assistant /
@@ -35,11 +35,17 @@ logic, test, or deployed feature behavior.
   result and is not a permanent claim about the moving tip of `main`.
   The package changed test and documentation evidence only; no
   production behavior changed.
+- **DOS-EXEC-001A — Synthetic Bakery Pilot:** complete, merged through
+  PR #36, deployed through the existing Pages workflow, independently
+  reviewed, post-merge verified, and closed. Approved candidate
+  `1bd96758d2a01dad9fabd222d9742ffad27bb9ad`; merge SHA
+  `ec9fc2136fe050fc036d1d635abbbab696685503`. The bakery prototype
+  remains a local synthetic artifact and was not published.
 - **Current package:** no implementation package is active. The next
   bounded package must be selected by Program Control and explicitly
   authorized by David; it is not inferred from DOS-GOV-003A,
-  DOS-TEST-001B, a backlog status, a roadmap entry, an integration
-  foundation, or an automatic workflow.
+  DOS-TEST-001B, DOS-EXEC-001A, a backlog status, a roadmap entry, an
+  integration foundation, or an automatic workflow.
 - **Roadmap and automation facts are not authorization.** Existing
   provider foundations and the repository's automatic Pages workflow are
   historical/current product facts, not permission to connect a
@@ -62,6 +68,40 @@ logic, test, or deployed feature behavior.
   implementation package is active after it closes. DOS-CTL Phase 1,
   real execution, credentials, live providers, deployment, and release
   remain unauthorized.
+
+## DOS-EXEC-001A synthetic pilot closeout — 2026-07-30
+
+- **Release identity:** DOS-EXEC-001A completed both gates through
+  [PR #36](https://github.com/davidcolome9-byte/DavidOS/pull/36).
+  Independent Gate 1 review approved candidate
+  `1bd96758d2a01dad9fabd222d9742ffad27bb9ad` at 97/100. The normal
+  merge commit is
+  `ec9fc2136fe050fc036d1d635abbbab696685503`.
+- **Exact cumulative scope:** 15 files, 3,876 insertions, 0 deletions.
+  The result is one self-contained fictional bakery package under
+  `pilots/dos-exec-001a/`: 13 authored files and two generated local
+  screenshot-evidence files. No runtime, dependency, configuration,
+  workflow, production website, provider, integration, or unrelated
+  file changed.
+- **Verification:** local `npm run verify` passed with 59 test files and
+  926/926 tests. PR CI and post-merge CI/Pages verification each passed
+  the full 108/108 Playwright suite on their exact target SHA.
+  Post-merge isolated synthetic acceptance passed 24/24 checks against
+  the public DavidOS site and 28/28 checks against the local bakery
+  prototype.
+- **Deployment and publication boundary:** the merge triggered and
+  passed the repository's existing GitHub Pages workflow, which deployed
+  the normal DavidOS `dist` output. The bakery prototype was not
+  published, hosted, connected to a domain, or added to the production
+  DavidOS application.
+- **Evidence:** the verified Gate 1 bundle SHA-256 is
+  `809E29430BF1F814FA62EB482EBCF3ACC31F1C03E9D19A1F6E09D22278FF5F50`.
+- **Authorization reset:** real execution, real-prospect research,
+  outreach, credentials, providers, spending, analytics, accounts, and
+  production integrations remain unauthorized. DOS-CTL Phase 1 is not
+  inferred or activated. No implementation package is active after
+  this closeout; Program Control must separately select a next package,
+  and David must explicitly authorize it.
 
 ## Version
 

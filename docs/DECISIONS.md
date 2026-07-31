@@ -1798,3 +1798,37 @@ records the completed release.
   real execution, push, pull request, merge, deployment, or release.
   Synthetic-only planning or evaluation requires its own explicit
   authorization.
+
+## 2026-07-30 — DOS-GOV-005A: DOS-EXEC-001A merge closeout and Program Control reset
+
+- **Package closed.** DOS-EXEC-001A completed both gates through PR #36.
+  Approved candidate `1bd96758d2a01dad9fabd222d9742ffad27bb9ad`
+  was merged by normal merge commit
+  `ec9fc2136fe050fc036d1d635abbbab696685503`.
+- **Decision and proof.** The synthetic Starwhisk Bakehouse pilot proved
+  that one rough fictional opportunity can be turned into a bounded,
+  reviewed, and verified command-to-package result: prospect analysis,
+  an offer, resale-product ideas, a working local static-site prototype,
+  validation evidence, draft-only outreach and proposal material, and
+  one approval bundle. It did not create or authorize a generalized
+  execution platform or real execution.
+- **Deployment boundary.** The merge passed the existing GitHub Pages
+  workflow for the normal DavidOS production bundle. The bakery
+  prototype was not published, hosted, connected to a domain, or
+  integrated into production DavidOS.
+- **Authorization boundary.** Real-business or prospect research,
+  outreach, credentials, providers, spending, analytics, accounts,
+  production integrations, DOS-CTL changes, DOS-CTL Phase 1, and real
+  execution remain unauthorized. Any real-use bakery pilot requires a
+  separately authorized package defining data mode, tools, credentials,
+  budget, stop conditions, and permitted external actions.
+- **Program reset.** Program Control returns to no active package. The
+  next package must be separately selected and explicitly authorized by
+  David; DOS-EXEC-001A does not infer a provider integration, another
+  workflow, or any follow-on implementation.
+- **DOS-GOV-005A boundary.** This closeout changes only
+  `docs/CURRENT_STATE.md`, `docs/OPEN_LOOPS.md`, and
+  `docs/DECISIONS.md`. It grants no continuing authority. Gate 1 permits
+  one local documentation candidate and independent-review preparation
+  only; push, pull request, merge, deployment, branch cleanup, and Gate 2
+  remain unauthorized.

@@ -425,19 +425,6 @@ credentials, off-device flows, real execution, deployment, and
 automation require separate explicit authorization and may not be
 inferred from a roadmap entry or prior foundation work.
 
-### DOS-EXEC-001A · Bakery Idea-to-Execution Pilot
-- **Kind:** intended flagship workflow · **Status:** Requires David; not
-  Ready
-- **Boundary:** synthetic-only planning or evaluation at most. No real
-  prospect research or execution is authorized. Activation requires a
-  separate explicit authorization defining scope, data mode, tools,
-  credentials, budget, stop conditions, and permitted external actions.
-- **Intended proof:** turn one rough bakery-opportunity command into an
-  evidence-backed opportunity package, a working local static-site
-  prototype, validation results, outreach preparation, and one final
-  approval bundle. No contact, publishing, hosting, spending, credentials,
-  provider APIs, production integrations, or private business data.
-
 ### OL-023 · v0.2 deferred polish bundle
 - **Kind:** future capability · **Status:** Requires David (pick what
   still matters) · Router weight tuning, multi-intent detection, "did
@@ -474,6 +461,36 @@ were independently re-verified as implemented on `main` at
 `7077dac7a9e50f84e39b0f58bf7665b358a1e577` and live on GitHub Pages
 during the 2026-07-19 reconciliation. Kept for history; do not reopen
 without new evidence.
+
+### DOS-EXEC-001A · Bakery Idea-to-Execution Pilot — RESOLVED / CLOSED
+- **Kind:** synthetic command-to-package proof · **Status:** Resolved and
+  closed on 2026-07-30
+- **Result:** the bounded synthetic-only package completed both gates
+  through PR #36. Approved candidate
+  `1bd96758d2a01dad9fabd222d9742ffad27bb9ad` was merged at
+  `ec9fc2136fe050fc036d1d635abbbab696685503`. It produced fictional
+  prospect analysis, an offer, resale-product ideas, a responsive local
+  static-site prototype, validation evidence, draft-only outreach and
+  proposal material, and one approval bundle. The result demonstrated a
+  bounded command-to-package workflow without creating a generalized
+  execution platform.
+- **Synthetic and publication boundary:** every bakery identity, fact,
+  metric, price, contact detail, claim, and commercial assumption is
+  fictional or synthetic. The existing GitHub Pages workflow succeeded
+  after merge for the normal DavidOS `dist` output; the bakery prototype
+  was not published, hosted, connected to a domain, or integrated into
+  production DavidOS.
+- **Real-use boundary:** any real-use bakery pilot requires a separate
+  package that explicitly defines its data mode, tools, credentials,
+  budget, stop conditions, and permitted external actions. This closed
+  pilot authorizes no real-business or prospect research, outreach,
+  provider or credential use, spending, analytics, accounts, production
+  integration, publication, or real execution.
+- **Program boundary:** this closeout does not infer or activate DOS-CTL
+  Phase 1, a provider integration, real research, outreach, another
+  workflow, or any next package. No implementation package is active.
+  Program Control must separately select the next bounded package, and
+  David must explicitly authorize it.
 
 ### OL-033 · Persistence smoke test reloaded on a UI signal, not a committed write — RESOLVED
 - **Domain:** test reliability / storage · **Kind:** maintenance ·
