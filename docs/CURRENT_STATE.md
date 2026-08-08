@@ -1,17 +1,21 @@
-# Current State — 2026-07-30
+# Current State — 2026-08-08
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
-the single authoritative description of the deployed production state;
-the single authoritative backlog is [docs/OPEN_LOOPS.md](OPEN_LOOPS.md).
+the authoritative current-state record for both deployed product/runtime
+facts and current program governance; adopted governance must not be read
+as deployed capability. The other authoritative program records are the
+prioritized backlog in [docs/OPEN_LOOPS.md](OPEN_LOOPS.md) and the
+append-only decision log in [docs/DECISIONS.md](DECISIONS.md).
 
 `package.json` and `package-lock.json` are unchanged by DOS-WF-002A,
 DOS-AGT-001A, DOS-STAB-001A, DOS-STAB-002A Stage 1, and the
-documentation-only DOS-STAB-002B Option 3 planning closure. That closure
-changes no runtime behavior, dependency, schema, storage key, persistence
-logic, test, or deployed feature behavior.
+documentation-only DOS-STAB-002B Option 3 planning closure and this
+governance-only ClickUp adoption record. This record changes no runtime
+behavior, dependency, schema, storage key, persistence logic, test, or
+deployed feature behavior.
 
-## Program Control baseline — 2026-07-30
+## Program Control baseline — 2026-08-08
 
 - **Active project portfolio:** exactly three projects: **DavidOS**;
   **Operation David / Health & Fitness**; and **Social Assistant /
@@ -41,33 +45,51 @@ logic, test, or deployed feature behavior.
   `1bd96758d2a01dad9fabd222d9742ffad27bb9ad`; merge SHA
   `ec9fc2136fe050fc036d1d635abbbab696685503`. The bakery prototype
   remains a local synthetic artifact and was not published.
-- **Current package:** no implementation package is active. The next
-  bounded package must be selected by Program Control and explicitly
-  authorized by David; it is not inferred from DOS-GOV-003A,
-  DOS-TEST-001B, DOS-EXEC-001A, a backlog status, a roadmap entry, an
-  integration foundation, or an automatic workflow.
+- **Current package:** no implementation package is active. The
+  governance-only ClickUp adoption record creates no implementation
+  authority. The next bounded package must be selected by Program
+  Control and explicitly authorized by David; it is not inferred from
+  DOS-GOV-003A, DOS-TEST-001B, DOS-EXEC-001A, a backlog status, a
+  roadmap entry, an integration foundation, or an automatic workflow.
 - **Roadmap and automation facts are not authorization.** Existing
   provider foundations and the repository's automatic Pages workflow are
   historical/current product facts, not permission to connect a
   provider, use credentials, push, merge, deploy, or begin a roadmap
   package.
 
-## Product direction adopted by David — 2026-07-28 (planning only)
+## Adopted no-build command and dashboard architecture — 2026-08-08 (governance only)
 
-- **Primary interface:** ChatGPT is the conversational front door.
-  DavidOS is intended to become a thin execution and orchestration layer,
-  not a replacement chat experience.
-- **Near-term proof:** turn a rough command into a bounded plan, working
-  and verified assets, an organized result, and one approval bundle
-  before any external or irreversible action. One or two complete
-  workflows take priority over broader platform machinery.
-- **Current capability:** the deployed DavidOS does not yet provide this
-  real command-to-outcome execution loop. The direction is a product
-  target, not a claim about current behavior.
-- **Authorization boundary:** DOS-GOV-004A adopts documentation only. No
-  implementation package is active after it closes. DOS-CTL Phase 1,
-  real execution, credentials, live providers, deployment, and release
-  remain unauthorized.
+- **Operational roles:** ChatGPT is the primary conversational command
+  interface. ClickUp is the adopted DavidOS visual mission dashboard.
+  GitHub remains the software authority and evidence system. Google
+  Drive remains supporting document and output storage. Airtable is a
+  fallback only if measured ClickUp friction later justifies
+  reconsideration.
+- **Authority model:** ClickUp is not a fourth authoritative DavidOS
+  program record. The authoritative program records remain: this current
+  state, the prioritized backlog/open loops, and the append-only decision
+  log.
+- **Structural-trial closeout:** the DavidOS no-build structural trial is
+  closed with final verdict **PASS WITH LIMITATIONS**. ChatGPT → ClickUp
+  conversational mission maintenance passed; project reconciliation
+  passed with limitations; targeted read-only GitHub → ChatGPT → ClickUp
+  and Google Drive → ChatGPT → ClickUp workflows passed; Windows ClickUp
+  usability passed; and Android usability passed with limitations.
+- **Known limitations:** ClickUp connector custom-field IDs are not
+  cleanly exposed for safe maintenance; Android Board cards show less
+  useful field detail than desktop; and general GitHub repository
+  discovery was unreliable even though exact-repository reads worked.
+  These limitations do not currently justify Airtable, n8n, or custom
+  DavidOS dashboard infrastructure.
+- **Product/runtime distinction:** this is an adopted operating and
+  governance architecture, not a claim that the deployed DavidOS PWA
+  implements ClickUp integration or real command-to-outcome execution.
+- **Authorization boundary:** Gate 1 remains closed. DOS-CTL-001A Phase 0
+  remains frozen and the synthetic-only default remains in force.
+  DOS-CTL Phase 1 and real DavidOS execution are not authorized. No new
+  provider or credential authority is created; ClickUp adoption creates
+  no implementation authority; and no implementation package becomes
+  active from this decision.
 
 ## DOS-EXEC-001A synthetic pilot closeout — 2026-07-30
 

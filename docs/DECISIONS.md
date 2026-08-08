@@ -1832,3 +1832,36 @@ records the completed release.
   one local documentation candidate and independent-review preparation
   only; push, pull request, merge, deployment, branch cleanup, and Gate 2
   remain unauthorized.
+
+## 2026-08-08 — Governance-only ClickUp adoption and structural-trial closeout
+
+- **Adopted architecture.** ChatGPT is the primary conversational command
+  interface; ClickUp is the DavidOS visual mission dashboard; GitHub is
+  the software authority and evidence system; and Google Drive is
+  supporting document and output storage. Airtable is fallback only if
+  measured ClickUp friction later justifies reconsideration.
+- **Program-record authority.** ClickUp is not a fourth authoritative
+  DavidOS program record. Authority remains with three repository
+  records: current state, prioritized backlog/open loops, and the
+  append-only decision log.
+- **Trial closeout.** The DavidOS no-build structural trial is closed with
+  final verdict **PASS WITH LIMITATIONS**. ChatGPT → ClickUp
+  conversational mission maintenance passed; project reconciliation
+  passed with limitations; targeted read-only GitHub → ChatGPT → ClickUp
+  and Google Drive → ChatGPT → ClickUp workflows passed; Windows ClickUp
+  usability passed; and Android usability passed with limitations.
+- **Known limitations.** ClickUp connector custom-field IDs are not
+  cleanly exposed for safe maintenance; Android Board cards expose less
+  useful field detail than desktop; and general GitHub repository
+  discovery was unreliable even though exact-repository reads worked.
+  These limits do not currently justify Airtable, n8n, or custom DavidOS
+  dashboard infrastructure.
+- **Capability boundary.** This governance adoption does not claim that
+  the deployed DavidOS PWA implements ClickUp integration or real
+  execution. It changes documentation only.
+- **Authority preserved.** Gate 1 remains closed. DOS-CTL-001A Phase 0
+  remains frozen and synthetic-only by default. DOS-CTL Phase 1 and real
+  DavidOS execution are not authorized. No provider or credential
+  authority is created, ClickUp adoption creates no implementation
+  authority, and no implementation package becomes active from this
+  decision.
