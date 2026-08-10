@@ -93,7 +93,7 @@ Restate the submission. Preview Week 3 in one line: "Next week we stop learning 
 
 On why this is worth their time:
 
-> "The person who says 'calls are up' is reporting. The person who says 'calls are up, it is concentrated in one channel, here are the three things it could be and here is what I would look at first' is doing analysis. The second person gets asked for their opinion next time. That is the whole difference and it is a difference in output format, not in intelligence."
+> "The person who says 'calls are up' is reporting. The person who says 'calls are up, it is concentrated in one channel, here are the three things it could be and here is what I would look at first' is doing analysis. The second person gets asked for their opinion next time."
 
 On the arithmetic risk:
 
@@ -128,4 +128,4 @@ Label it as a hypothesis and say what would confirm it. Nobody has ever been cri
 
 ## What to capture for your own records
 
-Log attendance, submission count, and specifically log any instance where a participant caught Copilot producing a wrong figure. Those are gold for the evidence tracker, because they demonstrate the program taught verification and not just usage. Write down the person's name and what they caught.
+Log attendance, submission count, and specifically log any instance where a participant caught Copilot producing a wrong figure. Those are gold for the evidence tracker, because they demonstrate the program taught verification and not just usage. Write down what they caught. Ask before you write down a name.

@@ -20,7 +20,7 @@ You get a synthetic fraud case file for a made up credit union. Nothing in it is
 
 1. A supervisor summary, under 100 words
 2. An internal case note a colleague could use cold
-3. A member facing letter, under 200 words
+3. A member facing letter, under 250 words
 
 Then you will hunt your own outputs for claims the file does not support.
 
@@ -83,6 +83,10 @@ Do not state or imply any finding the case file does not contain.
 
 The "do not state or imply" line is the one doing the work.
 
+## What this costs you outside the session
+
+About 45 minutes, because the case note is homework this week. If you do not have that off the phone, do the first two items and skip the third. Two thirds submitted beats nothing submitted, and that is an operational statement, not encouragement.
+
 ## What you submit
 
 Post one reply in the Week 4 thread by end of day Friday containing:
@@ -95,7 +99,7 @@ Item 2 is required. If you did not catch anything, look again. There is at least
 
 ## What good looks like
 
-A supervisor summary that opens with what needs a decision. A case note where facts and conclusions are visibly separate. A member letter under 200 words that a member could read twice, once fast and once angry, without finding something to fight about. An omission note that names a specific thing and a specific reason.
+A supervisor summary that opens with what needs a decision. A case note where facts and conclusions are visibly separate. A member letter under 250 words that a member could read twice, once fast and once angry, without finding something to fight about. An omission note that names a specific thing and a specific reason.
 
 ## What weak looks like
 
@@ -107,17 +111,7 @@ Three documents that are the same document at three lengths. A member letter con
 - Nothing you produce here goes to any real member.
 - Every word that leaves the building has a human owner. Not the tool.
 
-## Time budget
-
-| Segment | Minutes |
-|---|---|
-| Framing | 5 |
-| Teaching | 10 |
-| Demo | 10 |
-| Hands on | 20 |
-| Read aloud | 10 |
-| Close | 5 |
 
 ## One habit to take with you
 
-Read anything member facing out loud before you send it. Members read letters out loud to their spouse. Text that survives being spoken is text that survives being forwarded.
+Read anything member facing out loud before you send it. You will hear the sentence that sounds like an accusation, and you will not see it. That is the whole reason.

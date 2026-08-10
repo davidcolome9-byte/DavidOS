@@ -4,6 +4,8 @@
 
 Everything below is fabricated. Riverstone Credit Union does not exist. The policy numbers, timelines, ticket IDs, and people are invented for training. Do not substitute real material at any point.
 
+**These timelines are fabricated and several of them differ from Regulation E on purpose.** Nothing in this exercise is a reference for a live claim. For real timing, provisional credit, and member notice requirements, use Riverstone's actual dispute procedure and ask Compliance. If you find yourself repeating a number from this exercise on a real call, stop.
+
 ## The scenario
 
 You work in the digital contact center at Riverstone Credit Union. Over the last two weeks, agents have been getting the same call: a member reports an unauthorized debit card transaction and wants to know when the money comes back.
@@ -45,11 +47,11 @@ Copy from the line below through the end of DOC 4.
 
 Scope: unauthorized transactions on Riverstone consumer debit cards.
 
-When a member reports an unauthorized debit card transaction, the agent opens a claim in the case system on the same call. The investigation window begins on the date the claim is opened, not the date of the transaction.
+When a member reports an unauthorized debit card transaction, the agent opens a claim in the case system on the same call. The claim record carries two dates: the date the member first reported it and the date the record was keyed. Riverstone's investigation window runs from the report date.
 
 Riverstone completes the investigation within 10 business days of claim open. If the investigation is not complete within 10 business days, Riverstone issues provisional credit to the member's account by the end of the 10th business day.
 
-For claims involving a card that was reported lost or stolen before the transaction posted, the standard investigation window is 5 business days and no provisional credit is required, because these claims are resolved through the card network chargeback process.
+For claims involving a card that was reported lost or stolen before the transaction posted, the claim is routed to the Card Recovery queue in addition to the standard path. The investigation window and provisional credit handling are unchanged. Card Recovery pursues network recovery in parallel, and that process does not change what the member is told or when.
 
 Members must be notified in writing of the outcome within 3 business days of the investigation closing.
 
@@ -71,9 +73,9 @@ Debit card fraud claims:
 
 Team,
 
-Effective immediately, claims filed on accounts opened within the last 30 days are excluded from the standard provisional credit timeline. These claims get a 20 business day investigation window and provisional credit is issued at the end of that window if the investigation is still open.
+Effective immediately, claims involving a transaction that occurred within 30 days of the first deposit to the account follow the extended path. These claims get a 20 business day window in place of the standard 10, and provisional credit is issued at the end of that window if the investigation is still open. This is a longer window, not an exclusion from provisional credit.
 
-This applies to consumer accounts only. We are seeing a pattern of first party activity on very new accounts and the extra window gives us time to work it.
+This applies to consumer accounts only. Route these to Fraud Investigations on open.
 
 Please update your desk references.
 

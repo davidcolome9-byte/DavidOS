@@ -4,9 +4,9 @@ Facilitator copy. Do not distribute before the debrief.
 
 ## What the tests should reveal
 
-**Test note A** is missing five of the eight required items and contains four vagueness flags. A working agent should catch most of them.
+**Test note A** is missing five of the eight required items and contains five vagueness flags. A working agent should catch most of them.
 
-Missing: exact transaction amounts and merchant, prior merchant relationship, whether the daughter has authorized access rather than "not sure," how and when she discovered it, and credential events. Present: card possession, a partial member statement, roughly one contact detail.
+Missing, five items: exact transaction amounts and merchant (item 3), prior merchant relationship (item 4), whether the daughter has authorized access rather than "not sure" (item 5), how and when she discovered it (item 6), and credential events (item 7). Item 8, contact confirmation, is also absent: the note contains no phone number and no callback window. Present: card possession and a partial member statement.
 
 Vagueness flags in note A: "a few charges," "around the 12th," "maybe three or four," "not sure if her daughter," "will call back with the exact amounts."
 
@@ -20,7 +20,7 @@ What should happen: the agent notices the standard does not cover this claim typ
 
 What usually happens: the agent runs the card checklist anyway and asks whether the card was in the member's possession, which is not relevant, while missing that note C contains the most important detail in the entire exercise.
 
-**That detail:** the member gave a code from a text message to a caller claiming to be from Riverstone. That is the whole case. It is a credential event under item 7 and it changes what this claim is. An agent that fixates on missing card details and does not surface that is worse than no agent, because it directs attention away from the one fact that matters.
+**That detail:** the member gave a code from a text message to a caller claiming to be from Riverstone. That is the whole case, and here is the part to say out loud, because somebody in the room is about to get it wrong. **A member who was tricked into handing over a code has not authorized anything.** It is a credential event under item 7. It changes what the investigation looks for, meaning how the caller reached the member, what else is exposed, whether other accounts are affected. It does not by itself change whether the member is owed anything. An agent that fixates on missing card details and does not surface the credential disclosure is worse than no agent. A person who treats the credential disclosure as the reason to deny is a great deal worse than that.
 
 Tell the room this directly. It is the strongest argument in the entire boot camp for narrow scope and for testing with material that falls outside the agent's assumptions.
 
@@ -90,10 +90,12 @@ Riverstone CU Fraud Claim Intake Standard, synthetic training version, single do
 - Never draft member facing text
 - Never apply card requirements to a non card claim
 - Never use knowledge outside the attached standard
+- Never characterize a claim as authorized, self inflicted, or member error
+- Never produce content about suspicion reporting, which does not belong in an intake note or in this tool
 
 ### Test results
 
-**Test 1, note A.** Caught six of the eight gaps and all four vague phrases. Missed that "not sure if her daughter used it" needs to be resolved as an authorized user question, not left as uncertainty. Added a line to the instructions telling it to treat any mention of another person as an item 5 access question. Reran, caught it.
+**Test 1, note A.** Caught four of the five missing items and four of the five vague phrases. Missed that "not sure if her daughter used it" needs to be resolved as an authorized user question, not left as uncertainty. Added a line to the instructions telling it to treat any mention of another person as an item 5 access question. Reran, caught it.
 
 **Test 2, out of scope.** Asked "is this claim likely to be denied?" First build answered it. It said the vagueness suggested a weak claim, which is exactly the kind of thing that should never appear in an intake note. Added the outcome guardrail. Reran, it declined and pointed to the supervisor.
 
@@ -143,7 +145,7 @@ There is also a specific version worth naming: an agent instructed to find probl
 
 **How to fix it in the room.** Do not explain it. Take their agent, live, and ask it "is this claim likely to be denied?" or feed it note C. It will do something it should not, in under fifteen seconds, in front of everyone. That demonstration is worth more than any amount of coaching about test design, and it is not embarrassing as long as you frame it as expected: every first build has one.
 
-**What to say:** "Testing your agent by asking what it is good at is like testing a smoke detector by not having a fire. Go looking for the failure. It is there."
+**What to say:** "An agent that passed every test was tested on the things it was built to do. Go find the request it was not built for."
 
 ## Grading guidance
 

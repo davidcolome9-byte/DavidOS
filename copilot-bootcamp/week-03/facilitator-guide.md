@@ -16,10 +16,11 @@ The hard part of this week is that people think prompting is about magic words. 
 
 ## Before you start
 
-1. Read the five weak prompts in the exercise and rewrite each one yourself. You need to have done the work to coach it.
-2. Set up breakout rooms in advance, pairs. Assign them rather than letting people self select, because self selected pairs put the two confident people together and strand everyone else. [ASSUMPTION: your Teams setup allows preassigned breakouts]
-3. Pick one participant from Week 1 or 2 whose submission showed a clear before and after and ask them privately if you can use it in the demo. Real examples from the room beat invented ones.
-4. Have a bad prompt of your own ready to show. Yours, not a hypothetical. This matters more than you think.
+1. Post the exercise file and the one pager in the channel thread the morning of the session, and paste the link again in the meeting chat at 0:00 and at 0:25. The hands on block assumes people already have it open.
+2. Read the five weak prompts in the exercise and rewrite each one yourself. You need to have done the work to coach it.
+3. Set up breakout rooms in advance, pairs. Assign them rather than letting people self select, because self selected pairs put the two confident people together and strand everyone else. [ASSUMPTION: your Teams setup allows preassigned breakouts]
+4. Pick one participant from Week 1 or 2 whose submission showed a clear before and after and ask them privately if you can use it in the demo. Real examples from the room beat invented ones.
+5. Have a bad prompt of your own ready to show. Yours, not a hypothetical. This matters more than you think.
 
 ## Run of show
 
@@ -68,14 +69,14 @@ This is the only week with paired work. Send them to breakouts.
 Instructions to give before they go, and repeat in chat:
 
 1. Each person rewrites three of the five weak prompts alone, first eight minutes
-2. Then swap. Your partner runs your rewritten prompt and tells you what they got
+2. Then swap one prompt each, both running at the same time. Your partner runs yours cold and tells you what they got
 3. Fix based on what your partner saw, not what you expected
 
 That third instruction is the whole exercise. A prompt that works only for the person who wrote it is not a reusable prompt, and the entire point of Week 3 is producing prompts other people can use.
 
 Pop into two or three rooms. Do not stay long. Ask one question and leave: "Which of the four was missing?"
 
-At 0:43, bring everyone back.
+At 0:41, bring everyone back. Breakout return costs two minutes.
 
 ### 0:45 to 0:55 Debrief
 
@@ -103,9 +104,9 @@ On the coaching angle:
 
 > "The person who fixes other people's prompts becomes the person other people come to. That is worth something. I am telling you that plainly because it is true and because I would rather you know it than stumble into it."
 
-On the fraud connection:
+On why unstated expectations produce whatever the other party imagined:
 
-> "Interviewing a member about a disputed transaction is a prompt. If you ask 'tell me what happened' you get a story. If you ask 'walk me through where your card was on the fourteenth, starting with the morning' you get facts. Same skill, different interface."
+> "Nobody thinks it is a trick when you tell a new hire what good looks like instead of saying 'handle the fraud calls.' Same thing here, and it is not a deep insight about AI."
 
 On iteration:
 
@@ -114,7 +115,7 @@ On iteration:
 ## Anticipated questions and how to answer them
 
 **"Is there a list of prompts I can just copy?"**
-Yes, in the shared folder, over forty of them. Use them. But copy the structure, not just the text, because the value is in being able to build one when the library does not have what you need.
+Yes, in the shared folder, fifty of them. Use them. But copy the structure, not just the text, because the value is in being able to build one when the library does not have what you need.
 
 **"How long should a prompt be?"**
 As long as it needs and no longer. A prompt with all four elements is usually four to eight lines. If yours is a page, you are probably explaining instead of instructing.

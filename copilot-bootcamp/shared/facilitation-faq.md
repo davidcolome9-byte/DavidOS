@@ -8,7 +8,7 @@ Most of what goes wrong in a boot camp like this is not about the tool. It is ab
 
 Do not argue people into adoption. Nobody has ever been convinced by a facilitator winning a debate about AI in a Teams call.
 
-What moves people is watching a peer they respect do something useful and thinking "I could do that." Your job is mostly to create the conditions for that and then get out of the way. When you find yourself constructing a persuasive counterargument, you have already lost the room you were trying to persuade.
+What moves people is watching a peer they respect do something useful and thinking "I could do that." Your job is mostly to create the conditions for that and then get out of the way.
 
 ---
 

@@ -52,11 +52,15 @@ The last line is what keeps you out of trouble when you forward the output.
 
 ## The three competing explanations rule
 
-Any single explanation for a change in the numbers is a guess wearing a suit. If you only have one story, you have not analyzed anything, you have just described what you already believed.
+A single explanation is a hypothesis you have not tested. If you only have one, you have not analyzed anything, you have described what you already believed.
 
 This is the same discipline as a fraud review. You do not accept the first pattern that fits the transactions. You generate the alternatives and look for the one piece of evidence that eliminates two of them.
 
 Ask for three. Rank them. Name the tiebreaker.
+
+## What this costs you outside the session
+
+About 30 minutes. If you do not have that off the phone, do the first two items and skip the third. Two thirds submitted beats nothing submitted, and that is an operational statement, not encouragement.
 
 ## What you submit
 
@@ -71,7 +75,7 @@ Item 3 is not optional. If you did not check a number, go check one now. It take
 
 ## What good looks like
 
-Three findings that each contain a specific number and a plain language read of what it means for members. A recommendation specific enough that somebody could start it Monday. A verification note like "I recalculated the week 6 abandonment rate in Excel and got 11.2 percent, Copilot said 11.2 percent, matched." An investigation pick with a reason attached.
+Three findings that each contain a specific number and a plain language read of what it means for members. A recommendation specific enough that somebody could start it Monday. A verification note like "I recalculated the week 6 abandonment rate from offered and handled and got 11.08 percent, the table says 11.1, matched." An investigation pick with a reason attached.
 
 ## What weak looks like
 
@@ -83,17 +87,7 @@ A summary of what the table already showed, written in longer sentences than the
 - Do not upload live reporting into this exercise.
 - Label inferences as inferences when you pass work to somebody else.
 
-## Time budget
-
-| Segment | Minutes |
-|---|---|
-| Framing | 5 |
-| Teaching | 10 |
-| Demo | 10 |
-| Hands on | 20 |
-| Debrief | 10 |
-| Close | 5 |
 
 ## One habit to take with you
 
-When you send an analysis to anyone, include the sentence "what I would check next." It takes ten seconds, it makes you sound like someone who thinks past the report, and it protects you if the interpretation turns out to be wrong.
+When you send an analysis to anyone, include the sentence "what I would check next." It takes ten seconds and it protects you if the interpretation turns out to be wrong.

@@ -24,13 +24,13 @@ Pick three of the five prompts. For each one:
 2. Rewrite the prompt, adding the missing element and anything else genuinely required.
 3. Run it. Keep the output.
 
-**Minutes 8 to 16, swap.**
+**Minutes 8 to 14, swap. Both of you run at the same time. Do not take turns.**
 
-Send your three rewritten prompts to your partner with no explanation. No context, no "this is for a supervisor," nothing. Just the prompt text.
+Send your single best rewrite to your partner with no explanation. No context, no "this is for a supervisor," nothing. Just the prompt text.
 
-Your partner runs each one and tells you what they got.
+Run the one they send you, then tell each other in two sentences what came back.
 
-**Minutes 16 to 20, fix.**
+**Minutes 14 to 18, fix.**
 
 Repair based on what your partner actually received. If your partner's output was wrong for the intended purpose, your prompt is carrying context that only exists in your head. Move that context into the text.
 

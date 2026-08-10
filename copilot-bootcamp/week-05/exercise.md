@@ -4,6 +4,8 @@
 
 Everything below is fabricated. Riverstone Credit Union does not exist. The policy excerpts, claim examples, and quality standards are invented for training. Do not connect any agent you build to a real system or a real data source during this exercise.
 
+**These timelines are fabricated and several of them differ from Regulation E on purpose.** Nothing in this exercise is a reference for a live claim. For real timing, provisional credit, and member notice requirements, use Riverstone's actual dispute procedure and ask Compliance. If you find yourself repeating a number from this exercise on a real call, stop.
+
 ## The scenario
 
 Back in Week 2 you found that reopened fraud claims kept climbing after every other metric recovered. The cause was rushed intake during a volume spike: claims got opened with missing or vague information, then came back two to three weeks later.
@@ -20,13 +22,11 @@ Produce a complete five part specification for one agent, then test it by trying
 
 That is the whole job. It does not write the note. It does not decide the claim. It does not talk to members. Resist every urge to widen it.
 
-## Two paths
+## How this runs
 
-**Path A. You can create agents.** Write the spec, build it, run the three tests.
+**Everyone runs Path B in the session.** Write the spec, paste your instruction block as the first message in a Copilot chat, paste the standard under it, and run the three tests against that chat. This is not a fallback. The instructions are the thing being tested and the chat tests them identically.
 
-**Path B. You cannot create agents.** Write the spec, then paste your instruction block as the first message in a Copilot chat and treat that chat as the agent. Run the same three tests against it.
-
-Both paths work. The instructions determine quality either way, and the spec is what you carry with you.
+**Path A is homework.** If you can create agents, build yours after the session and post what changed. Allow twenty minutes, and expect an attached knowledge source to take a few minutes to become readable after you publish. If your first test comes back as though the agent never read the standard, wait two minutes and rerun before you edit anything.
 
 ## Synthetic knowledge source
 
@@ -59,6 +59,8 @@ A complete intake note contains all of the following. A claim missing any item i
 
 **Not the intake agent's job.** Intake does not determine the outcome, does not assess whether the claim is likely to be supported, and does not communicate any timeline or expectation of credit beyond reading the standard disclosure.
 
+**What a completeness check never delays.** The member's report is on the record from the moment the member makes it. This check improves the note. It does not hold the claim. If the note cannot be completed on the call, the claim goes in as it stands with the gaps flagged and the agent follows up. Never let a completeness check become a reason a claim sits unsubmitted.
+
 ---
 
 End of synthetic knowledge source.
@@ -73,7 +75,7 @@ Use these to test your agent. All fabricated.
 
 **Test note B, deliberately strong:**
 
-> Member states: "I opened my app on Tuesday morning and saw four charges I did not make. I have never heard of that store." Card in member's possession throughout, never lost or stolen. Disputed: 88.40 SYNTH-MART 03/12, 61.20 SYNTH-MART 03/12, 112.00 SYNTH-MART 03/12, 151.00 SYNTH-GOODS 03/12. Member confirms two prior purchases at SYNTH-MART, roughly four and six months ago, both hers. Spouse is a joint owner and has a card on the account, member states spouse did not make these. Member discovered via app push notification 03/13 at approximately 7am. Member denies sharing any code, clicking any link, or receiving any call claiming to be from Riverstone in the past 30 days. Best number confirmed, member available after 4pm weekdays.
+> Member states: "I opened my app on Tuesday morning and saw four charges I did not make. Three are at a store I have shopped at before and one I have never heard of." Card in member's possession throughout, never lost or stolen. Disputed: 88.40 SYNTH-MART 03/12, 61.20 SYNTH-MART 03/12, 112.00 SYNTH-MART 03/12, 151.00 SYNTH-GOODS 03/12. Member confirms two prior purchases at SYNTH-MART, roughly four and six months ago, both hers. Spouse is a joint owner and has a card on the account, member states spouse did not make these. Member discovered via app push notification 03/13 at approximately 7am. Member denies sharing any code, clicking any link, or receiving any call claiming to be from Riverstone in the past 30 days. Best number confirmed, member available after 4pm weekdays.
 
 **Test note C, the tricky one:**
 

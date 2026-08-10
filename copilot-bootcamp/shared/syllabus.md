@@ -57,7 +57,7 @@ The exercise gives eight weeks of synthetic contact center metrics, eight weeks 
 
 This is the midpoint and the session that makes the rest work. Everything reduces to four elements: goal, context, source, shape. When a prompt fails, usually exactly one is missing, and it is usually shape.
 
-Participants get five weak prompts drawn from realistic contact center, QA, fraud, and internal comms situations. They rewrite three, then hand them to a partner who runs them cold with no explanation. A prompt that only works for its author is not a reusable prompt.
+Participants get five weak prompts drawn from realistic contact center, QA, reporting, fraud, and internal comms situations. They rewrite three, then hand them to a partner who runs them cold with no explanation. A prompt that only works for its author is not a reusable prompt.
 
 **Pattern taught:** diagnose, do not rewrite.
 **Key move:** the partner test.
@@ -83,7 +83,7 @@ An agent is a saved set of instructions with a name, one job, and a fixed list o
 
 Participants write a five part specification and build or simulate an intake completeness checker: it reviews a draft fraud claim note against a synthetic intake standard and reports what is missing before submission. Then they try to break it. Every first build has a hole.
 
-Two paths, both full paths: build it if access allows, or write the spec and simulate it in a chat. The spec is what transfers.
+Everyone runs the same exercise in the session by simulating the agent in a chat. Building it for real is homework for anyone whose account allows it, because the build teaches little and the instructions are the whole thing.
 
 **Pattern taught:** narrow job, tight sources, explicit guardrails, break it before you share it.
 **Key move:** testing with material that falls outside the agent's assumptions.
@@ -103,14 +103,15 @@ Then an evidence card, due Friday, which is the real deliverable. Six months fro
 
 ## Materials
 
-Every week has six files: facilitator guide, participant one pager, exercise, solutions key, knowledge check, and announcement. The shared folder holds this syllabus, a prompt library of over 40 reusable prompts, a facilitation FAQ for handling resistance, an evidence tracker, and a manifest.
+Every week has six files: facilitator guide, participant one pager, exercise, solutions key, knowledge check, and announcement. The shared folder holds this syllabus, a prompt library of 50 reusable prompts, a facilitation FAQ for handling resistance, an evidence tracker, and a manifest.
 
 ## Data rules
 
-Stated once in Week 1 with weight, then not repeated every session, because constant repetition makes people anxious rather than careful.
+Stated with weight in Week 1, then restated at the point of use in every session where the material gets closer to live work: Week 4 before anyone drafts a member letter, Week 5 before anyone builds anything, Week 6 before anyone presents a workflow. Not a recitation every five minutes. One specific sentence attached to the specific thing about to be done. The rule that gets stated once is the rule people assume expired.
 
 - All exercises use fabricated data for a fictional institution.
 - No real member names, account numbers, card numbers, case IDs, or screenshots of live systems in any session.
+- The synthetic policies contradict Regulation E in several places on purpose. Nobody carries a timeline, provisional credit rule, or member notice requirement out of these exercises into live work.
 - Anything acted on gets its source checked by a human.
 - Every word that leaves the building has a human owner. Not the tool.
 

@@ -11,14 +11,14 @@ You need this clear in your head before anyone reads their letter out loud.
 - Three of them came from the member's known device in the member's home city
 - The member had two prior undisputed purchases at that same merchant
 - One transaction came from an unknown device in a different state and was credited
-- Provisional credit was issued in full on day 10
+- Provisional credit was issued in full on business day 10
 - 261.60 was reversed on closing, 151.00 was retained by the member
 - The member has not been notified
 
 **Not established, and this is the important list:**
 - That the member authorized T1, T2, or T3. The file says insufficient evidence to support unauthorized use, which is a statement about the evidence, not about the member.
 - That the member filed a false claim
-- Whether any appeal or reconsideration path exists
+- Whether any appeal or reconsideration path exists, or what the member may request from us
 - When the reversal posted
 - Whether the account went negative
 - Whether anyone tried to reach the member before reversing
@@ -74,7 +74,7 @@ If a participant catches three of those four, they had a strong session.
 
 **Why this works.** Observed and Concluded are separate sections, so a colleague six months out can tell what was seen from what was inferred. The conclusion explicitly states what the finding is not, which prevents the next person from escalating it. Open items are listed rather than narrated.
 
-### Member letter, 168 words
+### Member letter
 
 > Dear Casey Nolan,
 >
@@ -88,7 +88,11 @@ If a participant catches three of those four, they had a strong session.
 >
 > **What this means for your account**
 >
-> You keep the 151.00 credit. The 261.60 has been removed from your balance. Please check your account so you know your current balance.
+> You keep the 151.00 credit. We removed 261.60 from your account on [date]. For five business days from the date of this letter, we will pay checks, automatic payments, and other items we would have paid if that credit were still there, and we will not charge you an overdraft fee as a result of removing it.
+>
+> **Documents we used**
+>
+> You have the right to ask us for copies of the documents we relied on to reach this decision. Call the number below or write to us and we will send them to you promptly, at no charge.
 >
 > **If you disagree**
 >
@@ -98,7 +102,7 @@ If a participant catches three of those four, they had a strong session.
 >
 > Riverstone Credit Union
 
-**Why this works.** It states the partial outcome in the first line of findings, so the member does not read three paragraphs believing they lost everything. It uses "we were not able to find enough evidence" rather than any verb asserting the member authorized anything. It says nothing about the date inconsistency. It tells the member to check their balance, which is the actual practical consequence. It offers a path forward without promising a formal appeal process the file does not document.
+**Why this works.** It states the partial outcome in the first line of findings, so the member does not read three paragraphs believing they lost everything. It uses "we were not able to find enough evidence" rather than any verb asserting the member authorized anything. It says nothing about the date inconsistency. It runs to about 230 words, which is why the exercise allows 250: the required disclosures cost roughly 80 words and they are not the place to economize.
 
 **Their unsupported assertion catch:**
 
@@ -107,6 +111,12 @@ If a participant catches three of those four, they had a strong session.
 **Their omission note:**
 
 > "I left out that the member changed the date from the 14th to the 12th. It belongs in the case note because the next investigator needs it. In a letter to the member it reads as us calling them a liar, and it does not change what we decided."
+
+## Say this in the debrief before anyone leaves
+
+The letter above is deliberately incomplete as a real dispute denial notice, because the synthetic case file does not contain the pieces a real one needs. In a live shop, a letter that debits a provisional credit has to state the date and amount of the debit and has to tell the member that items will be honored without an overdraft charge for five business days. A letter finding no error has to state the member's right to request the documents relied on. Neither requirement is anywhere in this exercise's source material.
+
+Say that out loud. Do not let anyone leave believing this letter is a template. The exercise teaches how to avoid asserting what you cannot support. It does not teach notice content, and the gap between those two things is where people get hurt.
 
 ## Failure mode one: insufficient evidence becomes a verdict
 

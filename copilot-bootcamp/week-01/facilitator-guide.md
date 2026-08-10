@@ -27,9 +27,9 @@ Do not do introductions. People know each other. Open with the problem instead.
 
 Say something close to this:
 
-> "Everybody in this room has had a moment where a member is on the line and you know the answer exists in a document somewhere, but you cannot find it in the time you have. Six weeks from now every one of you is going to have a faster way to handle that moment. Today we start with the least glamorous piece, which is finding things and knowing where they came from."
+> "Everybody in this room has had a moment where a member is on the line and you know the answer exists in a document somewhere, but you cannot find it in the time you have. That is what these six weeks are pointed at. I do not know yet whether all of it will work for all of you, and some of what we try will be slower than what you already do. I would rather you find that out and tell me. Today we start with the least glamorous piece, which is finding things and knowing where they came from."
 
-Set the ground rule immediately: no real member data, no real account numbers, no screenshots of live systems, in this session or any other session in this series. Everything we use is made up. Say it once, clearly, and then move on. Repeating it every five minutes makes people nervous rather than careful.
+Set the ground rule immediately: no real member data, no real account numbers, no screenshots of live systems, in this session or any other session in this series. Everything we use is made up. Say it once, clearly, with weight, and then move on within this session. Do not treat it as discharged for the series. You will say it again in Week 4 before member letters and in Week 5 before anyone builds an agent, both times tied to what is in front of them.
 
 ### 0:05 to 0:15 Teach: what "research mode" actually means
 
@@ -96,7 +96,7 @@ Post the submission thread link in chat while people are still on the call. Do n
 
 On why this matters for the contact center specifically:
 
-> "Average handle time goes up when you are hunting. It does not go up much when you are typing. Every second you spend searching four tabs is a second the member is listening to you breathe."
+> "Average handle time goes up when you are hunting. It does not go up much when you are typing."
 
 On accuracy:
 

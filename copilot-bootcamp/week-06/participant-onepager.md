@@ -62,6 +62,10 @@ If your workflow got faster but worse, present that. If you built an agent nobod
 
 A failure you can explain is more useful to everyone in the room than a success you cannot. It also makes you look like somebody who evaluates their own work, which is a better look than a clean win.
 
+## What this costs you outside the session
+
+Two to three hours, spread across the two weeks before the session. Most of it is picking the workflow and getting an honest before number. If you cannot protect that, tell me at the one on one and we will scope it down rather than have you skip it.
+
 ## The evidence card
 
 Due Friday. It is in the exercise file. It takes about fifteen minutes.
@@ -76,14 +80,6 @@ Before you leave the call, name one person on the floor you will show one thing 
 
 One person. One thing. Two weeks. That is the whole commitment.
 
-## Time budget
-
-| Segment | Minutes |
-|---|---|
-| Open | 5 |
-| Showcases | 45 |
-| Pattern round | 7 |
-| Close | 3 |
 
 ## Prep before Tuesday
 

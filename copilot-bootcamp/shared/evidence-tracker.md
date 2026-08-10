@@ -98,13 +98,15 @@ Fill this in as you go. Replace the bracketed placeholders with your actual coun
 
 Fill one row per instance. These matter more than the counts.
 
+Names go in this log only with the person's spoken permission, asked for at the time, in the room. If you did not ask, log it as "a participant." A program summary is not worth somebody finding their name in a file they did not know existed.
+
 | Week | Participant | What they caught |
 |---|---|---|
-| [n] | [name] | [short label] |
+| [n] | [name or "a participant"] | [short label] |
 
 Underneath each entry, write two or three sentences of detail. Example format:
 
-- **Week 2, [name], wrong percent change.** Copilot reported a 435 percent increase in new account claims. Participant recalculated by hand and got 336 percent, identified that the model had divided the new value by the old value rather than dividing the difference. Caught before the figure went into a summary.
+- **Week 2, [name], wrong percent change.** Copilot reported a 436 percent increase in new account claims. Participant recalculated by hand and got 336 percent, identified that the model had divided the new value by the old value rather than dividing the difference. Caught before the figure went into a summary.
 
 That level of detail is what turns a count into evidence.
 
@@ -171,6 +173,27 @@ After Week 6:
 - [ ] Running tally finalized
 - [ ] Promotion packet lines drafted with real numbers
 - [ ] 30 day and 90 day check ins on the calendar
+
+## The 30 and 90 day check ins
+
+You promise these in five places across the package. Here is what they are, so they actually happen.
+
+**Format.** 30 minutes, optional attendance, same invite both times. Send it as a calendar hold before Week 6 ends, not after.
+
+**The invite text:**
+
+> Thirty minutes, optional. One question: what from the boot camp are you still using, and what did you drop? I want both answers. If you dropped everything, that is the most useful thing you can tell me and I would rather hear it than guess.
+
+**The agenda, and it is short on purpose:**
+
+1. Round the room, one sentence each: what is still in use
+2. Round the room again, one sentence each: what you stopped doing and why
+3. Anything anybody built that someone else picked up
+4. One thing you want that does not exist yet
+
+Do not present anything. Do not show slides. If you talk for more than five of the thirty minutes you have run the wrong meeting.
+
+**What to record afterward:** the still-in-use list by name, the dropped list with stated reasons, any artifact that spread to a person who did not attend, and any request that came up twice.
 
 At 30 days:
 

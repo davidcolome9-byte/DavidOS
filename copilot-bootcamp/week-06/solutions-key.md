@@ -133,6 +133,4 @@ That last item is the one most facilitators skip and it is the one that makes th
 
 ## A note about how you write this up later
 
-Write the results the way you taught people to write findings in Week 4. State what is established. Do not assert more than the evidence supports. If you documented eleven cards showing time savings and cannot verify a floor wide effect, say you have eleven documented cards, not that the program transformed the department.
-
-You spent six weeks teaching a room full of people that confidence language is a factual claim. The summary you write about the program is the last thing they will see you do, and some of them will read it.
+Write the results the way Week 4 taught people to write findings. The full version is in shared/evidence-tracker.md under "Writing this up later." Do not restate it here and do not restate it twice in your own summary.

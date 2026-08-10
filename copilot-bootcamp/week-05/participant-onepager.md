@@ -60,9 +60,13 @@ Tests 2 and 3 are the exercise. Test 1 is a warm up.
 
 ## What you practice today
 
-You build a specification for one agent, using the synthetic scenario in the exercise. If your access allows it, you build the agent. If it does not, you simulate it by pasting your instruction block at the top of a Copilot chat and running the same three tests.
+You write a specification for one agent, then run it in the session by pasting your instruction block at the top of a Copilot chat and testing that. Everyone does this, whatever your account can do.
 
-Both paths teach the same thing, because the instructions are what determine quality. The spec is the transferable artifact. The build is the easy part.
+If you can create agents, building it for real is homework. The build is the easy part and it teaches almost nothing. The instructions are what determine quality, and the spec is what you carry with you.
+
+## What this costs you outside the session
+
+About 40 minutes if you also build the agent, 25 if you do the spec only. If you do not have that off the phone, do the first two items and skip the third. Two thirds submitted beats nothing submitted, and that is an operational statement, not encouragement.
 
 ## What you submit
 
@@ -89,16 +93,6 @@ A job description like "helps the team with fraud questions." Instructions that 
 - Do not connect an agent to anything that takes an action in a real system during this exercise.
 - Any agent you share with someone who will act on its output needs a named owner and a review date.
 
-## Time budget
-
-| Segment | Minutes |
-|---|---|
-| Framing | 5 |
-| Teaching | 10 |
-| Live build | 10 |
-| Hands on | 20 |
-| Debrief | 10 |
-| Close | 5 |
 
 ## Looking ahead
 

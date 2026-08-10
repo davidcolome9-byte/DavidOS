@@ -8,9 +8,9 @@ Before you can judge a submission, you need to know the answer yourself.
 
 **The three real conflicts:**
 
-1. **Lost or stolen card timing.** DOC 1 says 5 business days with no provisional credit. DOC 2 does not mention the exception at all, so an agent following the quick reference card would promise provisional credit that is not coming. DOC 4 talks about card replacement in calendar days, which is a different thing entirely and is easy to confuse on a call.
+1. **Lost or stolen card handling.** DOC 1 adds a parallel Card Recovery routing and says the window and provisional credit are unchanged. DOC 2 omits the routing entirely. DOC 4 talks about card replacement in 7 to 10 calendar days, which is a different clock measuring a different thing, and agents confuse it with claim timing constantly.
 
-2. **New account claims.** DOC 3, from January 2025, creates a 20 business day window for accounts under 30 days old. DOC 1 (March 2024), DOC 2 (undated), and DOC 4 (December 2023) all predate it and none reflect it. DOC 3 is the most current source and it explicitly says to update desk references, which nobody did.
+2. **New account claims.** DOC 3, from January 2025, creates a 20 business day window where the transaction occurred within 30 days of the account's first deposit. DOC 1 (March 2024), DOC 2 (undated), and DOC 4 (December 2023) all predate it and none reflect it. DOC 3 is the most current source and it explicitly says to update desk references, which nobody did.
 
 3. **Business accounts.** DOC 2 says provisional credit is not available for business accounts. DOC 1 scopes itself to consumer debit cards and says nothing about business. DOC 4 makes an unqualified promise to credit the account. A business member reading the public FAQ would reasonably expect a credit they will not get.
 
@@ -22,6 +22,12 @@ Before you can judge a submission, you need to know the answer yourself.
 - The 500 dollar escalation threshold appears only in the undated DOC 2 and is not confirmed anywhere else.
 
 A strong submission finds at least two of the three conflicts and at least one gap. An excellent submission finds the denial reversal gap, because that is the one that shows the person was thinking about the call, not just diffing the documents.
+
+## Two things to correct in the room if they come up
+
+**If anyone writes that network recovery removes or delays a provisional credit obligation, correct it immediately.** Recovery from a card network is between the credit union and the network. It has no bearing on what the member is owed or when. This is a real failure pattern in live shops and it is worth ninety seconds.
+
+**If anyone reads DOC 3's trigger as the claim filing date or the account opening date, correct that too.** The trigger is the transaction date relative to the account's first deposit. People get this backwards constantly and it produces timing errors in both directions. Also worth saying: if a real version of DOC 3 ever gives a rationale that amounts to "we suspect this group of members," that is a problem with the document, not a rule to follow. A timing provision is available on its stated terms or it is not.
 
 ## Worked example of a strong response
 
@@ -50,9 +56,9 @@ Rules:
 >
 > **Standard consumer claim.** 10 business days from claim open. Provisional credit by end of day 10 if still open. (DOC 1)
 >
-> **Account opened in last 30 days.** 20 business days. Provisional credit at end of that window if still open. Consumer only. (DOC 3, overrides DOC 1)
+> **Transaction within 30 days of the account's first deposit.** 20 business days instead of 10. Provisional credit at end of that window if still open. Consumer only. Longer window, not an exclusion. (DOC 3, overrides DOC 1)
 >
-> **Card reported lost or stolen before the transaction posted.** 5 business days. No provisional credit, handled as network chargeback. (DOC 1. DOC 2 omits this and would lead an agent to promise credit incorrectly.)
+> **Card reported lost or stolen before the transaction posted.** Same window, same provisional credit, plus a parallel Card Recovery routing. (DOC 1. DOC 2 omits the routing.)
 >
 > **Business accounts.** DOC 2 says no provisional credit. DOC 1 covers consumer only. Public FAQ (DOC 4) promises credit without qualification. Confirm with Fraud before answering.
 >

@@ -14,7 +14,7 @@ We are building an intake quality checker. It reads a draft fraud claim note and
 
 Then we break it. On purpose. Every first build does something it should not, and finding yours is the actual assignment.
 
-You do not need permission to create agents to participate. There is a second path that works just as well, and the written specification is the part that transfers anyway.
+You do not need permission to create agents to participate. Everyone runs the same exercise in a chat window. Building the real thing is homework for anyone whose account allows it, and it is the least interesting part.
 
 **Also: Week 6 is the showcase.** Five minutes each, one workflow you improved, before and after. Start thinking about yours now.
 
@@ -24,9 +24,9 @@ You do not need permission to create agents to participate. There is a second pa
 
 **Copilot Boot Camp Week 5 in two hours.**
 
-Today we build one agent, then spend the rest of the time trying to make it misbehave.
+Today we spec one agent, run it in a chat window, then spend the rest of the time trying to make it misbehave.
 
-If you cannot create agents in your account, come anyway. The second path is a full path, not a consolation prize.
+If you cannot create agents in your account, come anyway. Nobody builds one during the session.
 
 [MEETING LINK]
 
@@ -50,7 +50,7 @@ Most of the hands on time goes to testing, and testing here means trying to brea
 
 Two practical notes:
 
-If your account cannot create agents, you can still do the full exercise by writing the spec and simulating the agent in a Copilot chat. Same learning, and the spec is the part that matters.
+Nobody builds a real agent during the session, whatever their account allows. Everyone writes the spec and runs it in a Copilot chat, because that tests the instructions identically and the instructions are the whole thing. If you can create agents, building it is homework.
 
 All sources and test material are fabricated. Do not connect anything you build to a real system.
 
@@ -70,7 +70,7 @@ Looking ahead: Week 6 is the showcase. Five minutes each on one workflow you act
 
 Deflate the expectation in the announcement, not just in the room. People who arrive expecting autonomy spend the first ten minutes disappointed, and disappointed people do not build anything.
 
-Mention the second path in every version. Access differences are the most likely reason someone skips this week, and if they think they will be sitting there watching, they will not come.
+Say that nobody builds during the session, in every version. Access differences are the most likely reason someone skips this week, and if they think they will be sitting there watching other people click buttons, they will not come.
 
 Put the Week 6 preview in this announcement. People need more than seven days of runway to pick a workflow and gather a before and after, and Week 5 is the last honest chance to give it to them.
 

@@ -12,13 +12,15 @@ Five minutes each. One workflow you actually improved. Before number, what you c
 
 Rules of the road:
 
-**Small and real beats large and vague.** Four minutes a day is sixteen hours a year. That is a real capstone. "It changed how I work" is not, because nobody can act on it.
+**Small and real beats large and vague.** A four minute saving on something you do daily is a real capstone. A claim that it changed how you work is not, because nobody can act on it.
 
 **Estimates are fine, say they are estimates.** "About twenty minutes down to about eight, timed twice" is credible. A clean percentage with nothing behind it is not, and everyone in this room can tell the difference.
 
 **Failures are welcome and they count.** If you built an agent nobody used, present it. If a habit lasted nine days, present that. Those five minutes are usually the most useful ones in the session.
 
 Show your prompt on screen. Do not describe it. People screenshot the artifact, not the description.
+
+The full structure, the evidence card template and a worked example are in the exercise file, attached to this post. Read it before your one on one.
 
 I will be reaching out for a ten minute call this week to hear what you are presenting. That call is the difference between a good showcase and a quiet one, so please take it.
 

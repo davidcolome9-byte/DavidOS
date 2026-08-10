@@ -22,10 +22,12 @@ Three. Testing an agent means trying to break it, not confirming it works.
 
 ## Before you start
 
-1. **Confirm what your tenant actually allows.** This is the week where facilitator prep can fail badly. Find out before the session whether participants can create agents, whether creation requires an admin, and which surface is available to them: Copilot Studio, agent building inside Microsoft 365 Copilot, or nothing at all. [ASSUMPTION: at least a subset of your cohort can create a basic agent, and the rest will work on the spec only]
-2. **Build the example agent yourself and test it.** Not optional. You will demo it live.
-3. **Prepare the fallback.** If nobody can create agents in your environment, the entire exercise still works as a written specification exercise plus manual simulation, where participants paste their instruction block at the top of a Copilot chat and treat that chat as the agent. Say this plainly at the start rather than discovering it mid session. The spec is the transferable skill either way.
-4. **Have a governance answer ready.** Someone will ask who owns agents, who reviews them, and what happens if one gives bad guidance. If your shop has no answer yet, say that, and say what you would recommend. Do not improvise a policy.
+1. **Post the exercise file and the one pager in the channel thread** the morning of the session, and paste the link again at 0:00 and 0:25.
+2. **Confirm what your tenant actually allows.** This is the week where facilitator prep can fail badly. Find out before the session whether participants can create agents, whether creation requires an admin, and which surface is available to them: Copilot Studio, agent building inside Microsoft 365 Copilot, or nothing at all. [ASSUMPTION: at least a subset of your cohort can create a basic agent, and the rest will work on the spec only]
+3. **Build the example agent yourself and test it.** Not optional. You will demo it live.
+4. **Prepare the fallback.** If nobody can create agents in your environment, the entire exercise still works as a written specification exercise plus manual simulation, where participants paste their instruction block at the top of a Copilot chat and treat that chat as the agent. Say this plainly at the start rather than discovering it mid session. The spec is the transferable skill either way.
+5. **Time a publish and index cycle yourself.** An attached knowledge source does not become readable the instant you publish. If it takes more than two minutes in your tenant, say so at 0:25, or the room will spend the exercise debugging instructions that were fine.
+6. **Have a governance answer ready.** Someone will ask who owns agents, who reviews them, and what happens if one gives bad guidance. If your shop has no answer yet, say that, and say what you would recommend. Do not improvise a policy.
 
 ## Run of show
 
@@ -71,13 +73,13 @@ If it fails any of these, fix the instruction live and rerun. Doing this on scre
 
 ### 0:25 to 0:45 Hands on
 
-Twenty minutes. This week has two paths and you should announce both clearly.
+Twenty minutes. Everyone does the same thing in the session, regardless of what their account can do.
 
-**Path A, for anyone who can create agents:** write the spec, build it, run the three break tests.
+**In the session:** write the spec, paste the instruction block as the first message in a Copilot chat, paste the standard under it, and run the three break tests against that chat.
 
-**Path B, for anyone who cannot:** write the spec, then simulate it by pasting the instruction block at the top of a Copilot chat and running the three break tests against it. This works genuinely well and produces the same learning about instruction quality.
+**Homework, for anyone who can create agents:** build it for real afterward and post what changed.
 
-Do not let Path B feel like a consolation prize. Say up front that the spec is the transferable artifact and the build is the easy part.
+Announce it this way round rather than as a main path and a fallback. Building the thing takes ten to twenty minutes on a cooperative tenant and teaches almost nothing. The instructions are what determine quality, and the chat tests them identically.
 
 Chat prompts to drop:
 
@@ -125,11 +127,11 @@ On why the spec matters more than the build:
 
 On testing:
 
-> "Testing an agent by asking it what it is good at is like testing a smoke detector by not having a fire. Go looking for the failure."
+> "Ask it the thing you would be embarrassed to have it get wrong in front of a member. If you have not done that, you have not tested it."
 
-On the fraud connection:
+On finding the hole first:
 
-> "Everyone here who has done case review knows the drill: you do not confirm the theory, you attack it. Same discipline. Attack your own agent before somebody on the floor finds the hole while a member is waiting."
+> "Find the hole before somebody on the floor finds it while a member is waiting. That is the entire reason we are spending most of the exercise on testing."
 
 ## Anticipated questions and how to answer them
 

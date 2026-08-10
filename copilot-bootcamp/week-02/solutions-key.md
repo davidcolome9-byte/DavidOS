@@ -8,7 +8,7 @@ You need to know this cold before you run the debrief, because participants will
 
 **There are three separate stories in week 6, not one.**
 
-**Story one: the merchant breach drove card claims.** Card claims went from 143 in week 5 to 236 in week 6, a jump of 93 claims. The grocery chain breach was announced Monday of week 6. Average claim amount also rose, which fits card testing and small purchase fraud at a retail merchant. This story explains most of the card claims column and a meaningful share of the call volume increase, because members who read a breach announcement call in whether or not anything happened to them.
+**Story one: the merchant breach drove card claims.** Card claims went from 143 in week 5 to 236 in week 6, a jump of 93 claims. The grocery chain breach was announced Monday of week 6. Average claim amount also rose, from 245 to 268. Note that this argues against small dollar card testing and points instead at larger single purchase fraud on compromised cards. This story explains most of the card claims column and a meaningful share of the call volume increase, because members who read a breach announcement call in whether or not anything happened to them.
 
 **Story two: the account opening change drove new account fraud.** This is the important one and it is easy to miss. New account claims went 14 in week 5, then 61 in week 6. The identity verification step was shortened from three checks to two on Tuesday of week 5. A one week lag between weakened verification and claims appearing is exactly what you would expect. This story has nothing to do with the grocery breach, and merging them is the single most common analytical error in this exercise.
 
@@ -72,7 +72,7 @@ directly show. Do not merge separate causes into one narrative.
 
 **Their verification note:**
 
-> "I recalculated week 6 abandonment from offered and handled: 1770 divided by 15980 is 11.08 percent, which matches the table and matches what Copilot reported. I also checked the new account percent change by hand: 61 minus 14 is 47, divided by 14 is 336 percent. Copilot's first answer said 'more than quadrupled' which is right, but its second answer said 435 percent, which is wrong. It looks like it divided 61 by 14 and called it a percent increase."
+> "I recalculated week 6 abandonment from offered and handled: 1770 divided by 15980 is 11.08 percent, which matches the table and matches what Copilot reported. I also checked the new account percent change by hand: 61 minus 14 is 47, divided by 14 is 336 percent. Copilot's first answer said 'more than quadrupled' which is right, but its second answer said 436 percent, which is wrong. It looks like it divided 61 by 14 and called it a percent increase."
 
 **Their investigation pick:**
 
@@ -96,7 +96,7 @@ directly show. Do not merge separate causes into one narrative.
 
 ## Failure mode two: arithmetic accepted because it was formatted
 
-**What it looks like.** The submission cites a figure like "a 435 percent increase in new account fraud" or "abandonment rose 106 percent." The numbers appear in a tidy bulleted list with bold headers and they are wrong. The participant never checked because the output looked finished.
+**What it looks like.** The submission cites a figure like "a 436 percent increase in new account fraud." The number appears in a tidy bulleted list with a bold header and it is wrong. The participant never checked because the output looked finished.
 
 **Why it happens.** Formatting reads as confidence. A number inside a clean bullet with a bold label feels audited. It is not. Percent change is also genuinely easy to get wrong in a way that produces plausible looking output: dividing the new value by the old value instead of dividing the difference by the old value gives 436 percent instead of 336 percent, and both are large numbers that fit the story.
 

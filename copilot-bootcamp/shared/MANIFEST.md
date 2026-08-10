@@ -44,7 +44,7 @@ copilot-bootcamp/
 - **facilitator-guide.md** includes a live demo where the facilitator checks Copilot's arithmetic on screen, whether or not it is wrong.
 - **participant-onepager.md** covers the three competing explanations rule and its connection to fraud review discipline.
 - **exercise.md** contains two synthetic tables (contact center metrics, fraud claims) plus an operational events list.
-- **solutions-key.md** works all three causes, gives verified arithmetic for fast grading, and covers the single narrative trap and manufactured numbers.
+- **solutions-key.md** works all three causes, gives verified arithmetic for fast grading, and covers the single narrative trap and arithmetic accepted because it was formatted.
 - **knowledge-check.md** tests where arithmetic risk lives and why a fivefold rate difference means separate causes.
 - **announcement.md** leads with the "4:10 on a Thursday" framing.
 
@@ -72,13 +72,14 @@ copilot-bootcamp/
 |---|---|
 | facilitator-guide.md | Run of show including a read aloud round |
 | participant-onepager.md | Printable: three readers, and confidence as a claim |
-| exercise.md | One synthetic case file, three documents to produce |
+| exercise.md | One synthetic case file, three documents |
 | solutions-key.md | All three worked documents plus two failure modes |
 | knowledge-check.md | Five questions with a reasoned answer key |
 | announcement.md | Teams post, reminder, and email |
 
 - **facilitator-guide.md** centers on the difference between "insufficient evidence" and "we determined it was authorized," and includes the editing versus generating demo.
 - **participant-onepager.md** lists the confidence verbs to search for before submitting anything.
+- **solutions-key.md** also carries a debrief note stating plainly that the model letter is not a template, because the synthetic case file does not contain the notice content a real dispute denial requires.
 - **exercise.md** contains a synthetic fraud case file with a partial outcome, a member statement inconsistency, and four documented gaps.
 - **solutions-key.md** provides a full worked supervisor summary, case note, and member letter, plus the two failure modes: insufficient evidence becoming a verdict, and three documents that are really one.
 - **knowledge-check.md** tests which sentence the case file supports and where a statement inconsistency belongs.
@@ -90,14 +91,14 @@ copilot-bootcamp/
 |---|---|
 | facilitator-guide.md | Run of show for the five part spec and adversarial testing |
 | participant-onepager.md | Printable: narrow job, tight sources, explicit guardrails |
-| exercise.md | Build an intake completeness agent, two access paths |
+| exercise.md | Build an intake completeness agent |
 | solutions-key.md | Complete worked spec plus two failure modes |
 | knowledge-check.md | Five questions with a reasoned answer key |
 | announcement.md | Teams post, reminder, and email |
 
 - **facilitator-guide.md** opens by deliberately deflating expectations about autonomy, and includes tenant access prep that most facilitators skip.
 - **participant-onepager.md** explains why starter prompts quietly determine what an agent gets used for.
-- **exercise.md** contains a synthetic intake standard, three test notes including one ACH claim the standard does not cover, and both a build path and a simulation path.
+- **exercise.md** contains a synthetic intake standard, three test notes including one ACH claim the standard does not cover, and a session path everyone can run plus a build path as homework.
 - **solutions-key.md** gives a complete five part spec with instructions and guardrails, documents what each test should reveal, and covers the agent that does everything and testing for confirmation.
 - **knowledge-check.md** tests scope discipline and why a wide knowledge source overrides a narrow guardrail.
 - **announcement.md** sets honest expectations and previews the Week 6 showcase a week early.
@@ -106,14 +107,14 @@ copilot-bootcamp/
 
 | File | Description |
 |---|---|
-| facilitator-guide.md | Run of show for the showcase, three format options |
+| facilitator-guide.md | Run of show and showcase slot math |
 | participant-onepager.md | Printable: the five minute structure |
 | exercise.md | Capstone prep plus the evidence card template |
 | solutions-key.md | Worked showcase plus two failure modes |
 | knowledge-check.md | Five questions on what makes work count |
 | announcement.md | One week notice, reminders, and a post session message |
 
-- **facilitator-guide.md** requires ten minute one on ones during the week, gives three showcase formats by cohort size, and includes the pattern round and the "what did not stick" question.
+- **facilitator-guide.md** requires ten minute one on ones during the week, gives the real per slot cost and a format table by cohort size, and includes the pattern round and the "what did not stick" question.
 - **participant-onepager.md** covers estimate versus invent and why habits need a trigger.
 - **exercise.md** contains the full evidence card template plus a completed synthetic example.
 - **solutions-key.md** reconstructs a strong showcase minute by minute and covers the transformation with no artifact and the manufactured number, including how to handle each live without deflating anyone.
@@ -131,7 +132,7 @@ copilot-bootcamp/
 | MANIFEST.md | This file |
 
 - **syllabus.md** documents the six week arc, the single synthetic narrative that runs through it, the data rules, what the program deliberately does not cover, and the three follow up commitments after Week 6.
-- **prompt-library.md** contains 50 prompts organized into contact center operations (10), fraud review and disputes (10), quality assurance and coaching (8), reporting and analysis (9), internal communications (8), and prompt repair and agent building (5). Each has a fill in structure and most include an explicit instruction for handling missing information.
+- **prompt-library.md** contains 50 prompts, five of them flagged **Live data** because they are built for real case work and must be de-identified before use, organized into contact center operations (10), fraud review and disputes (10), quality assurance and coaching (8), reporting and analysis (9), internal communications (8), and prompt repair and agent building (5). Each has a fill in structure and most include an explicit instruction for handling missing information.
 - **facilitation-faq.md** covers four types of skeptic and the different response each needs, a straight answer to "AI will replace us" that avoids the four phrases people distrust, a four cause diagnosis for low adoption, questions you must answer accurately, and what to do if the program is not working.
 - **evidence-tracker.md** maps each week to an outcome type, measure, and artifact, provides a quality evidence log format, and drafts six promotion packet lines including one that reports what did not stick.
 
@@ -145,7 +146,7 @@ copilot-bootcamp/
 | Shared files | 5 |
 | Prompts in library | 50 |
 | Knowledge check questions | 30 |
-| Documented failure modes | 12 |
+| Documented failure modes | 36 |
 | Synthetic data sets | 5 |
 
 ## Assumptions made and labeled inline

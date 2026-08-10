@@ -10,7 +10,7 @@ Anything in square brackets is yours to fill in. Anything not in brackets is doi
 
 **Before you contribute a prompt:** test it on one other person who was not in the room when you wrote it. Untested library prompts are how libraries die. Three people try one, get mediocre results, and quietly stop opening the file.
 
-**Data rule:** every one of these assumes you are following your organization's data handling guidance. Do not paste member identifying information into any of them. If you are unsure whether something counts, do not paste it.
+**Data rule.** Prompts get copied out of this file one at a time, so read this before you copy anything. Do not paste member identifying information into any of them. The prompts flagged **Live data** are the ones people most often get wrong, because they are the ones built for real case work. De-identify before you use those or do not use them. If you are unsure whether something counts, do not paste it, and ask before you paste rather than after.
 
 **A note on the phrase "not stated":** it appears in many of these. Keep it. Giving the model an explicit alternative to guessing is the single highest return line in this entire file.
 
@@ -197,6 +197,8 @@ cover, say so first and identify which requirements do not apply.
 
 ## 12. Separate observed facts from conclusions in a case note
 
+**Live data:** de-identify before pasting. Remove member name, account and card numbers, claim ID, address, phone, device identifiers, and geolocation. Substitute placeholders. If de-identifying makes the prompt useless, it is not approved for that case. Ask Compliance.
+
 ```
 Rewrite the case note below into two sections.
 
@@ -227,6 +229,8 @@ that is inconvenient.
 
 ## 14. Audit a draft determination for unsupported assertions
 
+**Live data:** de-identify before pasting. Remove member name, account and card numbers, claim ID, address, phone, device identifiers, and geolocation. Substitute placeholders. If de-identifying makes the prompt useless, it is not approved for that case. Ask Compliance.
+
 The most important prompt in this file.
 
 ```
@@ -242,6 +246,8 @@ Do not rewrite anything. Just list.
 ```
 
 ## 15. Convert a determination into member facing language
+
+**Live data:** de-identify before pasting. Remove member name, account and card numbers, claim ID, address, phone, device identifiers, and geolocation. Substitute placeholders. If de-identifying makes the prompt useless, it is not approved for that case. Ask Compliance.
 
 ```
 Rewrite the determination below as a letter to the member.
@@ -261,6 +267,8 @@ check.
 ```
 
 ## 16. Build the follow up question set from a thin statement
+
+**Live data:** de-identify before pasting. Remove member name, account and card numbers, claim ID, address, phone, device identifiers, and geolocation. Substitute placeholders. If de-identifying makes the prompt useless, it is not approved for that case. Ask Compliance.
 
 ```
 Below is a member's initial statement about a disputed transaction.
@@ -290,6 +298,8 @@ Do not draw a conclusion about credibility. Just find the differences.
 ```
 
 ## 18. Draft the handoff note for a case someone else will finish
+
+**Live data:** de-identify before pasting. Remove member name, account and card numbers, claim ID, address, phone, device identifiers, and geolocation. Substitute placeholders. If de-identifying makes the prompt useless, it is not approved for that case. Ask Compliance.
 
 ```
 Write a handoff note for the case below so another investigator can pick it up

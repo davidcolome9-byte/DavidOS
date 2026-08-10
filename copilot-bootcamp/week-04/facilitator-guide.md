@@ -2,7 +2,7 @@
 
 **Session length:** 60 minutes
 **Format:** Teams meeting, one round of read aloud
-**Prep time for you:** 25 minutes
+**Prep time for you:** 45 minutes, plus a compliance conversation you should start a week early
 
 ## What you are trying to accomplish
 
@@ -20,10 +20,11 @@ Three. Editing your own draft down is a better use of the tool than generating a
 
 ## Before you start
 
-1. Read the synthetic case file in the exercise closely. You need to know exactly what it does and does not establish, because the entire exercise turns on facts that are absent from it.
-2. Write the three outputs yourself. Do not skip this. You will coach far better having felt where it gets hard, which is the member letter.
-3. Confirm what your shop actually requires in a member facing adverse decision communication and whether anything in this exercise conflicts with it. If you are not sure, say so in the session rather than teaching something that turns out to be wrong. [ASSUMPTION: no formal template was provided to you for this boot camp]
-4. Decide whether you want anyone reading aloud. I recommend yes and I recommend you go first.
+1. Post the exercise file and the one pager in the channel thread the morning of the session, and paste the link again in the meeting chat at 0:00 and at 0:25.
+2. Read the synthetic case file in the exercise closely. You need to know exactly what it does and does not establish, because the entire exercise turns on facts that are absent from it.
+3. Write the three outputs yourself. Do not skip this. You will coach far better having felt where it gets hard, which is the member letter.
+4. Confirm what your shop actually requires in a member facing adverse decision communication and whether anything in this exercise conflicts with it. If you are not sure, say so in the session rather than teaching something that turns out to be wrong. [ASSUMPTION: no formal template was provided to you for this boot camp]
+5. Decide whether you want anyone reading aloud. I recommend yes and I recommend you go first.
 
 ## Run of show
 
@@ -81,7 +82,7 @@ Narrate the decisions, not the features.
 
 ### 0:25 to 0:45 Hands on
 
-Twenty minutes, working alone. Three outputs from one case file.
+Twenty minutes, working alone. Two outputs plus the audit. The case note is homework, and say so at 0:25 so nobody budgets session time for it. Three documents plus a self audit is a forty minute task and you have twenty.
 
 Chat prompts to drop:
 
@@ -127,7 +128,7 @@ On fluency:
 
 On why members read letters differently than we write them:
 
-> "A member reads a denial letter twice. Once fast, looking for whether they got their money. Once slowly, looking for something to be angry about. Write for both readings."
+> "Assume the member reads it twice, once for the number and once for anything they can argue with. You have all taken the second call. Write for that one."
 
 ## Anticipated questions and how to answer them
 

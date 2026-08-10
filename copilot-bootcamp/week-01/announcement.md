@@ -27,7 +27,7 @@ Reply here if you cannot make it live and I will get you the recording and the e
 
 Bring nothing. Open Copilot before you join so we are not troubleshooting logins on the call.
 
-We are working a fraud claim timeline scenario with fabricated data. If you have ever given a member a timeline you were not sure about, this session is for you.
+We are working a fraud claim timeline scenario with fabricated data. Four internal documents that do not agree with each other. If you have ever had to answer a timing question from sources that contradict, you already know the problem.
 
 [MEETING LINK]
 
@@ -43,9 +43,11 @@ The Copilot Boot Camp kicks off Tuesday. Six weekly sessions, one hour each, han
 
 Week 1 covers research: getting Copilot to find information across your work content and, more importantly, knowing when to trust what comes back. We will work through a scenario built on four conflicting internal documents about debit card fraud claim timelines. All of it is fabricated for training.
 
-Format is short teaching, a live demo, twenty minutes of you actually doing it, then a group debrief. There is a small submission due Friday. It takes about ten minutes and partial work counts.
+Format is short teaching, a live demo, twenty minutes of you actually doing it, then a group debrief. There is a submission due Friday. Week 1 is about fifteen minutes. It gets heavier: Week 4 runs closer to forty five minutes and Week 6 is a couple of hours spread over two weeks. I have asked for off queue time to cover it. If that did not reach you, tell me before Tuesday and I will chase it, because this does not work as unpaid evening homework and I am not going to pretend otherwise.
 
-Two things worth saying up front:
+Three things worth saying up front:
+
+I am keeping a record of what this program produces: attendance, submissions, and specific things people catch, like a wrong number in an AI output or an unsupported claim in a draft. I will use it to show this was worth running, which is good for me. I would rather tell you that now than have you find it sideways. If you would rather your name not appear in it, say so and it will not, and none of it goes to your supervisor or anywhere near a performance conversation.
 
 This is not a tool demo. You will be typing, not watching.
 
@@ -69,6 +71,6 @@ Post the 48 hour version once and do not repost it. Reposting the same announcem
 
 The two hour reminder does more work than the 48 hour post. People do not plan their week, they plan their afternoon.
 
-Do not lead with the word "training." Lead with the problem. Everybody in a contact center has given a member a timeline they were not fully sure about, and naming that gets more people in the room than any description of features.
+Do not lead with the word "training." Lead with the documents, not with the agent. The problem is that the sources conflict. Telling a call monitored room that they have all promised things they were not sure about puts a compliance frame on people you need on your side, and it is the wrong diagnosis anyway.
 
 If attendance is low in Week 1, do not respond by writing longer announcements. Ask two people who came what got them there and use their words next time.

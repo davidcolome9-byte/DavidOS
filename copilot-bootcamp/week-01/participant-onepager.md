@@ -45,6 +45,10 @@ If something is not stated in the text, say "not stated" instead of guessing.
 
 That last line is the one people skip and the one that matters most.
 
+## What this costs you outside the session
+
+About 15 minutes. If you do not have that off the phone, do the first two items and skip the third. Two thirds submitted beats nothing submitted, and that is an operational statement, not encouragement.
+
 ## What you submit
 
 Post one reply in the Week 1 thread by end of day Friday containing:
@@ -61,7 +65,7 @@ A strong Week 1 submission has a prompt that names the format, names the scope, 
 
 ## What weak looks like
 
-A single prompt like "summarize this," an output that is three dense paragraphs, and a reflection that says "it worked well." That submission tells nobody anything, including you.
+A single prompt like "summarize this," an output that is three dense paragraphs, and a reflection that says "it worked well." There is nothing in that for anyone to respond to, so nothing comes back.
 
 ## Ground rules for the whole six weeks
 
@@ -69,17 +73,7 @@ A single prompt like "summarize this," an output that is three dense paragraphs,
 - If you are not sure whether something counts as real, do not paste it. Ask first.
 - Anything you plan to act on gets its source clicked and read.
 
-## Time budget
-
-| Segment | Minutes |
-|---|---|
-| Framing | 5 |
-| Teaching | 10 |
-| Demo | 10 |
-| Hands on | 20 |
-| Debrief | 10 |
-| Close | 5 |
 
 ## If you get stuck
 
-Do not sit silently for twenty minutes. Put your question in the meeting chat. Somebody else has it too and is hoping you ask first.
+Put it in the meeting chat. Faster than working around it.

@@ -4,6 +4,8 @@
 
 Everything below is fabricated. Riverstone Credit Union does not exist. The member, the claim number, the transactions, the device data, and the investigator are invented for training. Do not substitute a real case at any point, and nothing you produce here goes to any real person.
 
+**These timelines are fabricated and several of them differ from Regulation E on purpose.** Nothing in this exercise is a reference for a live claim. For real timing, provisional credit, and member notice requirements, use Riverstone's actual dispute procedure and ask Compliance. If you find yourself repeating a number from this exercise on a real call, stop.
+
 ## The scenario
 
 You work in the digital department at Riverstone Credit Union. A fraud claim closed yesterday with a mixed outcome. Three people now need something from you, and they need different things.
@@ -18,11 +20,13 @@ You have one case file. It is incomplete in ways that matter, which is normal.
 
 ## Your job
 
-Produce three documents from one source.
+**In the session, 20 minutes:** the supervisor summary, the member letter, and the Step 5 audit on both. The audit is not the thing to cut.
+
+**Before Friday:** the internal case note, added to your submission.
 
 1. **Supervisor summary.** Under 100 words. She reads it on a phone.
 2. **Internal case note.** Facts and conclusions visibly separate. A colleague picks it up cold.
-3. **Member letter.** Under 200 words. Plain language.
+3. **Member letter.** Under 250 words. Plain language.
 
 Then hunt all three for claims the case file does not support.
 
@@ -69,7 +73,7 @@ Total disputed: 412.60
 
 **Provisional credit:**
 
-Provisional credit of 412.60 issued on day 10 because the investigation was not complete within 10 business days.
+Provisional credit of 412.60 issued on business day 10 because the investigation was not complete within 10 business days. All day references in this file are business days.
 
 **Closing determination, day 14:**
 
@@ -95,7 +99,7 @@ The file says **insufficient evidence to support unauthorized use.** It does not
 
 The file also does not say:
 
-- Whether the member has any way to appeal or provide more information
+- Whether the member has any way to appeal or provide more information, or any right to request the documents the decision relied on
 - When the reversal posted or will post
 - Whether the member was left with a negative balance
 - Whether anyone attempted to contact the member before reversing

@@ -21,7 +21,7 @@ Produce something your director could read in ninety seconds that contains:
 
 ## Step by step
 
-**Step 1.** Copy both tables and the events list into Copilot. If you have Copilot in Excel, paste the tables into a workbook first with one table per sheet. If you do not, paste them into Copilot chat as text. Both paths work.
+**Step 1.** Copy both tables and the events list into Copilot. If you have Copilot in Excel, open the workbook your facilitator posted. Do not rebuild it. If you do not have Copilot in Excel, paste the tables into chat as text. Both paths work.
 
 **Step 2.** Ask a broad question first, on purpose. Something like "analyze this data." Read what comes back. It will describe the tables. Keep it so you can compare later.
 
@@ -31,7 +31,7 @@ Produce something your director could read in ninety seconds that contains:
 
 **Step 5.** Verify at least one number yourself. Pick a number you plan to actually cite and recalculate it by hand or in a cell. Write down what you got.
 
-**Step 6.** Write your three findings and one recommendation. Under 250 words total.
+**Step 6.** Write your three findings and one recommendation. Under 250 words total. **Drafting this is Friday's work. In the session, get through Step 5.**
 
 ## Synthetic data set
 

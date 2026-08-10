@@ -25,7 +25,7 @@ That is the whole framework. There is no fifth thing.
 
 ## What you practice today
 
-You get five weak prompts pulled from realistic contact center, fraud, QA, and reporting situations. All scenarios are fabricated. You will:
+You get five weak prompts pulled from realistic contact center, QA, reporting, fraud, and internal comms situations. All scenarios are fabricated. You will:
 
 1. Rewrite three of them using the four elements
 2. Hand your rewrites to a partner who runs them cold
@@ -75,6 +75,10 @@ The model is not deterministic. The same prompt can give different answers on di
 
 More importantly, you carried context in your head that never made it into the text. You knew who the audience was. Your partner did not, and neither did the model. A prompt only counts as reusable when it works for somebody who was not in your head when you wrote it.
 
+## What this costs you outside the session
+
+About 30 minutes. If you do not have that off the phone, do the first two items and skip the third. Two thirds submitted beats nothing submitted, and that is an operational statement, not encouragement.
+
 ## What you submit
 
 Post one reply in the Week 3 thread by end of day Friday containing:
@@ -99,17 +103,7 @@ Rewrites that are just longer versions of the original with more polite language
 - All scenarios are synthetic. Do not swap in real case details.
 - Prompts you put in the team library must work without any of your personal context.
 
-## Time budget
-
-| Segment | Minutes |
-|---|---|
-| Framing | 5 |
-| Teaching | 10 |
-| Demo | 10 |
-| Pairs | 20 |
-| Debrief | 10 |
-| Close | 5 |
 
 ## Worth knowing
 
-The person who becomes good at fixing other people's prompts becomes the person other people come to. That is a real career effect, it happens quickly, and it is available to anyone in this room regardless of title.
+Fixing somebody else's prompt takes about two minutes once you have the four elements. Whether that turns into anything for you depends on your shop and I am not going to promise you it will. What it does reliably is stop the same question reaching you four times.

@@ -2,7 +2,7 @@
 
 **Session length:** 60 minutes
 **Format:** Teams meeting, everyone presents
-**Prep time for you:** 60 minutes, including one on ones during the week
+**Prep time for you:** 60 minutes of session prep, plus 2 to 3 hours of one on ones. Ten minutes times fourteen people is not an hour. Block it now, and if you cannot protect three hours, run five minute calls with everyone rather than ten minute calls with half the cohort
 
 ## What you are trying to accomplish
 
@@ -12,11 +12,11 @@ Three outcomes matter, in this order:
 
 **One. Every participant leaves with one documented before and after.** Not a feeling that things are better. A specific workflow, with a specific old cost and a specific new cost, that they can describe in sixty seconds to their manager.
 
-**Two. The group sees each other's work.** Adoption after a boot camp does not come from the boot camp. It comes from watching a peer do something useful and thinking "I could do that." Five minutes of a colleague showing a real improvement beats five hours of training.
+**Two. The group sees each other's work.** Adoption after a boot camp does not come from the boot camp. It comes from watching a peer do something useful and thinking "I could do that."
 
 **Three. You leave with an evidence base.** You are facilitating this, which means at some point somebody will ask what it produced. The answer needs to be specific and it needs to come from artifacts you collected, not from memory.
 
-Say the first two out loud to the room. Do not say the third. It is true, it is legitimate, and announcing it makes people perform for you instead of for their own benefit.
+Say all three out loud. The third one is yours and it is legitimate, and people can tell when a facilitator is collecting something they have not named. You disclosed it in Week 1. Do not go quiet about it now.
 
 ## Before you start
 
@@ -44,15 +44,17 @@ Then set the tone for what gets presented:
 
 ### 0:05 to 0:50 Showcases
 
-Five minutes each. With a cohort of twelve to sixteen, you cannot fit everyone in one hour, so plan for one of these:
+A five minute slot costs 6.5 minutes in practice: five to present, thirty seconds for the screen share handoff, sixty seconds for the one question. Forty five minutes holds six presenters, not nine. Do the arithmetic before you promise anyone a slot.
 
-**Option A, split the showcase.** Two sessions, half the cohort each. Best quality, costs an extra hour.
+| Cohort | Format |
+|---|---|
+| 6 or fewer | One session |
+| 7 to 12 | Two sessions, six each |
+| 13 or more | Three sessions, or 90 minutes |
 
-**Option B, three minute format.** Fits about twelve people. Tighter, less depth, works fine if you have prepped people on the structure.
+Do not solve this by cutting to a three minute format. Participants rehearsed five parts at roughly a minute each and were told five minutes in three separate announcements. Cutting on the day means they drop the last two parts, and the last part is "what did not work," which you told them was required.
 
-**Option C, small group rounds.** Break into three groups of four or five, everyone presents inside their group, then one person from each group presents to the whole room. Fits everyone in the hour, and everyone presents to somebody. This is the best option if attendance has been strong. [ASSUMPTION: Option C for a cohort over ten]
-
-Whichever you pick, decide before the session and announce it in the Week 6 invitation.
+Decide before the session and announce it in the Week 6 invitation. [ASSUMPTION: you can get a second hour on the calendar for a cohort over six]
 
 **The presentation structure participants were given:**
 
@@ -120,7 +122,7 @@ On what happens next:
 
 On presenting a failure:
 
-> "In fraud work, the case you could not make teaches you more than the one that closed cleanly. Same here. Show me what did not work."
+> "Show me what did not work. I will give it more time than the wins, and I mean that."
 
 ## Anticipated questions and how to answer them
 
