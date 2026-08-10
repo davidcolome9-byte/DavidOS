@@ -22,7 +22,7 @@ Say all three out loud. The third one is yours and it is legitimate, and people 
 
 This is the week where the prep happens during the week, not the hour before.
 
-1. **Run short one on ones on Monday and Tuesday.** Ten minutes each. Ask one question: "What are you presenting?" Anyone who does not have an answer needs help picking, right then, on that call. This single step is the difference between a good showcase and four people presenting while everyone else watches silently. [ASSUMPTION: you can find 10 minutes each with most of the cohort]
+1. **Run short one on ones on Monday and Tuesday.** Ten minutes each. Ask one question: "What are you presenting?" Anyone who does not have an answer needs help picking, right then, on that call. This single step is the difference between a good showcase and four people presenting while everyone else watches silently.
 2. **Build the running order in advance.** Do not ask for volunteers on the day. Start with somebody solid, put your least confident presenter third or fourth rather than first or last, and end with your strongest.
 3. **Enforce five minutes.** Have a timer visible. Announce that you will cut people off, then actually cut people off, kindly, on the first one. If you let the first person run to nine minutes, the last three people get two minutes each and learn that the schedule was a suggestion.
 4. **Prepare the evidence card yourself.** Fill one in for your own facilitation work and show it as the demo. It models the format and it means you have your own record.
@@ -54,7 +54,7 @@ A five minute slot costs 6.5 minutes in practice: five to present, thirty second
 
 Do not solve this by cutting to a three minute format. Participants rehearsed five parts at roughly a minute each and were told five minutes in three separate announcements. Cutting on the day means they drop the last two parts, and the last part is "what did not work," which you told them was required.
 
-Decide before the session and announce it in the Week 6 invitation. [ASSUMPTION: you can get a second hour on the calendar for a cohort over six]
+Decide before the session and announce it in the Week 6 invitation. If a second hour is not available, run the two sessions a week apart rather than compressing one.
 
 **The presentation structure participants were given:**
 

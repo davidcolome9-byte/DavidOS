@@ -91,8 +91,6 @@ It is longer. It is friendlier. It produces the same four paragraphs as the orig
 
 **How to fix it in the room.** Put the original and the rewrite side by side and ask the group to check off which of the four elements each contains. They will get identical scores. That comparison lands harder than any explanation and it takes thirty seconds.
 
-**What to say:** "Be as polite as you want, it costs nothing. Just notice that none of those words told it anything it did not already have. Politeness is free and it is not a specification."
-
 ## Failure mode two: the prompt that only works for its author
 
 **What it looks like.** Someone rewrites prompt 2, the QA coaching feedback, and gets an excellent result. Their partner runs the identical text and gets something formal and stiff again. The author insists it worked when they ran it.
@@ -103,13 +101,11 @@ The rewrite usually contains a line like "write it the way we normally do coachi
 
 There is a second contributor: the author's own work content may include real examples of coaching notes that the model can reach, while their partner's does not. Same prompt, different reachable material, different output. This is worth naming explicitly because it will keep happening after the boot camp ends.
 
-**Why it matters more than it looks.** This is the failure that kills prompt libraries. Someone contributes a prompt that works beautifully for them, three people try it, get mediocre results, and quietly stop using the library. The library dies not because the prompts were bad but because nobody tested them cold.
+This is the failure that kills prompt libraries. Someone contributes a prompt that works beautifully for them, three people try it, get mediocre results, and quietly stop using the library. The library dies not because the prompts were bad but because nobody tested them cold.
 
 **The tell.** The prompt references "our" anything without defining it. Our tone, our format, our usual approach, how we normally do it.
 
 **How to fix it in the room.** Ask the author to replace every instance of "our usual" with three concrete adjectives or an actual example. "Match our team's tone" becomes "direct, specific, no formal headers, written the way you would say it to someone standing next to you." Then have the partner rerun. The difference is immediate.
-
-**What to say:** "The model cannot read your mind and neither can your coworker. If a prompt says 'our usual format,' it is a note to yourself, not a prompt. That is fine. Just do not put it in the library."
 
 ## Grading guidance
 

@@ -18,7 +18,7 @@ The hard part of this week is that people think prompting is about magic words. 
 
 1. Post the exercise file and the one pager in the channel thread the morning of the session, and paste the link again in the meeting chat at 0:00 and at 0:25. The hands on block assumes people already have it open.
 2. Read the five weak prompts in the exercise and rewrite each one yourself. You need to have done the work to coach it.
-3. Set up breakout rooms in advance, pairs. Assign them rather than letting people self select, because self selected pairs put the two confident people together and strand everyone else. [ASSUMPTION: your Teams setup allows preassigned breakouts]
+3. Set up breakout rooms in advance, pairs. Assign them rather than letting people self select, because self selected pairs put the two confident people together and strand everyone else.
 4. Pick one participant from Week 1 or 2 whose submission showed a clear before and after and ask them privately if you can use it in the demo. Real examples from the room beat invented ones.
 5. Have a bad prompt of your own ready to show. Yours, not a hypothetical. This matters more than you think.
 

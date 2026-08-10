@@ -4,7 +4,7 @@
 
 **Format:** six weekly sessions, 60 minutes each, hands on. Participants type. They do not watch.
 
-**Cohort size:** 12 to 16 works well. Above 20, split into two cohorts or plan a two part showcase in Week 6. [ASSUMPTION]
+**Cohort size:** 12 to 16 works well. Above 20, split into two cohorts or plan a two part showcase in Week 6.
 
 **Prerequisites:** none. No Excel skills required, no prior AI experience required, no technical background required.
 
@@ -103,7 +103,7 @@ Then an evidence card, due Friday, which is the real deliverable. Six months fro
 
 ## Materials
 
-Every week has six files: facilitator guide, participant one pager, exercise, solutions key, knowledge check, and announcement. The shared folder holds this syllabus, a prompt library of 50 reusable prompts, a facilitation FAQ for handling resistance, an evidence tracker, and a manifest.
+A README at the package root is the entry point. Every week has six files: facilitator guide, participant one pager, exercise, solutions key, knowledge check, and announcement. The shared folder holds this syllabus, a prompt library of 50 reusable prompts, a facilitation FAQ for handling resistance, an evidence tracker, and a manifest.
 
 ## Data rules
 

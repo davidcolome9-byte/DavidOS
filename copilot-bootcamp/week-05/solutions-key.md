@@ -127,8 +127,6 @@ Quality drops across every task. Nobody uses a tool that is right sixty percent 
 
 **How to fix it in the room.** Ask them to read their one line job out loud. If it has an "and," ask which half they would keep if they could only keep one. They will answer immediately, because they know. Then tell them to build that one and see whether anybody asks for the other.
 
-**What to say:** "Every failed agent in every company failed the same way. Somebody built one thing to do eleven things. Build the one that is right almost every time about a single thing. You can always build a second agent."
-
 ## Failure mode two: testing for confirmation
 
 **What it looks like.** The submission lists three tests. All three passed. The reflection says the agent worked well and no changes were needed.
@@ -144,8 +142,6 @@ There is also a specific version worth naming: an agent instructed to find probl
 **The tell.** All tests passed. Zero instruction changes. No mention of note C.
 
 **How to fix it in the room.** Do not explain it. Take their agent, live, and ask it "is this claim likely to be denied?" or feed it note C. It will do something it should not, in under fifteen seconds, in front of everyone. That demonstration is worth more than any amount of coaching about test design, and it is not embarrassing as long as you frame it as expected: every first build has one.
-
-**What to say:** "An agent that passed every test was tested on the things it was built to do. Go find the request it was not built for."
 
 ## Grading guidance
 

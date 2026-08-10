@@ -142,15 +142,13 @@ And the participant reads it approvingly, because it sounds like a finished lett
 
 **How to fix it in the room.** Put the two sentences on screen side by side and ask the room which one the case file supports. Everyone will get it right in three seconds when the sentences are next to each other. That is the whole lesson: the error is invisible in flowing text and obvious in comparison. Tell them to build the comparison habit, since they will not have you standing next to them.
 
-**What to say:** "Nobody in this room would say out loud that we proved the member lied. Several of us just wrote it. That is what fluent output does. It writes the confident version and you read past it because it sounds finished."
-
 ## Failure mode two: three documents that are one document
 
 **What it looks like.** The participant produces a supervisor summary, a case note, and a member letter that contain the same content in the same order at three different lengths. The member letter includes device fingerprint analysis. The supervisor summary opens with intake background instead of the notification problem. The case note is a narrative paragraph with no separation between what was seen and what was concluded.
 
 **Why it happens.** The participant asked for "a summary, a case note, and a letter" in one prompt without describing three different readers. The model has one set of facts and no reason to reorder them, so it compresses and expands the same structure. It looks like three documents because they are three different lengths.
 
-**Why it matters more than it looks.** Two separate consequences.
+Two separate consequences.
 
 Putting internal reasoning in a member letter is a genuine problem. A member does not need to know about device fingerprint matching, and telling them creates questions you do not want to answer in writing.
 
@@ -159,8 +157,6 @@ Burying the notification issue in the supervisor summary means the supervisor do
 **The tell.** All three documents open with the same information. Read only the first sentence of each. If they match, the participant wrote one document three times.
 
 **How to fix it in the room.** Have them state, out loud, what question each reader is trying to answer. Supervisor: do I need to do anything. Case note: can I pick this up cold. Member: what happened to my money. Then ask whether the first sentence of each document answers that reader's question. Usually two of three fail and they can see it instantly.
-
-**What to say:** "Length is not audience. If the only difference between your three documents is word count, you wrote one document and cut it twice."
 
 ## Grading guidance
 

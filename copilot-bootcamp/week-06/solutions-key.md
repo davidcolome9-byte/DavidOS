@@ -14,53 +14,19 @@ Not the size of the improvement. Three things:
 
 A person who saved four minutes a day, measured it honestly, and produced a prompt two colleagues can run has done better work than someone claiming a transformation with nothing reusable behind it. Say that out loud early in the session, because otherwise people with modest results will apologize for them, and apologies are contagious.
 
-## Worked example of a strong showcase
+## What a strong showcase looks like
 
-Reconstructed from the fabricated evidence card in the exercise, presented as it would sound live.
+The worked evidence card in the exercise file is the model. A strong showcase is that card delivered aloud in five minutes, with the prompt on screen at minute three.
 
-**Minute 1, the workflow.**
+Four things separate the good ones:
 
-> "Every Monday I write four coaching notes from call reviews and send them to the agents. Four notes, every week, all year."
+**The before number has a source.** "I timed it twice in the first month and got 24 and 27" beats any percentage.
 
-Clean. Recurring. Names the audience. No preamble about how QA works, because everybody in the room knows.
+**The artifact is on screen, not described.** People screenshot a prompt. Nobody screenshots a description of a prompt.
 
-**Minute 2, before.**
+**The failure is specific.** "I told it to match our usual tone, which meant nothing to it" teaches the room something. "It took some trial and error" does not.
 
-> "About 25 minutes a note. I timed it twice in the first month and got 24 and 27. So roughly 100 minutes a week. Almost all of that was rewriting, because my first draft always came out sounding like a write up and I would soften it three or four times."
-
-The number has a source. The reconstruction is stated as a reconstruction. And they named the actual bottleneck, which was tone, not typing.
-
-**Minute 3, what changed.**
-
-Prompt on screen, full text, read the important line out loud:
-
-> "This is peer coaching from a QA reviewer to an agent on the same team. It is not a performance action and must not read like one."
-
-> "That one line is the whole thing. Everything else in the prompt is structure."
-
-Showing the artifact rather than describing it is what makes a showcase useful. People screenshot this.
-
-**Minute 4, after.**
-
-> "About 9 minutes a note now. 36 minutes a week instead of 100, measured across four weeks. Call it an hour a week back."
-
-Same measure as before, stated period, no percentage claim.
-
-**Minute 5, what did not work.**
-
-> "My first version said 'match our usual coaching tone.' That meant nothing, and I got formal HR language back three times before I figured out why. I also built an agent for this in Week 5 and abandoned it. I am the only person who writes these notes, so the agent was overhead with no benefit. The prompt was enough."
-
-Two failures, both specific, both instructive. The abandoned agent is the more valuable one, because it tells the room that not everything needs to be an agent.
-
-**Your question after:**
-
-> "Who else on the floor could use this tomorrow?"
-
-> "Both evening shift team leads do the same task."
-
-Now there are two names in the room and a small obligation attached to them. That question is doing more for adoption than the presentation did.
-
-**Why this showcase is strong.** It is one workflow, not a tour. The numbers have sources. The artifact is on screen and reusable. The quality claim has evidence behind it, including an unprompted comment from an agent. It admits an abandoned build. It ends with named people who could reuse it.
+**It ends with a name.** Your closing question, "who else on the floor could use this tomorrow," puts a person in the room and attaches a small obligation to them. That question does more for adoption than the presentation did.
 
 ## Failure mode one: the transformation with no artifact
 

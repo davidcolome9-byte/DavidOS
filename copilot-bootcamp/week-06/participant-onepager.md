@@ -80,7 +80,6 @@ Before you leave the call, name one person on the floor you will show one thing 
 
 One person. One thing. Two weeks. That is the whole commitment.
 
-
 ## Prep before Tuesday
 
 - Pick your workflow. Do not wait until Monday night.

@@ -73,7 +73,6 @@ A single prompt like "summarize this," an output that is three dense paragraphs,
 - If you are not sure whether something counts as real, do not paste it. Ask first.
 - Anything you plan to act on gets its source clicked and read.
 
-
 ## If you get stuck
 
 Put it in the meeting chat. Faster than working around it.

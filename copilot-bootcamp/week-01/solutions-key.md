@@ -86,8 +86,6 @@ Rules:
 
 **How to fix it in the room.** Do not just tell them the answer. Have them paste the same source pack and add one line: "Where do these documents disagree, and which is most recent?" Same sources, same model, completely different output. That before and after does more teaching than ten minutes of explanation.
 
-**What to say:** "It did not lie to you. You asked for a summary and a summary means smoothing. If you want the sharp edges, you have to ask for the sharp edges."
-
 ## Failure mode two: the verification that was not verification
 
 **What it looks like.** The participant produces a good briefing, then confirms it by asking Copilot "is this accurate?" Copilot says yes. They submit it as verified.
@@ -99,8 +97,6 @@ Rules:
 **Why it is dangerous.** This is the habit that carries into live work. Somebody who self certifies with the tool in Week 1 will self certify a member facing letter in Week 4, and eventually something goes out the door that nobody read.
 
 **How to fix it in the room.** Ask the participant to find the phrase "20 business days" in the source pack and read the sentence around it out loud. Then ask whether their briefing reflects it. Do not embarrass anyone. Frame it as a habit everybody has to unlearn once.
-
-**What to say:** "Asking the tool to grade its own work is not a control. Verification means your eyes on the source. It takes three minutes. Do the three minutes."
 
 ## Grading guidance
 

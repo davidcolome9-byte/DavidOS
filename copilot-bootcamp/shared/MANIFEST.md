@@ -1,6 +1,6 @@
 # MANIFEST
 
-Complete file list for the Microsoft 365 Copilot Boot Camp package. 41 files.
+Complete file list for the Microsoft 365 Copilot Boot Camp package. 43 files.
 
 Every scenario in every file uses fabricated data for a fictional institution called Riverstone Credit Union. No real member information, account data, or internal material appears anywhere in this package.
 
@@ -8,9 +8,12 @@ Every scenario in every file uses fabricated data for a fictional institution ca
 
 ```
 copilot-bootcamp/
+  README.md                   front door
   week-01/ through week-06/   six files each
   shared/                     five files
 ```
+
+- **README.md** is the entry point: where to start depending on why you opened the folder, the ground rules, and what to change when adapting the program.
 
 ## Week 01: Copilot as Researcher
 
@@ -79,9 +82,8 @@ copilot-bootcamp/
 
 - **facilitator-guide.md** centers on the difference between "insufficient evidence" and "we determined it was authorized," and includes the editing versus generating demo.
 - **participant-onepager.md** lists the confidence verbs to search for before submitting anything.
-- **solutions-key.md** also carries a debrief note stating plainly that the model letter is not a template, because the synthetic case file does not contain the notice content a real dispute denial requires.
 - **exercise.md** contains a synthetic fraud case file with a partial outcome, a member statement inconsistency, and four documented gaps.
-- **solutions-key.md** provides a full worked supervisor summary, case note, and member letter, plus the two failure modes: insufficient evidence becoming a verdict, and three documents that are really one.
+- **solutions-key.md** provides a full worked supervisor summary, case note, and member letter, the two failure modes, and a debrief note stating plainly that the model letter is not a template, because the synthetic case file does not contain the notice content a real dispute denial requires.
 - **knowledge-check.md** tests which sentence the case file supports and where a statement inconsistency belongs.
 - **announcement.md** leads with the two sentence comparison and announces the read aloud in advance.
 
@@ -117,7 +119,7 @@ copilot-bootcamp/
 - **facilitator-guide.md** requires ten minute one on ones during the week, gives the real per slot cost and a format table by cohort size, and includes the pattern round and the "what did not stick" question.
 - **participant-onepager.md** covers estimate versus invent and why habits need a trigger.
 - **exercise.md** contains the full evidence card template plus a completed synthetic example.
-- **solutions-key.md** reconstructs a strong showcase minute by minute and covers the transformation with no artifact and the manufactured number, including how to handle each live without deflating anyone.
+- **solutions-key.md** names the four things that separate a strong showcase and covers the transformation with no artifact and the manufactured number, including how to handle each live without deflating anyone.
 - **knowledge-check.md** tests what makes a capstone credible and which habits survive.
 - **announcement.md** includes a post session message with the honest "what did not stick" list.
 
@@ -129,18 +131,20 @@ copilot-bootcamp/
 | prompt-library.md | 50 tested prompts across five work areas |
 | facilitation-faq.md | Skeptics, low adoption, and replacement fears |
 | evidence-tracker.md | Week to outcome mapping and promotion packet lines |
+| handbook.html | Designed program overview, for sharing |
 | MANIFEST.md | This file |
 
 - **syllabus.md** documents the six week arc, the single synthetic narrative that runs through it, the data rules, what the program deliberately does not cover, and the three follow up commitments after Week 6.
 - **prompt-library.md** contains 50 prompts, five of them flagged **Live data** because they are built for real case work and must be de-identified before use, organized into contact center operations (10), fraud review and disputes (10), quality assurance and coaching (8), reporting and analysis (9), internal communications (8), and prompt repair and agent building (5). Each has a fill in structure and most include an explicit instruction for handling missing information.
 - **facilitation-faq.md** covers four types of skeptic and the different response each needs, a straight answer to "AI will replace us" that avoids the four phrases people distrust, a four cause diagnosis for low adoption, questions you must answer accurately, and what to do if the program is not working.
+- **handbook.html** is a self contained page presenting the program: the six week arc with each run of show drawn to scale, the four frameworks people use standing up, the data rules, and the evidence model. Open it in a browser or share the link. It prints cleanly.
 - **evidence-tracker.md** maps each week to an outcome type, measure, and artifact, provides a quality evidence log format, and drafts six promotion packet lines including one that reports what did not stick.
 
 ## Totals
 
 | Item | Count |
 |---|---|
-| Files | 41 |
+| Files | 43 |
 | Weeks | 6 |
 | Files per week | 6 |
 | Shared files | 5 |
@@ -149,15 +153,14 @@ copilot-bootcamp/
 | Documented failure modes | 36 |
 | Synthetic data sets | 5 |
 
-## Assumptions made and labeled inline
+## What the design assumes
 
-Marked as [ASSUMPTION] where they appear:
+These are the calls made where the brief was open. Change any of them and the affected materials still work.
 
-- Cohort size of 12 to 16, with alternate formats given for larger groups
+- A cohort of 12 to 16, with alternate formats supplied for larger groups
 - Submissions collected as replies in a Teams channel thread
-- Mixed availability of Copilot in Excel across the cohort, with both paths supported
-- Mixed agent creation permissions, with a full simulation path provided
-- Teams supports preassigned breakout rooms for Week 3
-- Facilitator can find ten minutes with most participants before Week 6
-- No organization specific member communication template was supplied for Week 4
-- Facilitator has confirmed the true answer to "is usage being tracked" before Week 1
+- Mixed availability of Copilot in Excel, so every data exercise also works from pasted text
+- Mixed agent creation permissions, so nobody builds a live agent during a session
+- Preassigned breakout rooms available for the Week 3 pairing
+- Ten minutes of facilitator time per participant in the week before the showcase
+- No organization specific template for member communication, so Week 4 teaches the judgment and names the notice requirements it does not cover

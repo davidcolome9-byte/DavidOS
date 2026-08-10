@@ -23,7 +23,7 @@ Three. Testing an agent means trying to break it, not confirming it works.
 ## Before you start
 
 1. **Post the exercise file and the one pager in the channel thread** the morning of the session, and paste the link again at 0:00 and 0:25.
-2. **Confirm what your tenant actually allows.** This is the week where facilitator prep can fail badly. Find out before the session whether participants can create agents, whether creation requires an admin, and which surface is available to them: Copilot Studio, agent building inside Microsoft 365 Copilot, or nothing at all. [ASSUMPTION: at least a subset of your cohort can create a basic agent, and the rest will work on the spec only]
+2. **Confirm what your tenant actually allows.** This is the week where facilitator prep can fail badly. Find out before the session whether participants can create agents, whether creation requires an admin, and which surface is available to them: Copilot Studio, agent building inside Microsoft 365 Copilot, or nothing at all.
 3. **Build the example agent yourself and test it.** Not optional. You will demo it live.
 4. **Prepare the fallback.** If nobody can create agents in your environment, the entire exercise still works as a written specification exercise plus manual simulation, where participants paste their instruction block at the top of a Copilot chat and treat that chat as the agent. Say this plainly at the start rather than discovering it mid session. The spec is the transferable skill either way.
 5. **Time a publish and index cycle yourself.** An attached knowledge source does not become readable the instant you publish. If it takes more than two minutes in your tenant, say so at 0:25, or the room will spend the exercise debugging instructions that were fine.

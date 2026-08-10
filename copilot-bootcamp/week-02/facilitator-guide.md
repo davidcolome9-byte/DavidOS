@@ -16,7 +16,7 @@ The failure mode to fight all session is treating Copilot as a calculator. It is
 
 1. Build the synthetic workbook. The exercise file contains two tables in markdown. Paste them into an Excel workbook, one per sheet, and save it somewhere the cohort can copy from. Name the sheets `Contact Volume` and `Fraud Claims`. Do this yourself before the session and confirm Copilot in Excel can read it.
 2. Run the exercise yourself end to end. You need to know what the numbers actually say so you can catch a wrong answer in the debrief.
-3. Confirm which participants have Copilot in Excel available versus chat only. Not everyone will. The exercise is written so it works either way, using pasted tables, but you should know the split before you start. [ASSUMPTION: mixed availability across the cohort]
+3. Confirm which participants have Copilot in Excel available versus chat only. Not everyone will. The exercise is written so it works either way, using pasted tables, but you should know the split before you start.
 4. Have the answer to "what is our actual abandonment rate target" ready, or be ready to say you do not know.
 
 ## Run of show

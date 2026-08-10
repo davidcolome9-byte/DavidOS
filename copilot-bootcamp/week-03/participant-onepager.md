@@ -103,7 +103,6 @@ Rewrites that are just longer versions of the original with more polite language
 - All scenarios are synthetic. Do not swap in real case details.
 - Prompts you put in the team library must work without any of your personal context.
 
-
 ## Worth knowing
 
 Fixing somebody else's prompt takes about two minutes once you have the four elements. Whether that turns into anything for you depends on your shop and I am not going to promise you it will. What it does reliably is stop the same question reaching you four times.

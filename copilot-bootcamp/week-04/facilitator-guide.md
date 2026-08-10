@@ -23,7 +23,7 @@ Three. Editing your own draft down is a better use of the tool than generating a
 1. Post the exercise file and the one pager in the channel thread the morning of the session, and paste the link again in the meeting chat at 0:00 and at 0:25.
 2. Read the synthetic case file in the exercise closely. You need to know exactly what it does and does not establish, because the entire exercise turns on facts that are absent from it.
 3. Write the three outputs yourself. Do not skip this. You will coach far better having felt where it gets hard, which is the member letter.
-4. Confirm what your shop actually requires in a member facing adverse decision communication and whether anything in this exercise conflicts with it. If you are not sure, say so in the session rather than teaching something that turns out to be wrong. [ASSUMPTION: no formal template was provided to you for this boot camp]
+4. Confirm what your shop actually requires in a member facing adverse decision communication and whether anything in this exercise conflicts with it. If you are not sure, say so in the session rather than teaching something that turns out to be wrong.
 5. Decide whether you want anyone reading aloud. I recommend yes and I recommend you go first.
 
 ## Run of show

@@ -2,7 +2,7 @@
 
 **Session length:** 60 minutes
 **Format:** Teams meeting with cameras optional, chat used for submissions
-**Cohort size assumption:** 12 to 16 participants [ASSUMPTION]
+**Cohort size:** 12 to 16 participants
 **Prep time for you:** 20 minutes
 
 ## What you are trying to accomplish
@@ -16,7 +16,7 @@ If people leave believing "Copilot knows things," you have made your job harder 
 1. Open the Week 1 exercise file and copy the synthetic source pack into a Teams chat message or a OneNote page participants can reach. They will paste it into Copilot chat.
 2. Have your own Copilot window open and already signed in. Do not troubleshoot your own login on the call.
 3. Post the announcement 48 hours ahead and again 2 hours ahead.
-4. Decide where submissions go. Default is a reply in the Teams channel thread. [ASSUMPTION]
+4. Decide where submissions go. A reply in the Teams channel thread works and keeps everything in one place.
 5. Have a fallback demo ready in case Copilot is slow or returns something odd. A screenshot of a good result you captured earlier is enough.
 
 ## Run of show
@@ -128,7 +128,7 @@ Because we are practicing. Practice with fake data, work with real data under re
 Today, maybe. Your supervisor is not available at 4:55 on a Friday. Also, your supervisor answering the same question forty times a month is forty answers they are not giving to something harder.
 
 **"Is this going to be used to measure us?"**
-Give a straight answer based on what is actually true in your shop. If adoption is being tracked, say so. If it is not, say so. Hedging here costs you credibility for five more weeks. [ASSUMPTION: you have confirmed the answer before the session]
+Give a straight answer based on what is actually true in your shop. If adoption is being tracked, say so. If it is not, say so. Hedging here costs you credibility for five more weeks. Confirm the answer before the session so you are not guessing in front of the room.
 
 ## Failure modes for you, the facilitator
 

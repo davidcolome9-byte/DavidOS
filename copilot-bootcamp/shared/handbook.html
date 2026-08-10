@@ -1,0 +1,658 @@
+<title>Microsoft 365 Copilot Boot Camp: Program Handbook</title>
+<style>
+/* ---------- tokens: complete light palette on bare :root ---------- */
+:root{
+  --paper:#F7F8FA;
+  --surface:#FFFFFF;
+  --surface-sunk:#EEF1F6;
+  --ink:#101A2B;
+  --ink-soft:#41506A;
+  --ink-mute:#66748C;
+  --navy:#12395E;
+  --navy-soft:#2C5C8A;
+  --rule:#DCE3EC;
+  --rule-firm:#C3CEDD;
+  --oxide:#A23B2E;
+  --oxide-wash:#F6EAE7;
+  --band-a:#12395E;
+  --band-b:#2C5C8A;
+  --band-c:#5D82A8;
+  --band-d:#93AEC9;
+  --band-e:#C0D0E0;
+  --band-f:#E2E9F1;
+  --band-ink-dark:#FFFFFF;
+  --band-ink-light:#12395E;
+  --focus:#A23B2E;
+  --shadow:0 1px 2px rgba(16,26,43,.06),0 8px 24px -12px rgba(16,26,43,.18);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1220;
+    --surface:#141C2C;
+    --surface-sunk:#1B2536;
+    --ink:#E7ECF3;
+    --ink-soft:#B3C0D2;
+    --ink-mute:#8B9AB0;
+    --navy:#8FB4DC;
+    --navy-soft:#6E97C4;
+    --rule:#273248;
+    --rule-firm:#35435E;
+    --oxide:#E08A78;
+    --oxide-wash:#2A1C1A;
+    --band-a:#8FB4DC;
+    --band-b:#6E97C4;
+    --band-c:#4E76A2;
+    --band-d:#3A5B80;
+    --band-e:#2C445F;
+    --band-f:#212F44;
+    --band-ink-dark:#0C1220;
+    --band-ink-light:#E7ECF3;
+    --focus:#E08A78;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1220;
+  --surface:#141C2C;
+  --surface-sunk:#1B2536;
+  --ink:#E7ECF3;
+  --ink-soft:#B3C0D2;
+  --ink-mute:#8B9AB0;
+  --navy:#8FB4DC;
+  --navy-soft:#6E97C4;
+  --rule:#273248;
+  --rule-firm:#35435E;
+  --oxide:#E08A78;
+  --oxide-wash:#2A1C1A;
+  --band-a:#8FB4DC;
+  --band-b:#6E97C4;
+  --band-c:#4E76A2;
+  --band-d:#3A5B80;
+  --band-e:#2C445F;
+  --band-f:#212F44;
+  --band-ink-dark:#0C1220;
+  --band-ink-light:#E7ECF3;
+  --focus:#E08A78;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 28px -14px rgba(0,0,0,.7);
+}
+
+/* ---------- base ---------- */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  font-size:16.5px;
+  line-height:1.6;
+  font-feature-settings:"kern" 1;
+}
+.serif{font-family:ui-serif,Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif}
+.mono,code,kbd{font-family:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,"Liberation Mono",monospace}
+a{color:var(--navy);text-underline-offset:3px;text-decoration-thickness:1px}
+a:focus-visible,summary:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:2px}
+h1,h2,h3,h4{text-wrap:balance;margin:0}
+p{margin:0}
+ul,ol{margin:0;padding-left:1.15em}
+li{margin:.3em 0}
+::selection{background:var(--navy);color:var(--paper)}
+
+/* ---------- shell ---------- */
+.shell{max-width:1180px;margin:0 auto;padding:0 clamp(18px,4vw,44px)}
+.masthead{
+  border-bottom:1px solid var(--rule-firm);
+  background:var(--surface);
+}
+.masthead .shell{padding-top:clamp(38px,6vw,66px);padding-bottom:clamp(26px,4vw,38px)}
+.eyebrow{
+  font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-mute);font-weight:600;
+}
+h1{
+  font-size:clamp(30px,5.4vw,52px);line-height:1.08;letter-spacing:-.015em;
+  margin:.42em 0 0;color:var(--ink);font-weight:600;
+}
+.dek{
+  margin-top:.9em;max-width:62ch;font-size:clamp(16.5px,1.9vw,19px);
+  color:var(--ink-soft);line-height:1.55;
+}
+.factstrip{
+  display:flex;flex-wrap:wrap;gap:0;margin-top:clamp(24px,3.6vw,34px);
+  border-top:1px solid var(--rule);
+}
+.fact{
+  flex:1 1 150px;padding:14px 20px 14px 0;border-right:1px solid var(--rule);
+}
+.fact:last-child{border-right:0}
+.fact b{
+  display:block;font-size:clamp(20px,2.6vw,26px);line-height:1.1;
+  color:var(--navy);font-weight:600;font-variant-numeric:tabular-nums;
+}
+.fact span{display:block;margin-top:3px;font-size:12.5px;color:var(--ink-mute);letter-spacing:.02em}
+
+/* ---------- layout ---------- */
+.body-grid{display:grid;grid-template-columns:1fr;gap:0}
+@media (min-width:960px){
+  .body-grid{grid-template-columns:196px minmax(0,1fr);gap:clamp(34px,5vw,64px)}
+}
+.rail{display:none}
+@media (min-width:960px){
+  .rail{
+    display:block;position:sticky;top:0;align-self:start;
+    padding-top:clamp(40px,5vw,58px);max-height:100vh;overflow-y:auto;
+  }
+}
+.rail h2{font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-mute);font-weight:600;margin-bottom:12px}
+.rail ol{list-style:none;padding:0;margin:0 0 26px;border-left:1px solid var(--rule)}
+.rail li{margin:0}
+.rail a{
+  display:block;padding:6px 0 6px 14px;margin-left:-1px;
+  border-left:2px solid transparent;
+  color:var(--ink-soft);text-decoration:none;font-size:14px;line-height:1.35;
+}
+.rail a:hover{color:var(--navy);border-left-color:var(--rule-firm)}
+.rail a .num{
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:11.5px;color:var(--ink-mute);margin-right:7px;
+}
+main{padding-top:clamp(40px,5vw,58px);padding-bottom:clamp(56px,8vw,96px);min-width:0}
+
+section{margin-bottom:clamp(46px,6vw,74px);scroll-margin-top:24px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.sec-head h2{
+  font-size:clamp(21px,2.7vw,27px);letter-spacing:-.01em;font-weight:600;color:var(--ink);
+}
+.sec-head .tag{
+  font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-mute);font-weight:600;
+}
+.lede{max-width:66ch;color:var(--ink-soft);margin-bottom:22px}
+
+/* ---------- week card ---------- */
+.week{
+  background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:clamp(20px,3vw,30px);margin-bottom:16px;box-shadow:var(--shadow);
+}
+.week-top{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px}
+.wk-num{
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--band-ink-dark);
+  background:var(--navy);padding:5px 9px;border-radius:2px;white-space:nowrap;
+}
+.wk-title{flex:1 1 260px;min-width:0}
+.wk-title h3{font-size:clamp(19px,2.3vw,23px);font-weight:600;letter-spacing:-.01em;line-height:1.2}
+.wk-title .q{margin-top:6px;color:var(--ink-soft);font-size:15.5px;font-style:italic}
+
+/* ---------- the 60 minute ruler ---------- */
+.ruler{margin:22px 0 6px}
+.ruler-label{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-mute);font-weight:600;margin-bottom:7px;
+}
+.bar{
+  display:grid;grid-template-columns:repeat(60,1fr);
+  height:34px;border-radius:2px;overflow:hidden;
+  border:1px solid var(--rule-firm);
+}
+.bar span{
+  display:flex;align-items:center;justify-content:center;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:11px;font-variant-numeric:tabular-nums;
+  border-right:1px solid var(--surface);overflow:hidden;
+}
+.bar span:last-child{border-right:0}
+.b1{background:var(--band-a);color:var(--band-ink-dark)}
+.b2{background:var(--band-b);color:var(--band-ink-dark)}
+.b3{background:var(--band-c);color:var(--band-ink-dark)}
+.b4{background:var(--band-d);color:var(--band-ink-light)}
+.b5{background:var(--band-e);color:var(--band-ink-light)}
+.b6{background:var(--band-f);color:var(--band-ink-light)}
+.ticks{
+  display:grid;grid-template-columns:repeat(4,1fr);margin-top:5px;
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:10.5px;color:var(--ink-mute);font-variant-numeric:tabular-nums;
+}
+.ticks{position:relative}
+.ticks i{font-style:normal;border-left:1px solid var(--rule-firm);padding-left:5px}
+.ticks::after{
+  content:"60";position:absolute;right:0;top:0;
+  padding-right:5px;border-right:1px solid var(--rule-firm);
+}
+.legend{
+  display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:11px;
+  font-size:12.5px;color:var(--ink-soft);
+}
+.legend em{font-style:normal;display:inline-flex;align-items:center;gap:6px}
+.swatch{width:9px;height:9px;border-radius:1px;flex:0 0 auto;display:inline-block}
+
+/* ---------- pattern + docs ---------- */
+.pattern{
+  margin-top:20px;padding:13px 16px;background:var(--surface-sunk);
+  border-left:2px solid var(--navy);border-radius:0 2px 2px 0;
+}
+.pattern .k{font-size:11.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-mute);font-weight:600}
+.pattern .v{margin-top:3px;font-size:16px;color:var(--ink)}
+.docs{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));
+  gap:0;margin-top:22px;border-top:1px solid var(--rule);
+}
+.doc{padding:12px 16px 12px 0;border-bottom:1px solid var(--rule)}
+.doc b{display:block;font-size:13px;font-weight:600;color:var(--ink)}
+.doc code{font-size:11.5px;color:var(--ink-mute);display:block;margin-top:1px}
+.doc p{margin-top:5px;font-size:13.5px;color:var(--ink-soft);line-height:1.45}
+
+/* ---------- reference cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:16px}
+.card{
+  background:var(--surface);border:1px solid var(--rule);border-radius:3px;
+  padding:22px 22px 24px;box-shadow:var(--shadow);
+}
+.card h3{
+  font-size:16.5px;font-weight:600;letter-spacing:-.005em;margin-bottom:4px;
+}
+.card .sub{font-size:12.5px;color:var(--ink-mute);margin-bottom:14px}
+.card ol,.card ul{font-size:14.5px;color:var(--ink-soft)}
+.card ol li b,.card ul li b{color:var(--ink)}
+.verbs{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.verbs code{
+  background:var(--oxide-wash);color:var(--oxide);border:1px solid var(--oxide);
+  padding:2px 7px;border-radius:2px;font-size:12.5px;font-weight:600;
+}
+
+/* ---------- stamp block ---------- */
+.stamp{
+  border:1px solid var(--oxide);border-left-width:3px;border-radius:0 3px 3px 0;
+  background:var(--oxide-wash);padding:20px 22px;
+}
+.stamp h3{
+  font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--oxide);font-weight:700;margin-bottom:11px;
+}
+.stamp ul{font-size:15px;color:var(--ink)}
+.stamp li::marker{color:var(--oxide)}
+
+/* ---------- tables ---------- */
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:3px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+caption{text-align:left;padding:14px 16px 0;font-size:12.5px;color:var(--ink-mute)}
+th,td{padding:10px 16px;text-align:left;border-bottom:1px solid var(--rule);vertical-align:top}
+thead th{
+  font-size:11.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-mute);
+  font-weight:600;background:var(--surface-sunk);border-bottom:1px solid var(--rule-firm);
+}
+tbody tr:last-child td{border-bottom:0}
+td.num{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-variant-numeric:tabular-nums;color:var(--navy);font-weight:600}
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--rule-firm);background:var(--surface)}
+footer .shell{padding-top:26px;padding-bottom:40px;display:flex;flex-wrap:wrap;gap:18px 40px;justify-content:space-between}
+footer p{font-size:13px;color:var(--ink-mute);max-width:56ch}
+
+/* ---------- print ---------- */
+@media print{
+  :root{--paper:#fff;--surface:#fff;--surface-sunk:#f2f4f7;--shadow:none}
+  body{font-size:10.5pt}
+  .rail{display:none}
+  .body-grid{grid-template-columns:1fr}
+  .week,.card,.tablewrap{break-inside:avoid;box-shadow:none}
+  section{break-inside:auto}
+  a{text-decoration:none;color:var(--ink)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<header class="masthead">
+  <div class="shell">
+    <p class="eyebrow">Internal enablement program &middot; Digital &amp; Contact Center</p>
+    <h1 class="serif">Microsoft&nbsp;365 Copilot Boot Camp</h1>
+    <p class="dek">Six weekly hours that take a contact center team from asking Copilot for things to checking what it gives back, writing with it under real stakes, and packaging the result so a colleague can use it without learning any of this.</p>
+    <div class="factstrip">
+      <div class="fact"><b>6</b><span>weekly sessions</span></div>
+      <div class="fact"><b>60</b><span>minutes each</span></div>
+      <div class="fact"><b>42</b><span>documents</span></div>
+      <div class="fact"><b>50</b><span>reusable prompts</span></div>
+      <div class="fact"><b>0</b><span>real member records</span></div>
+    </div>
+  </div>
+</header>
+
+<div class="shell body-grid">
+  <nav class="rail" aria-label="Program contents">
+    <h2>The arc</h2>
+    <ol>
+      <li><a href="#w1"><span class="num">01</span>Researcher</a></li>
+      <li><a href="#w2"><span class="num">02</span>Analyst</a></li>
+      <li><a href="#w3"><span class="num">03</span>Prompt Coach</a></li>
+      <li><a href="#w4"><span class="num">04</span>Writing Coach</a></li>
+      <li><a href="#w5"><span class="num">05</span>Agent Builder</a></li>
+      <li><a href="#w6"><span class="num">06</span>Capstone</a></li>
+    </ol>
+    <h2>Reference</h2>
+    <ol>
+      <li><a href="#quickref">Frameworks</a></li>
+      <li><a href="#rules">Data rules</a></li>
+      <li><a href="#evidence">Evidence</a></li>
+      <li><a href="#index">File index</a></li>
+    </ol>
+  </nav>
+
+  <main>
+
+    <section id="premise">
+      <div class="sec-head"><h2 class="serif">What this is</h2><span class="tag">Read first</span></div>
+      <p class="lede">Every session is an hour: a short teach, a live demo, twenty minutes where participants do the work themselves, and a debrief. Nobody watches a tool tour. Each week ends with a small submission, and the six weeks end with each person able to describe one improved workflow in sixty seconds, with a number behind it.</p>
+      <p class="lede">One fabricated institution runs through all six weeks, so the work compounds. A problem discovered in the Week&nbsp;2 data, reopened fraud claims climbing after every other metric recovers, is the same problem the Week&nbsp;5 agent is built to solve. The Week&nbsp;4 case file uses the Week&nbsp;1 policy timelines. None of it is real, and the material says so at the point of use, not just once at the start.</p>
+    </section>
+
+    <section id="w1">
+      <div class="sec-head"><h2 class="serif">The six weeks</h2><span class="tag">Run of show, drawn to scale</span></div>
+
+      <article class="week">
+        <div class="week-top">
+          <span class="wk-num">WEEK 01</span>
+          <div class="wk-title"><h3 class="serif">Researcher</h3><p class="q">How do I find something fast without getting burned by an answer that sounds right?</p></div>
+        </div>
+        <p>Four internal documents contradict each other about fraud claim timelines, and one is out of date. Participants build a briefing an agent could read in fifteen seconds on a live call, then check every number against the source themselves.</p>
+        <div class="ruler">
+          <div class="ruler-label"><span>Run of show</span><span>60 minutes</span></div>
+          <div class="bar" role="img" aria-label="Open 5 minutes, teach 10, demo 10, hands on 20, debrief 10, close 5">
+            <span class="b1" style="grid-column:span 5">5</span>
+            <span class="b2" style="grid-column:span 10">10</span>
+            <span class="b3" style="grid-column:span 10">10</span>
+            <span class="b4" style="grid-column:span 20">20</span>
+            <span class="b5" style="grid-column:span 10">10</span>
+            <span class="b6" style="grid-column:span 5">5</span>
+          </div>
+          <div class="ticks"><i>0</i><i>15</i><i>30</i><i>45</i></div>
+          <p class="legend">
+            <em><span class="swatch" style="background:var(--band-a)"></span>Open</em>
+            <em><span class="swatch" style="background:var(--band-b)"></span>Teach</em>
+            <em><span class="swatch" style="background:var(--band-c)"></span>Demo</em>
+            <em><span class="swatch" style="background:var(--band-d)"></span>Hands on</em>
+            <em><span class="swatch" style="background:var(--band-e)"></span>Debrief</em>
+            <em><span class="swatch" style="background:var(--band-f)"></span>Close</em>
+          </p>
+        </div>
+        <div class="pattern"><p class="k">Pattern taught</p><p class="v">Ask, shape, verify. An answer without a source is a rumor.</p></div>
+        <div class="docs">
+          <div class="doc"><b>Facilitator guide</b><code>facilitator-guide.md</code><p>Timed run of show, a demo built to start deliberately weak, and the questions you will actually get.</p></div>
+          <div class="doc"><b>Participant one pager</b><code>participant-onepager.md</code><p>The prompt scaffold, including the line that stops it guessing.</p></div>
+          <div class="doc"><b>Exercise</b><code>exercise.md</code><p>Four conflicting policy documents and a call-ready briefing to build.</p></div>
+          <div class="doc"><b>Solutions key</b><code>solutions-key.md</code><p>Every conflict and gap, plus two failure modes and how to handle each.</p></div>
+          <div class="doc"><b>Knowledge check</b><code>knowledge-check.md</code><p>Five questions with reasoning, not just letters.</p></div>
+          <div class="doc"><b>Announcement</b><code>announcement.md</code><p>Channel post, reminder, and email, with notes on what actually drives attendance.</p></div>
+        </div>
+      </article>
+
+      <article class="week" id="w2">
+        <div class="week-top">
+          <span class="wk-num">WEEK 02</span>
+          <div class="wk-title"><h3 class="serif">Analyst</h3><p class="q">How do I go from a table of numbers to something worth saying?</p></div>
+        </div>
+        <p>Eight weeks of contact center metrics, eight weeks of fraud claims, and an events list. One week looks terrible and three separate causes are hiding inside it, so any single explanation is wrong however good it sounds. The session includes catching the tool doing arithmetic wrong, live.</p>
+        <div class="ruler">
+          <div class="ruler-label"><span>Run of show</span><span>60 minutes</span></div>
+          <div class="bar" role="img" aria-label="Open 5 minutes, teach 10, demo 10, hands on 20, debrief 10, close 5">
+            <span class="b1" style="grid-column:span 5">5</span>
+            <span class="b2" style="grid-column:span 10">10</span>
+            <span class="b3" style="grid-column:span 10">10</span>
+            <span class="b4" style="grid-column:span 20">20</span>
+            <span class="b5" style="grid-column:span 10">10</span>
+            <span class="b6" style="grid-column:span 5">5</span>
+          </div>
+          <div class="ticks"><i>0</i><i>15</i><i>30</i><i>45</i></div>
+        </div>
+        <div class="pattern"><p class="k">Pattern taught</p><p class="v">Numbers get verified. Stories get generated.</p></div>
+        <div class="docs">
+          <div class="doc"><b>Facilitator guide</b><code>facilitator-guide.md</code><p>How to separate calculation from interpretation, and why you check a figure on screen even when it is right.</p></div>
+          <div class="doc"><b>Participant one pager</b><code>participant-onepager.md</code><p>The three competing explanations rule and where it comes from.</p></div>
+          <div class="doc"><b>Exercise</b><code>exercise.md</code><p>Two synthetic tables, an events list, and a director who needs an answer by morning.</p></div>
+          <div class="doc"><b>Solutions key</b><code>solutions-key.md</code><p>All three causes worked through, with verified arithmetic for fast grading.</p></div>
+          <div class="doc"><b>Knowledge check</b><code>knowledge-check.md</code><p>Where the real risk sits, and why a fivefold rate difference means separate causes.</p></div>
+          <div class="doc"><b>Announcement</b><code>announcement.md</code><p>Opens on the report that lands at ten past four on a Thursday.</p></div>
+        </div>
+      </article>
+
+      <article class="week" id="w3">
+        <div class="week-top">
+          <span class="wk-num">WEEK 03</span>
+          <div class="wk-title"><h3 class="serif">Prompt Coach</h3><p class="q">Why did my prompt fail, and how do I fix somebody else's?</p></div>
+        </div>
+        <p>The midpoint, and the session that makes the rest work. Five weak prompts from real situations get diagnosed against four elements. Then partners run each other's rewrites cold, with no explanation, which is how you find out whether a prompt carries its own context or only works for the person who wrote it.</p>
+        <div class="ruler">
+          <div class="ruler-label"><span>Run of show</span><span>60 minutes</span></div>
+          <div class="bar" role="img" aria-label="Open 5 minutes, teach 10, demo 10, paired work 20, debrief 10, close 5">
+            <span class="b1" style="grid-column:span 5">5</span>
+            <span class="b2" style="grid-column:span 10">10</span>
+            <span class="b3" style="grid-column:span 10">10</span>
+            <span class="b4" style="grid-column:span 20">20 pairs</span>
+            <span class="b5" style="grid-column:span 10">10</span>
+            <span class="b6" style="grid-column:span 5">5</span>
+          </div>
+          <div class="ticks"><i>0</i><i>15</i><i>30</i><i>45</i></div>
+        </div>
+        <div class="pattern"><p class="k">Pattern taught</p><p class="v">Diagnose, do not rewrite. It is almost never more than one missing element, and it is usually shape.</p></div>
+        <div class="docs">
+          <div class="doc"><b>Facilitator guide</b><code>facilitator-guide.md</code><p>Opens with your own bad prompt, and includes a demo that breaks a working prompt on purpose.</p></div>
+          <div class="doc"><b>Participant one pager</b><code>participant-onepager.md</code><p>The four elements and the template, on one side of a page.</p></div>
+          <div class="doc"><b>Exercise</b><code>exercise.md</code><p>Five broken prompts from agent, QA, team lead, fraud, and internal comms desks.</p></div>
+          <div class="doc"><b>Solutions key</b><code>solutions-key.md</code><p>A diagnosis for each, and the two failure modes that kill prompt libraries.</p></div>
+          <div class="doc"><b>Knowledge check</b><code>knowledge-check.md</code><p>The diagnostic move and the portability test.</p></div>
+          <div class="doc"><b>Announcement</b><code>announcement.md</code><p>Announces the paired format in advance so nobody is surprised into leaving.</p></div>
+        </div>
+      </article>
+
+      <article class="week" id="w4">
+        <div class="week-top">
+          <span class="wk-num">WEEK 04</span>
+          <div class="wk-title"><h3 class="serif">Writing Coach</h3><p class="q">How do I write the same facts for three readers without asserting what I cannot support?</p></div>
+        </div>
+        <p>The highest stakes week and the one that looks easiest. One fabricated case file becomes a supervisor summary, an internal case note, and a member letter. The claim outcome is partial, the file is deliberately incomplete, and first drafts routinely accuse the member of something the file never established.</p>
+        <div class="ruler">
+          <div class="ruler-label"><span>Run of show</span><span>60 minutes</span></div>
+          <div class="bar" role="img" aria-label="Open 5 minutes, teach 10, demo 10, hands on 20, read aloud 10, close 5">
+            <span class="b1" style="grid-column:span 5">5</span>
+            <span class="b2" style="grid-column:span 10">10</span>
+            <span class="b3" style="grid-column:span 10">10</span>
+            <span class="b4" style="grid-column:span 20">20</span>
+            <span class="b5" style="grid-column:span 10">read aloud</span>
+            <span class="b6" style="grid-column:span 5">5</span>
+          </div>
+          <div class="ticks"><i>0</i><i>15</i><i>30</i><i>45</i></div>
+        </div>
+        <div class="pattern"><p class="k">Pattern taught</p><p class="v">Same facts, different reader, and confidence is a factual claim.</p></div>
+        <div class="docs">
+          <div class="doc"><b>Facilitator guide</b><code>facilitator-guide.md</code><p>Built around the gap between insufficient evidence and a determination, plus the read aloud round.</p></div>
+          <div class="doc"><b>Participant one pager</b><code>participant-onepager.md</code><p>The three readers and the verbs to search your own draft for.</p></div>
+          <div class="doc"><b>Exercise</b><code>exercise.md</code><p>A synthetic case file with a partial outcome and four documented gaps.</p></div>
+          <div class="doc"><b>Solutions key</b><code>solutions-key.md</code><p>All three documents worked in full, and a debrief note saying plainly that the model letter is not a template.</p></div>
+          <div class="doc"><b>Knowledge check</b><code>knowledge-check.md</code><p>Which sentence the file supports, and where an inconsistency belongs.</p></div>
+          <div class="doc"><b>Announcement</b><code>announcement.md</code><p>Leads with two sentences that look identical and are not.</p></div>
+        </div>
+      </article>
+
+      <article class="week" id="w5">
+        <div class="week-top">
+          <span class="wk-num">WEEK 05</span>
+          <div class="wk-title"><h3 class="serif">Agent Builder</h3><p class="q">How do I stop retyping the same prompt and package it for everyone else?</p></div>
+        </div>
+        <p>An agent is a saved set of instructions with a name, one job, and a fixed list of sources. Participants write a five part specification for an intake completeness checker, run it in a chat window, then spend the rest of the time trying to break it. Every first build has a hole, including one that matters a great deal.</p>
+        <div class="ruler">
+          <div class="ruler-label"><span>Run of show</span><span>60 minutes</span></div>
+          <div class="bar" role="img" aria-label="Open 5 minutes, teach 10, live build 10, hands on 20, debrief 10, close 5">
+            <span class="b1" style="grid-column:span 5">5</span>
+            <span class="b2" style="grid-column:span 10">10</span>
+            <span class="b3" style="grid-column:span 10">build</span>
+            <span class="b4" style="grid-column:span 20">20</span>
+            <span class="b5" style="grid-column:span 10">10</span>
+            <span class="b6" style="grid-column:span 5">5</span>
+          </div>
+          <div class="ticks"><i>0</i><i>15</i><i>30</i><i>45</i></div>
+        </div>
+        <div class="pattern"><p class="k">Pattern taught</p><p class="v">Narrow job, tight sources, explicit guardrails. Break it before you share it.</p></div>
+        <div class="docs">
+          <div class="doc"><b>Facilitator guide</b><code>facilitator-guide.md</code><p>Deflates the autonomy expectation in the first thirty seconds, and covers the tenant prep most people skip.</p></div>
+          <div class="doc"><b>Participant one pager</b><code>participant-onepager.md</code><p>The five part spec and the three tests that actually test something.</p></div>
+          <div class="doc"><b>Exercise</b><code>exercise.md</code><p>An intake standard, three test notes, and one claim the standard does not cover.</p></div>
+          <div class="doc"><b>Solutions key</b><code>solutions-key.md</code><p>A complete worked spec, what each test should reveal, and the inference nobody should draw.</p></div>
+          <div class="doc"><b>Knowledge check</b><code>knowledge-check.md</code><p>Scope discipline, and why a wide source quietly beats a narrow guardrail.</p></div>
+          <div class="doc"><b>Announcement</b><code>announcement.md</code><p>Sets honest expectations and gives a week of runway for the showcase.</p></div>
+        </div>
+      </article>
+
+      <article class="week" id="w6">
+        <div class="week-top">
+          <span class="wk-num">WEEK 06</span>
+          <div class="wk-title"><h3 class="serif">Capstone and Showcase</h3><p class="q">What do I actually have to show for six weeks?</p></div>
+        </div>
+        <p>Everyone presents. One workflow, the before number and where it came from, the change shown on screen, the after number, and one thing that did not work. A five minute slot costs six and a half once you add the question and the screen handoff, so forty five minutes holds six presenters, not nine. Plan the cohort against that before promising anyone a slot.</p>
+        <div class="ruler">
+          <div class="ruler-label"><span>Run of show</span><span>60 minutes</span></div>
+          <div class="bar" role="img" aria-label="Open 5 minutes, showcases 45, pattern round 7, close 3">
+            <span class="b1" style="grid-column:span 5">5</span>
+            <span class="b3" style="grid-column:span 45">45 showcases</span>
+            <span class="b5" style="grid-column:span 7">7</span>
+            <span class="b6" style="grid-column:span 3">3</span>
+          </div>
+          <div class="ticks"><i>0</i><i>15</i><i>30</i><i>45</i></div>
+          <p class="legend">
+            <em><span class="swatch" style="background:var(--band-a)"></span>Open</em>
+            <em><span class="swatch" style="background:var(--band-c)"></span>Showcases</em>
+            <em><span class="swatch" style="background:var(--band-e)"></span>Pattern round</em>
+            <em><span class="swatch" style="background:var(--band-f)"></span>Close</em>
+          </p>
+        </div>
+        <div class="pattern"><p class="k">Pattern taught</p><p class="v">Small and real beats large and vague. Habits survive only when attached to a trigger already in the week.</p></div>
+        <div class="docs">
+          <div class="doc"><b>Facilitator guide</b><code>facilitator-guide.md</code><p>Slot arithmetic, the format table by cohort size, and the question that asks what did not stick.</p></div>
+          <div class="doc"><b>Participant one pager</b><code>participant-onepager.md</code><p>The five minute structure and the difference between estimating and inventing.</p></div>
+          <div class="doc"><b>Exercise</b><code>exercise.md</code><p>Capstone prep and the evidence card, with a completed example.</p></div>
+          <div class="doc"><b>Solutions key</b><code>solutions-key.md</code><p>What separates a strong showcase, and how to handle a manufactured number without deflating anyone.</p></div>
+          <div class="doc"><b>Knowledge check</b><code>knowledge-check.md</code><p>What makes a capstone credible and which habits last.</p></div>
+          <div class="doc"><b>Announcement</b><code>announcement.md</code><p>One week of notice, plus a post session message that publishes the failures too.</p></div>
+        </div>
+      </article>
+    </section>
+
+    <section id="quickref">
+      <div class="sec-head"><h2 class="serif">Quick reference</h2><span class="tag">Pin this</span></div>
+      <p class="lede">Four things from the program that people use standing up. Everything else lives in the week folders.</p>
+      <div class="cards">
+        <div class="card">
+          <h3 class="serif">Why a prompt failed</h3>
+          <p class="sub">Week 3 &middot; one element, not four</p>
+          <ol>
+            <li><b>Goal.</b> The outcome, not the topic.</li>
+            <li><b>Context.</b> Who reads it and what constrains it.</li>
+            <li><b>Source.</b> What it may use.</li>
+            <li><b>Shape.</b> Format, length, structure.</li>
+          </ol>
+          <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">Add the missing one and rerun. Rewriting from scratch teaches you nothing about what mattered.</p>
+        </div>
+        <div class="card">
+          <h3 class="serif">Before you send it</h3>
+          <p class="sub">Week 4 &middot; confidence is a claim</p>
+          <p style="font-size:14.5px;color:var(--ink-soft)">Search your own draft for these. Each one asserts something about what you know.</p>
+          <div class="verbs">
+            <code>determined</code><code>confirmed</code><code>established</code><code>verified</code><code>proved</code><code>found that</code>
+          </div>
+          <p style="margin-top:13px;font-size:14px;color:var(--ink-soft)">Then check the source for every instance. The accurate sentence is usually the clumsier one. Write the clumsier one.</p>
+        </div>
+        <div class="card">
+          <h3 class="serif">Testing an agent</h3>
+          <p class="sub">Week 5 &middot; three tests, in order</p>
+          <ol>
+            <li><b>In scope.</b> It works. Move on fast.</li>
+            <li><b>Next door to its job.</b> Does the guardrail hold, or does it help?</li>
+            <li><b>Outside its sources.</b> Does it say so, or fill the gap?</li>
+          </ol>
+          <p style="margin-top:12px;font-size:14px;color:var(--ink-soft)">If all three passed, you asked the same question three ways.</p>
+        </div>
+        <div class="card">
+          <h3 class="serif">Making it stick</h3>
+          <p class="sub">Week 6 &middot; triggers, not intentions</p>
+          <p style="font-size:14.5px;color:var(--ink-soft)">An intention decays in about nine days. A trigger attached to something already in your week does not.</p>
+          <p style="margin-top:11px;font-size:14.5px;color:var(--ink-mute)"><s>I will use Copilot more.</s></p>
+          <p style="margin-top:6px;font-size:14.5px;color:var(--ink)">Every Friday, when I build the update, I paste the numbers into this prompt.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="rules">
+      <div class="sec-head"><h2 class="serif">Data and accuracy rules</h2><span class="tag">Non negotiable</span></div>
+      <div class="stamp">
+        <h3>Stated in Week 1, restated at the point of use</h3>
+        <ul>
+          <li>Every exercise uses fabricated material for a fictional institution. No real member names, account or card numbers, case identifiers, or screenshots of live systems, in any session.</li>
+          <li>The synthetic policies differ from real regulation on purpose. No timeline, provisional credit rule, or member notice requirement leaves these exercises and enters live work.</li>
+          <li>Five prompts in the library are marked for live case work. Those are de-identified before use or they are not used.</li>
+          <li>Anything acted on gets its source opened and read by a person.</li>
+          <li>Every word that leaves the building has a human owner. Not the tool.</li>
+        </ul>
+      </div>
+      <p class="lede" style="margin-top:20px">The rule is stated once with weight rather than every five minutes, because constant repetition makes people anxious instead of careful. It is then restated at the point of use in the three sessions that get closest to live work: before anyone drafts a member letter, before anyone builds anything, and before anyone presents a real workflow.</p>
+    </section>
+
+    <section id="evidence">
+      <div class="sec-head"><h2 class="serif">What the program produces</h2><span class="tag">Evidence model</span></div>
+      <p class="lede">Each week is designed to leave a specific artifact behind. The facilitator records these within forty eight hours of each session, while they are still accurate, and participants are told in Week 1 that the record exists and what it is for. Names go in it only with spoken permission.</p>
+      <div class="tablewrap">
+        <table>
+          <caption>Each week maps to one outcome type and one thing you can point at later.</caption>
+          <thead><tr><th scope="col">Week</th><th scope="col">Outcome</th><th scope="col">Measure</th><th scope="col">Artifact</th></tr></thead>
+          <tbody>
+            <tr><td class="num">01</td><td>Verification habit</td><td>Submissions citing sources</td><td>Briefings</td></tr>
+            <tr><td class="num">02</td><td>Error detection</td><td>Errors caught</td><td>Verified figures</td></tr>
+            <tr><td class="num">03</td><td>Peer coaching</td><td>Prompts rewritten</td><td>Library entries</td></tr>
+            <tr><td class="num">04</td><td>Risk control</td><td>Assertions caught</td><td>Document sets</td></tr>
+            <tr><td class="num">05</td><td>Reusable build</td><td>Specs completed</td><td>Agent specs</td></tr>
+            <tr><td class="num">06</td><td>Documented gain</td><td>Cards submitted</td><td>Evidence cards</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="lede" style="margin-top:20px">The strongest outcomes are the caught errors, not the adoption counts. A participant who finds a wrong figure in generated analysis, or an unsupported claim in their own draft, demonstrates that the training produced a control rather than enthusiasm. The program summary reports what did not stick alongside what did, because a write up with no failures gets discounted by exactly the people worth persuading.</p>
+    </section>
+
+    <section id="index">
+      <div class="sec-head"><h2 class="serif">Package contents</h2><span class="tag">42 documents</span></div>
+      <p class="lede">A README at the root, six documents per week in the same order every week, and five shared references. Full descriptions are in the manifest.</p>
+      <div class="tablewrap">
+        <table>
+          <caption>Shared references sit alongside the six week folders.</caption>
+          <thead><tr><th scope="col">File</th><th scope="col">What it is for</th></tr></thead>
+          <tbody>
+            <tr><td><code>syllabus.md</code></td><td>The six week arc, the rules, and what the program deliberately does not cover</td></tr>
+            <tr><td><code>prompt-library.md</code></td><td>50 prompts across contact center, fraud, QA, reporting, and internal comms</td></tr>
+            <tr><td><code>facilitation-faq.md</code></td><td>Four kinds of skeptic, low adoption, and a straight answer on replacement</td></tr>
+            <tr><td><code>evidence-tracker.md</code></td><td>Week to outcome mapping, the quality log, and the check in agendas</td></tr>
+            <tr><td><code>MANIFEST.md</code></td><td>Every file with a description, counts, and the design assumptions</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tablewrap" style="margin-top:16px">
+        <table>
+          <caption>The same six documents appear in every week folder.</caption>
+          <thead><tr><th scope="col">Document</th><th scope="col">Audience</th><th scope="col">Used when</th></tr></thead>
+          <tbody>
+            <tr><td><code>facilitator-guide.md</code></td><td>Facilitator</td><td>Before and during</td></tr>
+            <tr><td><code>participant-onepager.md</code></td><td>Participant</td><td>During, printed</td></tr>
+            <tr><td><code>exercise.md</code></td><td>Participant</td><td>Hands on block</td></tr>
+            <tr><td><code>solutions-key.md</code></td><td>Facilitator</td><td>Debrief and grading</td></tr>
+            <tr><td><code>knowledge-check.md</code></td><td>Participant</td><td>After the session</td></tr>
+            <tr><td><code>announcement.md</code></td><td>Facilitator</td><td>Week before</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <div class="shell">
+    <p>Program handbook and quick reference. The working documents are the markdown files in the week folders; this page is the front door for anyone picking the program up for the first time.</p>
+    <p>All scenarios, policies, metrics, and case files in this package are fabricated for training. Riverstone Credit Union does not exist.</p>
+  </div>
+</footer>

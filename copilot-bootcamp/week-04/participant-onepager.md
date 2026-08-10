@@ -111,7 +111,6 @@ Three documents that are the same document at three lengths. A member letter con
 - Nothing you produce here goes to any real member.
 - Every word that leaves the building has a human owner. Not the tool.
 
-
 ## One habit to take with you
 
 Read anything member facing out loud before you send it. You will hear the sentence that sounds like an accusation, and you will not see it. That is the whole reason.

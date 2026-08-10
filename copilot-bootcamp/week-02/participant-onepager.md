@@ -87,7 +87,6 @@ A summary of what the table already showed, written in longer sentences than the
 - Do not upload live reporting into this exercise.
 - Label inferences as inferences when you pass work to somebody else.
 
-
 ## One habit to take with you
 
 When you send an analysis to anyone, include the sentence "what I would check next." It takes ten seconds and it protects you if the interpretation turns out to be wrong.

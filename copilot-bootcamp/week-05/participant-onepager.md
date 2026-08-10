@@ -93,7 +93,6 @@ A job description like "helps the team with fraud questions." Instructions that 
 - Do not connect an agent to anything that takes an action in a real system during this exercise.
 - Any agent you share with someone who will act on its output needs a named owner and a review date.
 
-
 ## Looking ahead
 
 Week 6 is the showcase. Five minutes each, one workflow you actually improved, with before and after. Start thinking about which one now, not the night before.

@@ -92,8 +92,6 @@ directly show. Do not merge separate causes into one narrative.
 
 **How to fix it in the room.** Put both percentages on screen next to each other. Ask: "If one event caused both of these, why did one move five times harder than the other?" Let them answer. Then have them rerun with one added line: "Do not merge separate causes into one narrative. Say how many distinct things are moving." Same data, different answer.
 
-**What to say:** "It gave you a story because you asked for a story. A story has one villain. Data usually has three."
-
 ## Failure mode two: arithmetic accepted because it was formatted
 
 **What it looks like.** The submission cites a figure like "a 436 percent increase in new account fraud." The number appears in a tidy bulleted list with a bold header and it is wrong. The participant never checked because the output looked finished.
@@ -105,8 +103,6 @@ directly show. Do not merge separate causes into one narrative.
 **The tell.** No verification note, or a verification note that says "checked and correct" without stating what was calculated or what number came out.
 
 **How to fix it in the room.** Do not lecture. Ask the participant to compute one percent change on screen, out loud, right then. It takes fifteen seconds and it settles the point permanently for everyone watching.
-
-**What to say:** "You get to cite numbers you checked. Everything else is a number Copilot mentioned, and those go in your notes, not in your director's inbox."
 
 ## Grading guidance
 
