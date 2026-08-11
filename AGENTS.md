@@ -3,7 +3,9 @@
 This file is the entry point for any AI coding agent (Codex, Claude Code,
 Gemini, or other) working on DavidOS. Read it fully before changing code.
 It is vendor-neutral and version-controlled; it supersedes
-`docs/handoff.md` (now a pointer here).
+`docs/handoff.md` (now a pointer here). [CLAUDE.md](CLAUDE.md) is a
+Claude Code-specific companion (repo map, conventions, failure modes); it
+adds orientation only and never outranks this file or the docs below.
 
 **AI tool and model routing.** Before selecting a model, assigning
 implementation, beginning review, or releasing work, read
@@ -107,6 +109,7 @@ Detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
 ```
 davidos/
   AGENTS.md          ← you are here
+  CLAUDE.md          Claude Code companion guide (subordinate to this file)
   docs/              operating docs (see index below)
   seed/              portable JSON/MD specs: agents, workflows, projects,
                      prompts, context — data, not code; readable by any AI

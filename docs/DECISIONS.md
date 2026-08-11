@@ -1865,3 +1865,30 @@ records the completed release.
   authority is created, ClickUp adoption creates no implementation
   authority, and no implementation package becomes active from this
   decision.
+
+## 2026-08-11 — CLAUDE.md added as a subordinate Claude Code companion guide
+
+- **Decision.** Added a root `CLAUDE.md`: a Claude Code-specific
+  orientation guide covering the repository map, architecture mental
+  model, command surface, validator invariants, coding/testing
+  conventions, definition of done, and common failure modes.
+- **Authority.** `CLAUDE.md` is explicitly subordinate. It states in its
+  own header that `AGENTS.md`, `docs/AI_TOOL_ROUTING.md`, and running
+  code outrank it, and it reproduces the mandatory reading order rather
+  than replacing it. It creates no new rule, no new authorization, and
+  no exception to the two-gate model.
+- **Why a separate file rather than more AGENTS.md.** Claude Code loads
+  `CLAUDE.md` automatically, so the alternative was either duplicating
+  agent rules into a tool-specific file with no stated precedence, or
+  relying on the tool to find `AGENTS.md` on its own. A short,
+  explicitly subordinate pointer-plus-orientation file keeps AGENTS.md
+  vendor-neutral and keeps a single authoritative rule source.
+- **Drift control.** `AGENTS.md` now names `CLAUDE.md` in its opening
+  paragraph and in its directory map, so the relationship is visible
+  from the authoritative side. `npm run validate:docs` already checks
+  every relative markdown link in every tracked `.md`, so broken
+  cross-references in `CLAUDE.md` fail the verification gate.
+- **Scope boundary.** Documentation only. No runtime behavior,
+  dependency, schema, storage key, persistence logic, test, deployed
+  feature, package authorization, or gate state changed. `AGENTS.md`
+  content was not otherwise modified.
