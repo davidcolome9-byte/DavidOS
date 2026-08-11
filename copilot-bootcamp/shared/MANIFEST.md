@@ -131,13 +131,13 @@ copilot-bootcamp/
 | prompt-library.md | 50 tested prompts across five work areas |
 | facilitation-faq.md | Skeptics, low adoption, and replacement fears |
 | evidence-tracker.md | Week to outcome mapping and promotion packet lines |
-| handbook.html | Designed program overview, for sharing |
+| handbook.html | The whole package as one page, for sharing |
 | MANIFEST.md | This file |
 
 - **syllabus.md** documents the six week arc, the single synthetic narrative that runs through it, the data rules, what the program deliberately does not cover, and the three follow up commitments after Week 6.
 - **prompt-library.md** contains 50 prompts, five of them flagged **Live data** because they are built for real case work and must be de-identified before use, organized into contact center operations (10), fraud review and disputes (10), quality assurance and coaching (8), reporting and analysis (9), internal communications (8), and prompt repair and agent building (5). Each has a fill in structure and most include an explicit instruction for handling missing information.
 - **facilitation-faq.md** covers four types of skeptic and the different response each needs, a straight answer to "AI will replace us" that avoids the four phrases people distrust, a four cause diagnosis for low adoption, questions you must answer accurately, and what to do if the program is not working.
-- **handbook.html** is a self contained page presenting the program: the six week arc with each run of show drawn to scale, the four frameworks people use standing up, the data rules, and the evidence model. Open it in a browser or share the link. It prints cleanly.
+- **handbook.html** is the whole package as a single self contained page: the six week arc with each run of show drawn to scale, the frameworks people use standing up, the data rules, the evidence model, and all 42 documents in full behind a search box. Open it in a browser or share the link. It prints cleanly, with every document expanded. It is built from the markdown files, so it is a snapshot: if you edit a document, the page needs rebuilding to match.
 - **evidence-tracker.md** maps each week to an outcome type, measure, and artifact, provides a quality evidence log format, and drafts six promotion packet lines including one that reports what did not stick.
 
 ## Totals

@@ -34,7 +34,7 @@ Every week folder holds the same six documents.
 | `knowledge-check.md` | Participant | After |
 | `announcement.md` | Facilitator | Week before |
 
-`shared/handbook.html` is the same program presented as a designed page, for sharing or printing. `shared/MANIFEST.md` describes all 43 files in full.
+`shared/handbook.html` is the whole package as a single page, with every document searchable and readable in place. Open it in a browser to share or print. It is built from the markdown files, so treat it as a snapshot and rebuild it if you edit a document. `shared/MANIFEST.md` describes all 43 files.
 
 ## How a session runs
 
