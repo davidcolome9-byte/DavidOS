@@ -1,4 +1,4 @@
-# Current State — 2026-08-08
+# Current State — 2026-08-11
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -45,12 +45,24 @@ deployed feature behavior.
   `1bd96758d2a01dad9fabd222d9742ffad27bb9ad`; merge SHA
   `ec9fc2136fe050fc036d1d635abbbab696685503`. The bakery prototype
   remains a local synthetic artifact and was not published.
+- **CLAUDE.md Claude Code companion guide — 2026-08-11:**
+  documentation-only change, merged through PR #39 at merge SHA
+  `5818095840a10ed6b634f9bd03a39f5ad545aad2`. Merge was explicitly
+  authorized by David as Gate 2; post-merge CI and the GitHub Pages
+  deploy both succeeded on that SHA. It added a root `CLAUDE.md`
+  subordinate to `AGENTS.md` and `docs/AI_TOOL_ROUTING.md`, one
+  AGENTS.md pointer to it, and one append-only decision entry. No
+  runtime behavior, dependency, schema, storage key, persistence logic,
+  test, or deployed feature changed, and it creates no implementation
+  authority.
 - **Current package:** no implementation package is active. The
-  governance-only ClickUp adoption record creates no implementation
-  authority. The next bounded package must be selected by Program
-  Control and explicitly authorized by David; it is not inferred from
-  DOS-GOV-003A, DOS-TEST-001B, DOS-EXEC-001A, a backlog status, a
-  roadmap entry, an integration foundation, or an automatic workflow.
+  governance-only ClickUp adoption record and the CLAUDE.md
+  documentation change create no implementation authority. The next
+  bounded package must be selected by Program Control and explicitly
+  authorized by David; it is not inferred from DOS-GOV-003A,
+  DOS-TEST-001B, DOS-EXEC-001A, the CLAUDE.md documentation change, a
+  backlog status, a roadmap entry, an integration foundation, or an
+  automatic workflow.
 - **Roadmap and automation facts are not authorization.** Existing
   provider foundations and the repository's automatic Pages workflow are
   historical/current product facts, not permission to connect a
