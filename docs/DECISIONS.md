@@ -1892,3 +1892,30 @@ records the completed release.
   dependency, schema, storage key, persistence logic, test, deployed
   feature, package authorization, or gate state changed. `AGENTS.md`
   content was not otherwise modified.
+
+## 2026-08-24 — DOS-GOV-006A: portfolio authority taxonomy refresh (local candidate)
+
+- **Status honesty.** This entry records a local documentation candidate
+  on `work/davidos-portfolio-authority-refresh-20260824`. It is not
+  pushed, merged, deployed, or released.
+- **Decision.** Replace the obsolete “exactly three projects” model with
+  a categorized authority index: DavidOS as command/coordination; Handoff
+  OS as shared continuity infrastructure; MacroPilot and Operation David
+  as specialist applications; Dating / Social Assistant as a specialist
+  workflow; davidos-control / DOS-CTL as engineering/control
+  infrastructure; GitHub, Google Drive, ClickUp, and the F/H preservation
+  system as supporting services; named research and agent workspaces as
+  experimental/research; and named retired systems plus stale evidence as
+  historical.
+- **Authority boundary.** The index points to each project's own
+  repository, accepted project record, or preserved evidence. It does not
+  copy each project's Truth into DavidOS and does not make DavidOS a
+  second central state database. Categorization does not activate a
+  package, grant implementation authority, change accepted lifecycle
+  state, or revive experimental or historical work.
+- **Scope and authorization.** This owner-authorized Gate 1 correction is
+  documentation only. It changes `docs/CURRENT_STATE.md`,
+  `docs/AI_TOOL_ROUTING.md`, and this append-only decision log. It
+  authorizes one local candidate commit and validation only; no source,
+  runtime, test, dependency, provider, credential, data-flow, push, pull
+  request, merge, deployment, or release action is authorized.

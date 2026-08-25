@@ -491,10 +491,14 @@ integration foundation, or automatic workflow activates that package.
 - Option 4 remains deferred and separately approval-bound.
 - The next program package must be selected and explicitly authorized
   separately; it must not be inferred from OL-032.
-- The active project portfolio is exactly: DavidOS; Operation David /
-  Health & Fitness; Social Assistant / Dating Assistant. Product domains,
-  workflow labels, seed projects, and roadmap headings do not create
-  additional active projects.
+- Portfolio authority follows the categorized pointer index in
+  `docs/CURRENT_STATE.md`: DavidOS coordinates but does not absorb or
+  duplicate the authoritative Truth of Handoff OS, specialist
+  applications/workflows, engineering/control infrastructure, supporting
+  services, experiments, or historical evidence. A taxonomy entry does
+  not activate a package or grant implementation authority; product
+  domains, agent names, seed projects, and roadmap headings do not by
+  themselves create additional portfolio authorities.
 - DOS-CTL-001A Phase 0 Revision 1 Correction Round 3 is complete,
   approved, Gate 1 closed, frozen, and synthetic-only. Real DavidOS
   execution and DOS-CTL Phase 1 are not authorized.
