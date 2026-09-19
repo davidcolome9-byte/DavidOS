@@ -9,6 +9,7 @@ import {
   selectJournalAuthority,
 } from '../storage/stateJournal';
 import type { ExclusiveLockCoordinator } from '../storage/stateJournal';
+import { defined } from '../../testSupport/defined';
 
 function memoryStorage() {
   const data = new Map<string, string>();
@@ -161,8 +162,8 @@ describe('production journal persistence controller', () => {
     const selected = selectJournalAuthority(storage).authority!;
     expect(JSON.parse(selected.raw).openLoops[0].label).toBe('newest');
     const payloads = generationWrites(storage).map(([, , raw]) => raw ?? '');
-    expect(JSON.parse(payloads[0]).openLoops).toEqual([]);
-    expect(JSON.parse(payloads[payloads.length - 1]).openLoops[0].label).toBe('newest');
+    expect(JSON.parse(defined(payloads[0], 'first generation payload')).openLoops).toEqual([]);
+    expect(JSON.parse(defined(payloads[payloads.length - 1], 'last generation payload')).openLoops[0].label).toBe('newest');
     expect(payloads.some((raw) => raw.includes('superseded'))).toBe(false);
   });
 

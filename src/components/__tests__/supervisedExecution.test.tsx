@@ -17,6 +17,7 @@ import { STORAGE_KEY } from '../../lib/storage/localStore';
 import { selectJournalAuthority } from '../../lib/storage/stateJournal';
 import type { AppState } from '../../lib/types';
 import { CODING_COORDINATOR } from '../../lib/agents/executionAgentRegistry';
+import { defined } from '../../testSupport/defined';
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -151,6 +152,9 @@ function byId(id: string): Element {
 const storedState = (): AppState =>
   JSON.parse(selectJournalAuthority(storage as unknown as Storage).authority!.raw) as AppState;
 
+/** The first stored execution record; its existence is part of what tests assert. */
+const firstRecord = () => defined(storedState().executionRecords[0], 'first stored execution record');
+
 /** Fill the draft editor with valid (marker-carrying) values and create it. */
 async function createFullDraft() {
   await click('+ New record');
@@ -207,7 +211,7 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
   it('all authority defaults to NOT authorized and persists that way', async () => {
     await mount({});
     await createFullDraft();
-    const record = storedState().executionRecords[0];
+    const record = firstRecord();
     expect(Object.values(record.authority).every((v) => v === false)).toBe(true);
     const notAuthorized = container.textContent!.match(/NOT authorized/g) ?? [];
     expect(notAuthorized.length).toBeGreaterThanOrEqual(6);
@@ -223,7 +227,7 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     expect(button('Mark ready').disabled).toBe(false);
 
     await click('Mark ready');
-    expect(storedState().executionRecords[0].status).toBe('ready');
+    expect(firstRecord().status).toBe('ready');
     expect(maybeButton('Mark ready')).toBeUndefined();
     expect(maybeButton('Complete')).toBeUndefined();
     expect(maybeButton('Return to draft')).toBeDefined();
@@ -236,21 +240,21 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     await click('Mark ready');
     await click('Begin work (external)');
 
-    const idp = `exec-${storedState().executionRecords[0].id}`;
+    const idp = `exec-${firstRecord().id}`;
     await type(byId(`${idp}-blocker`), `${PRIV}-blocker-text`);
     await click('Mark blocked');
     expect(container.textContent).toContain(`Blocked: ${PRIV}-blocker-text`);
-    expect(storedState().executionRecords[0].blockerSummary).toBe(`${PRIV}-blocker-text`);
+    expect(firstRecord().blockerSummary).toBe(`${PRIV}-blocker-text`);
 
     await click('Resume work');
-    expect(storedState().executionRecords[0].blockerSummary).toBeUndefined();
+    expect(firstRecord().blockerSummary).toBeUndefined();
     expect(container.textContent).not.toContain(`${PRIV}-blocker-text`);
 
     await type(byId(`${idp}-decision`), `${PRIV}-decision-text`);
     await click('Request approval');
     expect(container.textContent).toContain(`Required decision: ${PRIV}-decision-text`);
     await click('Resume work');
-    expect(storedState().executionRecords[0].decisionSummary).toBeUndefined();
+    expect(firstRecord().decisionSummary).toBeUndefined();
     expect(container.textContent).not.toContain(`${PRIV}-decision-text`);
   });
 
@@ -262,14 +266,14 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     expect(button('Complete').disabled).toBe(true);
     expect(container.textContent).toContain('Completion requires at least one valid evidence item.');
 
-    const idp = `exec-${storedState().executionRecords[0].id}`;
+    const idp = `exec-${firstRecord().id}`;
     await type(byId(`${idp}-evidence-ref`), `${PRIV}-evidence-ref`);
     await click('Add evidence (local)');
-    expect(storedState().executionRecords[0].evidence).toHaveLength(1);
+    expect(firstRecord().evidence).toHaveLength(1);
     expect(button('Complete').disabled).toBe(false);
 
     await click('Complete');
-    const record = storedState().executionRecords[0];
+    const record = firstRecord();
     expect(record.status).toBe('completed');
     expect(record.closedAt).toBeTruthy();
     // Terminal: no mutation or transition controls remain.
@@ -287,14 +291,14 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     await createFullDraft();
     await click('Mark ready');
     await click('Begin work (external)');
-    const idp = `exec-${storedState().executionRecords[0].id}`;
+    const idp = `exec-${firstRecord().id}`;
     await type(byId(`${idp}-evidence-ref`), 'evidence-x');
     await click('Add evidence (local)');
     await type(byId(`${idp}-gate`), `${PRIV}-gate-label`);
     await click('Add gate (local)');
     expect(button('Complete').disabled).toBe(true);
     await click('Approve');
-    expect(storedState().executionRecords[0].approvalGates[0].decision).toBe('approved');
+    expect(defined(firstRecord().approvalGates[0], 'approval gate').decision).toBe('approved');
     expect(button('Complete').disabled).toBe(false);
   });
 
@@ -323,8 +327,9 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     await click('Copy packet (nothing is sent)');
     expect(container.textContent).toContain('the packet was NOT copied');
     const after = storedState();
-    expect(after.executionRecords[0].status).toBe('ready');
-    expect(after.executionRecords[0].evidence).toHaveLength(0);
+    const afterRecord = defined(after.executionRecords[0], 'stored execution record');
+    expect(afterRecord.status).toBe('ready');
+    expect(afterRecord.evidence).toHaveLength(0);
     expect(after.auditLog.some((e) => e.command.startsWith('execution_packet_copied'))).toBe(false);
     expect(after.auditLog.length).toBe(before.auditLog.length);
   });
@@ -335,7 +340,7 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     await createFullDraft();
     await click('Mark ready');
     await click('Begin work (external)');
-    const idp = `exec-${storedState().executionRecords[0].id}`;
+    const idp = `exec-${firstRecord().id}`;
     await type(byId(`${idp}-blocker`), `${PRIV}-blocker`);
     await click('Mark blocked');
     await click('Resume work');
@@ -356,9 +361,9 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     await createFullDraft();
     await click('Cancel record…');
     // Nothing changed yet — confirm step only.
-    expect(storedState().executionRecords[0].status).toBe('draft');
+    expect(firstRecord().status).toBe('draft');
     await click('Confirm cancel (terminal)');
-    expect(storedState().executionRecords[0].status).toBe('cancelled');
+    expect(firstRecord().status).toBe('cancelled');
     expect(maybeButton('Cancel record…')).toBeUndefined();
     expect(maybeButton('Edit draft')).toBeUndefined();
   });
@@ -399,7 +404,7 @@ describe('Supervised execution section (DOS-AGT-001A)', () => {
     await createFullDraft();
     await click('Mark ready');
     const state = storedState();
-    const recordId = state.executionRecords[0].id;
+    const recordId = defined(state.executionRecords[0], 'stored execution record').id;
     expect(recordId.length).toBeGreaterThanOrEqual(8);
     const serialized = JSON.stringify(state.auditLog);
     expect(serialized).not.toContain(recordId);

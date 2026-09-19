@@ -10,6 +10,7 @@ import {
 import { buildResetState } from '../storage/resetState';
 import { buildDefaultState } from '../../data/defaultState';
 import type { AppState } from '../types';
+import { defined } from '../../testSupport/defined';
 
 /** Minimal in-memory localStorage for node-environment tests. */
 function fakeLocalStorage(overrides: Partial<Storage> = {}) {
@@ -221,7 +222,7 @@ describe('normalizeState', () => {
     const n = normalizeState(dirty);
     expect(n.priorities).toHaveLength(1);
     expect(n.prompts).toEqual([]);
-    expect(n.projects[0].relatedPrompts).toEqual([]);
+    expect(defined(n.projects[0], 'normalized project').relatedPrompts).toEqual([]);
     expect(n.settings.theme).toBe('dark');
   });
 

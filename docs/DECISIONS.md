@@ -1919,3 +1919,45 @@ records the completed release.
   authorizes one local candidate commit and validation only; no source,
   runtime, test, dependency, provider, credential, data-flow, push, pull
   request, merge, deployment, or release action is authorized.
+
+## 2026-09-19 — DOS-APP-20260919 bounded local app completion
+
+David authorized reversible implementation of the existing bounded app backlog,
+with an independent review and local evidence, from baseline
+`cdf3cbb8b348dd4c29db5560bf4cf046e398eb52`. The selected package covers
+OL-013, OL-014, OL-016–OL-021, and OL-028. Historical no-active-package
+statements are superseded only for this package. The routing doctrine and
+adopted coordination/portfolio architecture are unchanged. This is a local
+candidate, not a merge, deployment, physical-device acceptance, or completion
+of the broader autonomous-execution vision.
+
+- Reuse the existing app, registries, store, Vite loader, and test tools. No new
+  dependencies, provider integration, account, background service, or dashboard.
+- Derive router labels/defaults from the registry. Generate seed backups from
+  the app's actual default/export modules; use a distinct seed-backup filename
+  and exclusive-create writes, refusing all existing output paths. Tests use
+  synthetic temporary directories only; personal backups are not accessed.
+- Add Context creation with explicit kind selection, required fields, local-write
+  notice, redacted audit, and session-honest feedback. Existing asynchronous
+  journal persistence and failure warnings retain their semantics.
+- Keep disclosure controls mounted and share one labelled, keyboard-scrollable
+  panel component. Preserve the existing routes; use a query for Data navigation
+  while honoring the old secondary hash. More exposes its active section to
+  assistive technology; all vault editor labels identify their controls.
+- Enable both TypeScript indexing/casing checks. Use guards, fixed tuples, and
+  documented invariants rather than weakening compiler options. Preserve the
+  synchronous hash algorithm and journal format; add independent hash-oracle
+  cases and throwing test lookups. Empty workflow output-style lists are rejected
+  by registry validation instead of exposing an undefined default.
+- The first combined verification attempt overlapped a separate build, causing
+  the generated service worker to be stamped twice. This was a validation
+  sequencing error, not a source-worker regression. Final gates run serially.
+- Correct the stale development note that described the legacy key as live
+  state. It now points to the existing journal contract and app-managed reset;
+  no storage behavior changed.
+
+Verification counts and independent-review disposition belong in the current
+candidate section of CURRENT_STATE.md. Backlog entries remain implemented
+candidates until separately authorized merge/deployment. OL-026, provider work,
+major toolchain upgrades, and the existing OL-032 storage decisions are not
+reopened by this package.

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useStore } from '../state/store';
 import { measureStorageUsage } from '../lib/storage/storageUsage';
 import { downloadTextFile } from '../lib/storage/exportImport';
@@ -14,6 +14,14 @@ const PRIMARY_NAV = [
   { to: '/logs', icon: '📋', label: 'Logs' },
   { to: '/more', icon: '⋯', label: 'More' },
 ];
+
+// Routes reached through More (see MoreMenu.tsx) that have no tab of their own.
+// /agents hosts the Supervised execution section; /logs is a primary tab.
+const MORE_SUBROUTES = ['/agents', '/prompts', '/context', '/planning', '/health', '/settings'];
+
+function isMoreSubroute(pathname: string): boolean {
+  return MORE_SUBROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
 
 export default function Layout() {
   const { state, persistFailed, recovery, externalChange, committedGeneration, committedSequence } = useStore();
@@ -39,6 +47,8 @@ export default function Layout() {
   // condition (`externalChange`) lives in the store and keeps persistence
   // suppressed, so a dismissed dialog can never permit an overwrite — the
   // dialog is simply replaced by a persistent warning that can reopen it.
+  const { pathname } = useLocation();
+  const onMoreSubroute = isMoreSubroute(pathname);
   const [staleDialogDismissed, setStaleDialogDismissed] = useState(false);
   const staleDialogOpen = externalChange && !staleDialogDismissed;
   const headerRef = useRef<HTMLElement | null>(null);
@@ -123,7 +133,7 @@ export default function Layout() {
               copy before the old one is removed — on this device that may soon fail. Your last saved
               data stays protected, but new or unsaved changes may not be written. Export a backup (a
               copy of your data that does not itself free storage or raise the browser’s limit) from{' '}
-              <a href="#/settings">Settings → Data</a>. If pruning is available, pruning old saved
+              <a href="#/settings?section=data">Settings → Data</a>. If pruning is available, pruning old saved
               prompts can reduce storage usage; pruning is unavailable whenever saving is paused or
               failing. Export and recovery downloads stay available. Nothing is deleted
               automatically.
@@ -146,12 +156,26 @@ export default function Layout() {
         <Outlet />
       </main>
       <nav className="bottom-nav" ref={navRef}>
-        {PRIMARY_NAV.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
-            <span className="nav-icon">{item.icon}</span>
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+        {PRIMARY_NAV.map((item) =>
+          item.to === '/more' ? (
+            // NavLink only knows /more itself; a plain Link lets More stay
+            // highlighted (aria-current="true") on the pages it leads to.
+            <Link
+              key={item.to}
+              to={item.to}
+              className={pathname === '/more' || onMoreSubroute ? 'active' : ''}
+              aria-current={pathname === '/more' ? 'page' : onMoreSubroute ? 'true' : undefined}
+            >
+              <span className="nav-icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </Link>
+          ) : (
+            <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
+              <span className="nav-icon">{item.icon}</span>
+              <span>{item.label}</span>
+            </NavLink>
+          ),
+        )}
       </nav>
     </div>
   );

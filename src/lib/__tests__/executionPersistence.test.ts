@@ -3,6 +3,7 @@ import type { AppState, ExecutionRecord } from '../types';
 import { inspectStructure, normalizeState } from '../storage/localStore';
 import { parseImport, serializeState } from '../storage/exportImport';
 import { buildDefaultState } from '../../data/defaultState';
+import { defined } from '../../testSupport/defined';
 import { addApprovalGate, addEvidence, applyTransition, createExecutionRecord, decideApprovalGate } from '../agents/executionRecords';
 
 /** Synthetic privacy marker — must never appear in import diagnostics. */
@@ -90,7 +91,7 @@ describe('executionRecords import/export (DOS-AGT-001A)', () => {
   it('a legacy backup without executionRecords imports successfully as []', () => {
     const imported = parseImport(envelope(legacyState()));
     expect(imported.executionRecords).toEqual([]);
-    expect(imported.priorities[0].label).toBe('SENTINEL-PRIORITY');
+    expect(defined(imported.priorities[0], 'first imported priority').label).toBe('SENTINEL-PRIORITY');
   });
 
   it('export → import round-trips records with nested evidence and gates exactly', () => {
@@ -98,10 +99,11 @@ describe('executionRecords import/export (DOS-AGT-001A)', () => {
     const state: AppState = { ...buildDefaultState(), executionRecords: [record] };
     const imported = parseImport(serializeState(state));
     expect(imported.executionRecords).toEqual(JSON.parse(JSON.stringify([record])));
-    expect(imported.executionRecords[0].evidence).toHaveLength(1);
-    expect(imported.executionRecords[0].approvalGates[0].decision).toBe('approved');
-    expect(imported.executionRecords[0].authority.editCode).toBe(true);
-    expect(imported.executionRecords[0].authority.merge).toBe(false);
+    const importedRecord = defined(imported.executionRecords[0], 'first imported execution record');
+    expect(importedRecord.evidence).toHaveLength(1);
+    expect(defined(importedRecord.approvalGates[0], 'first approval gate').decision).toBe('approved');
+    expect(importedRecord.authority.editCode).toBe(true);
+    expect(importedRecord.authority.merge).toBe(false);
   });
 
   it('rejects a backup whose executionRecords collection is not an array', () => {

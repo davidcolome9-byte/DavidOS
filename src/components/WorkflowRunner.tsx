@@ -20,6 +20,7 @@ import { uid, nowIso } from '../lib/types';
 import type { AgentId, Handoff, Workflow, WorkflowArtifact } from '../lib/types';
 import RiskBadge from './RiskBadge';
 import PlanningContextDisclosure from './PlanningContextDisclosure';
+import RevealToggle from './RevealToggle';
 
 /** Locked "no notes typed" placeholders, keyed by planning-context mode (DOS-WF-002A). */
 const ZERO_NOTE_PLACEHOLDER: Record<'planning' | 'weekly', string> = {
@@ -50,7 +51,7 @@ export default function WorkflowRunner() {
   const [builtConfigKey, setBuiltConfigKey] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('preview');
   const [includeProfile, setIncludeProfile] = useState(true);
-  const [profileRevealLevel, setProfileRevealLevel] = useState(0); // 0=summary 1=metadata 2=text
+  const [profileRevealed, setProfileRevealed] = useState(false);
   const [includePlanningState, setIncludePlanningState] = useState(true);
   const [planningRevealed, setPlanningRevealed] = useState(false);
   const [flash, setFlash] = useState('');
@@ -146,7 +147,7 @@ export default function WorkflowRunner() {
 
   function pick(wf: Workflow) {
     setWorkflow(wf);
-    setStyle(wf.outputStyles[0]);
+    setStyle(resolveWorkflowOutputStyle(wf)); // the workflow's default (first) style
     setBuilt(null);
     setBuiltConfigKey(null);
     setWorkoutText('');
@@ -231,7 +232,7 @@ export default function WorkflowRunner() {
         });
     setBuilt(result);
     setBuiltConfigKey(currentConfigKey(workflow));
-    setProfileRevealLevel(0);
+    setProfileRevealed(false);
     setPlanningRevealed(false);
     audit({
       command: `Build prompt: ${workflow.name}`,
@@ -561,7 +562,7 @@ export default function WorkflowRunner() {
               counts={planningContext?.counts ?? null}
               block={planningBlock}
               revealed={planningRevealed}
-              onReveal={() => setPlanningRevealed(true)}
+              onToggleReveal={() => setPlanningRevealed((v) => !v)}
             />
           )}
 
@@ -622,11 +623,13 @@ export default function WorkflowRunner() {
                         </li>
                         <li className="small muted">Fields: {profileBlock.metadata.includedFieldPaths?.join(', ')}</li>
                       </ul>
-                      {profileRevealLevel < 2 ? (
-                        <button className="chip" onClick={() => setProfileRevealLevel(2)}>Show Inserted Health Profile Text</button>
-                      ) : (
-                        <pre className="output">{profileBlock.text}</pre>
-                      )}
+                      <RevealToggle
+                        panelId="health-profile-text"
+                        subject="Inserted Health Profile Text"
+                        revealed={profileRevealed}
+                        onToggle={() => setProfileRevealed((v) => !v)}
+                        text={profileBlock.text}
+                      />
                     </details>
                   )}
                   <details>

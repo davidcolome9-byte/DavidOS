@@ -316,7 +316,7 @@ function validateHandoffRelationships(push: Push, handoffs: unknown[]): void {
   // to the same original.
   for (const [, correctors] of correctorsByTarget) {
     if (correctors.length <= 1) continue;
-    const first = correctors[0];
+    const first = correctors[0]!; // correctors.length > 1 (guard above), so index 0 exists
     for (const dup of correctors.slice(1)) {
       push({ collection: 'handoffs', item: dup.ref, field: 'correctsHandoffId', expected: 'at most one correction per corrected handoff', message: `handoffs${dup.ref}: targets the same handoff as handoffs[${first.index}]; only one correction may reference an original.` });
     }
@@ -335,7 +335,7 @@ function validateHandoffRelationships(push: Push, handoffs: unknown[]): void {
     }
     // Walk the chain: superseded → its corrector → … → a live correction.
     const visited = new Set<number>([n.index]);
-    let cur = correctors[0];
+    let cur = correctors[0]!; // correctors.length === 0 was handled by the `continue` above
     let terminated = false;
     for (;;) {
       if (visited.has(cur.index)) break; // cycle

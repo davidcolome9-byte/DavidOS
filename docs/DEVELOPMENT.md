@@ -73,20 +73,35 @@ anything is uploaded to GitHub Pages; a failing gate aborts the deploy.
 
 ## Local persistence during development
 
-Live state is localStorage key `davidos-state-v1` (per origin — the dev
-server, preview server, and deployed app each have separate state).
+Live state is an immutable localStorage generation journal with alternating
+head records; see [DATA_MODEL.md](DATA_MODEL.md). `davidos-state-v1` is
+legacy migration input/fallback, so deleting that key does not reset a
+journal-backed app. The dev server, preview server, and deployed app each
+have separate state because they use separate origins.
 
-Clean reset options:
-1. In-app: Settings → Reset to seed (type RESET; preserves Health
-   Profile by default).
-2. DevTools: Application → Local Storage → delete `davidos-state-v1`.
-3. Nuclear: clear site data (also unregisters the service worker).
+Use Settings → Reset to seed (type RESET; preserves Health Profile by
+default) for an app-managed reset. Tests use isolated synthetic browser
+contexts and journal-aware helpers. Do not manually delete journal records
+or clear real device data to prepare a test.
 
 ## Seed / fixture data
 
 `seed/` ships generic starter data (bracket placeholders). To produce a
-personal starter backup locally, `scripts/seed-to-backup.mjs` writes into
-the gitignored `personal/` folder — its output must never be committed.
+generic starter backup locally, `node scripts/seed-to-backup.mjs` writes
+`personal/davidos-seed-backup.json` in the gitignored folder. It uses the
+app's actual `buildDefaultState` and `serializeState` through the existing
+Vite SSR loader, with no new dependency, environment-file loading, or
+development socket. It refuses every existing output path; there is no
+overwrite/force option. It never regenerates the user's personal backup.
+An optional output-path argument supports synthetic temporary tests; do
+not commit generated output or point agents at real personal backups.
+
+TypeScript enables `noUncheckedIndexedAccess` and
+`forceConsistentCasingInFileNames`. Indexed values need narrowing; only
+documented fixed-length/loop/regex invariants use non-null assertions.
+Tests use a throwing `defined` helper when missing data should fail the
+test. The synchronous SHA-256 implementation remains synchronous and is
+checked against an independent digest implementation at padding boundaries.
 
 ## Deploying
 

@@ -26,21 +26,31 @@ export function sha256Hex(input: string): string {
   dv.setUint32(padded.length - 4, bitLen >>> 0);
   dv.setUint32(padded.length - 8, Math.floor(bitLen / 0x100000000));
 
-  const h = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  // Fixed-length tuple: h[0]..h[7] are always defined, so no index assertions.
+  const h: [number, number, number, number, number, number, number, number] =
+    [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
   const w = new Array<number>(64);
 
+  // The `!` on K[...] and w[...] below are safe by construction: K has exactly
+  // 64 constants and every read index is within 0..63. Per block, w[0..15] are
+  // all written by the first loop, and the schedule loop writes w[i] only after
+  // reading w[i-16], w[i-15], w[i-7], w[i-2] (all < i, hence already set), so
+  // no read ever sees an unset slot. The assertions only satisfy
+  // noUncheckedIndexedAccess; the arithmetic is unchanged.
   for (let off = 0; off < padded.length; off += 64) {
     for (let i = 0; i < 16; i++) w[i] = dv.getUint32(off + i * 4);
     for (let i = 16; i < 64; i++) {
-      const s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
-      const s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
-      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+      const w15 = w[i - 15]!;
+      const w2 = w[i - 2]!;
+      const s0 = rotr(w15, 7) ^ rotr(w15, 18) ^ (w15 >>> 3);
+      const s1 = rotr(w2, 17) ^ rotr(w2, 19) ^ (w2 >>> 10);
+      w[i] = (w[i - 16]! + s0 + w[i - 7]! + s1) >>> 0;
     }
     let [a, b, c, d, e, f, g, hh] = h;
     for (let i = 0; i < 64; i++) {
       const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
       const ch = (e & f) ^ (~e & g);
-      const t1 = (hh + S1 + ch + K[i] + w[i]) >>> 0;
+      const t1 = (hh + S1 + ch + K[i]! + w[i]!) >>> 0;
       const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
       const maj = (a & b) ^ (a & c) ^ (b & c);
       const t2 = (S0 + maj) >>> 0;

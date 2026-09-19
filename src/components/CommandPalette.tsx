@@ -64,7 +64,8 @@ export default function CommandPalette() {
     const r = routeIntent(text);
     const commandRisk = classifyCommand(text);
     const blocked = requiresApproval(commandRisk); // external_write and above
-    const classSummary: Record<string, string> = {
+    // Keyed by the closed classification union, so the lookup below is total.
+    const classSummary: Record<RouteResult['classification'], string> = {
       supported: `Routed -> ${r.target} (confidence ${r.confidence}). Draft-only, nothing sent.`,
       unsupported: `Recognized ${r.intentLabel ?? 'an unsupported intent'} — no workflow exists yet. Nothing routed.`,
       ambiguous: `Ambiguous request — asked for clarification. Nothing routed.`,

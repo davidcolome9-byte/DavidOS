@@ -55,6 +55,11 @@ export default function ProjectVault() {
             + New
           </button>
         </h2>
+        {state.projects.length === 0 && (
+          <p className="muted small" data-testid="projects-empty">
+            No projects yet. Use <strong>+ New</strong> to add your first project — it stays on this device.
+          </p>
+        )}
         {state.projects.map((p) => (
           <details className="item" key={p.id}>
             <summary>
@@ -92,18 +97,18 @@ export default function ProjectVault() {
           {editing.name.trim() === '' && (
             <p id="project-name-hint" className="notice small" role="alert">A name is required to save this project.</p>
           )}
-          <label className="field">Status</label>
-          <select value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as ProjectStatus })}>
+          <label className="field" htmlFor="project-status">Status</label>
+          <select id="project-status" value={editing.status} onChange={(e) => setEditing({ ...editing, status: e.target.value as ProjectStatus })}>
             <option value="active">active</option>
             <option value="paused">paused</option>
             <option value="done">done</option>
           </select>
-          <label className="field">Area</label>
-          <input type="text" value={editing.area} onChange={(e) => setEditing({ ...editing, area: e.target.value })} />
-          <label className="field">Next action</label>
-          <input type="text" value={editing.nextAction} onChange={(e) => setEditing({ ...editing, nextAction: e.target.value })} />
-          <label className="field">Notes</label>
-          <textarea value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} />
+          <label className="field" htmlFor="project-area">Area</label>
+          <input id="project-area" type="text" value={editing.area} onChange={(e) => setEditing({ ...editing, area: e.target.value })} />
+          <label className="field" htmlFor="project-next-action">Next action</label>
+          <input id="project-next-action" type="text" value={editing.nextAction} onChange={(e) => setEditing({ ...editing, nextAction: e.target.value })} />
+          <label className="field" htmlFor="project-notes">Notes</label>
+          <textarea id="project-notes" value={editing.notes} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} />
           <div className="btn-row">
             <button className="primary" onClick={() => save(editing)} disabled={editing.name.trim() === ''}>Save (local)</button>
             <button onClick={() => setEditing(null)}>Cancel</button>

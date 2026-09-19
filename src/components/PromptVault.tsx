@@ -120,24 +120,26 @@ export default function PromptVault() {
           {editing.title.trim() === '' && (
             <p id="prompt-title-hint" className="notice small" role="alert">A title is required to save this prompt.</p>
           )}
-          <label className="field">Category</label>
-          <input type="text" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
-          <label className="field">Tags (comma-separated)</label>
+          <label className="field" htmlFor="prompt-category">Category</label>
+          <input id="prompt-category" type="text" value={editing.category} onChange={(e) => setEditing({ ...editing, category: e.target.value })} />
+          <label className="field" htmlFor="prompt-tags">Tags (comma-separated)</label>
           <input
+            id="prompt-tags"
             type="text"
             value={editing.tags.join(', ')}
             onChange={(e) => setEditing({ ...editing, tags: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) })}
           />
-          <label className="field">Agent</label>
+          <label className="field" htmlFor="prompt-agent">Agent</label>
           <select
+            id="prompt-agent"
             value={editing.agentId ?? ''}
             onChange={(e) => setEditing({ ...editing, agentId: (e.target.value || undefined) as Prompt['agentId'] })}
           >
             <option value="">(none)</option>
             {AGENTS.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
-          <label className="field">Prompt body</label>
-          <textarea style={{ minHeight: 180 }} value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} />
+          <label className="field" htmlFor="prompt-body">Prompt body</label>
+          <textarea id="prompt-body" style={{ minHeight: 180 }} value={editing.body} onChange={(e) => setEditing({ ...editing, body: e.target.value })} />
           <p className="muted small">
             ⚠️ Keep sensitive personal/work details as [PLACEHOLDERS] — prompts get pasted into external AI tools.
           </p>

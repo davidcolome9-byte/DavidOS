@@ -19,6 +19,7 @@ import { sha256Hex } from '../../lib/utils/hash';
 import { buildDefaultState } from '../../data/defaultState';
 import { QUOTA_UNITS_ESTIMATE } from '../../lib/storage/storageUsage';
 import type { AppState, Handoff, WorkflowArtifact } from '../../lib/types';
+import { defined } from '../../testSupport/defined';
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -224,11 +225,10 @@ function seedSizedJournal(fraction: number) {
   storage.store.clear();
   const sized: AppState = {
     ...buildDefaultState(),
-    artifacts: [artifact('sized', '2026-01-01T00:00:00.000Z')],
-  };
-  sized.artifacts[0] = {
-    ...sized.artifacts[0],
-    content: 'X'.repeat(Math.ceil(QUOTA_UNITS_ESTIMATE * fraction)),
+    artifacts: [{
+      ...artifact('sized', '2026-01-01T00:00:00.000Z'),
+      content: 'X'.repeat(Math.ceil(QUOTA_UNITS_ESTIMATE * fraction)),
+    }],
   };
   // Store the NORMALIZED form so the raw is a fixed point of normalizeState:
   // boot re-normalizes to a byte-identical string, so the provider enqueues no
@@ -593,7 +593,7 @@ describe('the meter refreshes AFTER the journal commit lands, not on the memory-
     // Memory changed, but the meter has NOT jumped ahead of persistence: no new
     // generation is committed yet, so classification stays exactly where the
     // last verified commit left it.
-    expect(probedState!.artifacts[0].id).toBe('big');
+    expect(defined(probedState!.artifacts[0], 'newest artifact').id).toBe('big');
     expect(probedCommittedSequence).toBe(seqBefore);
     expect(byTestId('storage-level-badge')!.textContent).toBe('ok');
 
@@ -622,11 +622,10 @@ describe('the meter refreshes AFTER the journal commit lands, not on the memory-
     storage.store.clear();
     const migrating: AppState = {
       ...buildDefaultState(),
-      artifacts: [artifact('legacy-big', '2026-01-01T00:00:00.000Z')],
-    };
-    migrating.artifacts[0] = {
-      ...migrating.artifacts[0],
-      content: 'X'.repeat(Math.ceil(QUOTA_UNITS_ESTIMATE * 0.32)),
+      artifacts: [{
+        ...artifact('legacy-big', '2026-01-01T00:00:00.000Z'),
+        content: 'X'.repeat(Math.ceil(QUOTA_UNITS_ESTIMATE * 0.32)),
+      }],
     };
     storage.store.set(STORAGE_KEY, JSON.stringify(normalizeState(migrating)));
 
@@ -717,7 +716,7 @@ describe('journal-backed prune transaction', () => {
 
     expect(generationWrites()).toHaveLength(1);
     expect(headWrites()).toHaveLength(1);
-    const first = JSON.parse(generationWrites()[0][2]!) as AppState;
+    const first = JSON.parse(defined(generationWrites()[0], 'first generation write')[2]!) as AppState;
     expect(first.artifacts.map((item) => item.id)).toEqual(['a4', 'a3']);
     expect(first.handoffs).toEqual(HANDOFFS);
     expect(first.auditLog.find((entry) => entry.command.includes('Prune saved prompts') && entry.command.includes('completed')))

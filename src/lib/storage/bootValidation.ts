@@ -179,7 +179,7 @@ const APPROVED_DAMAGE_CATEGORIES: ReadonlySet<string> = new Set([
 export function summarizeStructuralDamage(invalidFields: readonly string[]): string {
   const counts = new Map<string, number>();
   for (const field of invalidFields) {
-    const top = field.split(/[.[]/, 1)[0];
+    const top = field.split(/[.[]/, 1)[0] ?? '';
     const label = APPROVED_DAMAGE_CATEGORIES.has(top) ? top : 'AppState records';
     counts.set(label, (counts.get(label) ?? 0) + 1);
   }

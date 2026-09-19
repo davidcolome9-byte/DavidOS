@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { routeIntent } from '../router/intentRouter';
+import { AGENTS } from '../agents/agentRegistry';
+import { AGENT_NAMES, DEFAULT_WORKFLOW, routeIntent } from '../router/intentRouter';
 
 describe('intentRouter', () => {
+  it('derives router labels and launch defaults from the agent registry', () => {
+    for (const agent of AGENTS) {
+      expect(AGENT_NAMES[agent.id]).toBe(agent.name);
+      expect(DEFAULT_WORKFLOW[agent.id]).toBe(agent.defaultWorkflow);
+    }
+    expect(Object.keys(AGENT_NAMES).sort()).toEqual(AGENTS.map((a) => a.id).sort());
+    expect(Object.keys(DEFAULT_WORKFLOW).sort()).toEqual(AGENTS.map((a) => a.id).sort());
+  });
+
   it('routes fitness screenshot cleanup to the fitness agent', () => {
     const r = routeIntent('Turn these workout screenshots into a clean handoff and ignore goals or remaining.');
     expect(r.target).toBe('fitness');

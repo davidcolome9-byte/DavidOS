@@ -8,6 +8,7 @@ import { STORAGE_KEY, RECOVERY_KEY_PREFIX } from '../../lib/storage/localStore';
 import { JOURNAL_GENERATION_PREFIX, commitJournalState } from '../../lib/storage/stateJournal';
 import type { ExclusiveLockCoordinator } from '../../lib/storage/stateJournal';
 import type { AppState } from '../../lib/types';
+import { defined } from '../../testSupport/defined';
 
 /** Runs the callback immediately — no real Web Locks in happy-dom. */
 const immediateLockCoordinator = (): ExclusiveLockCoordinator => ({
@@ -61,6 +62,8 @@ let root: Root | null = null;
 let storage: ReturnType<typeof fakeLocalStorage>;
 let downloads: Array<{ filename: string; text: Promise<string> }>;
 let revokedUrls: string[];
+// Existence of the Nth download is part of what these tests assert.
+const download = (i: number) => defined(downloads[i], `download #${i}`);
 
 beforeEach(() => {
   storage = fakeLocalStorage();
@@ -82,7 +85,8 @@ beforeEach(() => {
     revokedUrls.push(url);
   };
   vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
-    if (downloads.length > 0) downloads[downloads.length - 1].filename = this.download;
+    const latest = downloads[downloads.length - 1];
+    if (latest) latest.filename = this.download;
   });
 });
 
@@ -153,8 +157,8 @@ describe('recovery exports (no StoreProvider required)', () => {
     await click(fallbackButton(/Download saved data/));
 
     expect(downloads).toHaveLength(1);
-    expect(downloads[0].filename).toMatch(/^davidos-raw-state-.*\.json$/);
-    expect(await downloads[0].text).toBe(SYN_RAW_BLOB);
+    expect(download(0).filename).toMatch(/^davidos-raw-state-.*\.json$/);
+    expect(await download(0).text).toBe(SYN_RAW_BLOB);
   });
 
   it('offers no raw-data download when nothing is stored', async () => {
@@ -185,8 +189,8 @@ describe('recovery exports (no StoreProvider required)', () => {
     await click(fallbackButton(/Download saved data/));
 
     expect(downloads).toHaveLength(1);
-    expect(await downloads[0].text).toBe(committed);
-    expect(await downloads[0].text).not.toBe(SYN_RAW_BLOB);
+    expect(await download(0).text).toBe(committed);
+    expect(await download(0).text).not.toBe(SYN_RAW_BLOB);
   });
 
   it('falls back to the legacy blob when no journal authority exists', async () => {
@@ -197,7 +201,7 @@ describe('recovery exports (no StoreProvider required)', () => {
     await mount(<Bomb />);
     await click(fallbackButton(/Download saved data/));
 
-    expect(await downloads[0].text).toBe(SYN_RAW_BLOB);
+    expect(await download(0).text).toBe(SYN_RAW_BLOB);
   });
 
   it('surfaces every preserved recovery blob as its own byte-exact download', async () => {
@@ -210,12 +214,12 @@ describe('recovery exports (no StoreProvider required)', () => {
     await click(fallbackButton(/Download recovery copy 1/));
     await click(fallbackButton(/Download recovery copy 2/));
     expect(downloads).toHaveLength(2);
-    expect(await downloads[0].text).toBe(SYN_RECOVERY_A);
-    expect(await downloads[1].text).toBe(SYN_RECOVERY_B);
+    expect(await download(0).text).toBe(SYN_RECOVERY_A);
+    expect(await download(1).text).toBe(SYN_RECOVERY_B);
     // Fixed-format, index-based filenames — never derived from storage keys.
-    expect(downloads[0].filename).toMatch(/^davidos-recovery-copy-1-[\dTZ-]+-\d+\.json$/);
-    expect(downloads[1].filename).toMatch(/^davidos-recovery-copy-2-[\dTZ-]+-\d+\.json$/);
-    expect(downloads[0].filename).not.toContain(keyA);
+    expect(download(0).filename).toMatch(/^davidos-recovery-copy-1-[\dTZ-]+-\d+\.json$/);
+    expect(download(1).filename).toMatch(/^davidos-recovery-copy-2-[\dTZ-]+-\d+\.json$/);
+    expect(download(0).filename).not.toContain(keyA);
   });
 
   it('Reload triggers a page reload', async () => {
@@ -245,7 +249,7 @@ describe('independent, guarded, bounded storage discovery', () => {
     await mount(<Bomb />);
 
     await click(fallbackButton(/Download saved data/));
-    expect(await downloads[0].text).toBe(SYN_RAW_BLOB);
+    expect(await download(0).text).toBe(SYN_RAW_BLOB);
     // Recovery list degrades to empty without crashing the fallback.
     expect(container.textContent).not.toContain('Preserved recovery copies');
   });
@@ -258,7 +262,7 @@ describe('independent, guarded, bounded storage discovery', () => {
     await mount(<Bomb />);
 
     await click(fallbackButton(/Download saved data/));
-    expect(await downloads[0].text).toBe(SYN_RAW_BLOB);
+    expect(await download(0).text).toBe(SYN_RAW_BLOB);
   });
 
   it('key enumeration throwing MIDWAY keeps the recovery copies found so far', async () => {
@@ -304,7 +308,7 @@ describe('independent, guarded, bounded storage discovery', () => {
     await mount(<Bomb />);
 
     await click(fallbackButton(/Download saved data/));
-    expect(await downloads[0].text).toBe(SYN_RAW_BLOB);
+    expect(await download(0).text).toBe(SYN_RAW_BLOB);
   });
 
   it('a primary discovery failure does not prevent exporting readable recovery copies', async () => {
@@ -320,7 +324,7 @@ describe('independent, guarded, bounded storage discovery', () => {
 
     expect([...container.querySelectorAll('button')].some((b) => /Download saved data/.test(b.textContent ?? ''))).toBe(false);
     await click(fallbackButton(/Download recovery copy 1/));
-    expect(await downloads[0].text).toBe(SYN_RECOVERY_A);
+    expect(await download(0).text).toBe(SYN_RECOVERY_A);
   });
 });
 
@@ -353,7 +357,7 @@ describe('filenames are fixed, sanitized, and never key-derived', () => {
       expect(d.filename).not.toContain('SYN-PRIVATE-DIAGNOSIS-XYZ');
     }
     // The bytes themselves are still exported exactly.
-    expect(await downloads[0].text).toBe(SYN_RECOVERY_A);
+    expect(await download(0).text).toBe(SYN_RECOVERY_A);
   });
 
   it('repeated primary exports produce unique filenames (beyond the calendar day)', async () => {

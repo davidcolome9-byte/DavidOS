@@ -1,5 +1,19 @@
 # Open Loops — Prioritized Backlog
 
+## Local candidate update — 2026-09-19
+
+DOS-APP-20260919 implements OL-013, OL-014, OL-016, OL-017, OL-018,
+OL-019, OL-020, OL-021, and OL-028 in an isolated local candidate.
+They remain here until merge/deployment: **Implemented candidate** is not
+the **Resolved** release status defined below. Combined verification passed
+(942 unit/component tests, 129 browser tests); independent read-only review
+returned READY FOR CANDIDATE COMMIT with no blocking findings, after its own
+165 targeted tests and 21 browser scenarios passed.
+David's current bounded authorization
+supersedes historical no-active-package statements only for this package;
+provider, credential, storage redesign, push, merge, and deployment work
+remain outside it. See [CURRENT_STATE.md](CURRENT_STATE.md) for evidence.
+
 The single authoritative backlog. Every item: stable ID, domain, kind
 (defect / maintenance / environmental / future capability), problem,
 evidence, priority (P1 highest), dependencies, approach, acceptance
@@ -232,8 +246,9 @@ selected and explicitly authorized.
   authorized
 
 ### OL-013 · Router duplicates agent names/default workflows from seed
+- **2026-09-19 candidate:** Router names/defaults now derive from the agent registry; registry parity and routing regressions cover the change.
 - **Domain:** dead code/drift risk · **Kind:** maintenance ·
-  **Status:** Verified + Ready
+  **Status:** Implemented candidate — not merged/deployed
 - **Evidence (re-verified 2026-07-17):** `src/lib/router/intentRouter.ts:6-22`
   hardcodes `AGENT_NAMES`/`DEFAULT_WORKFLOW` that `agentRegistry`
   already exposes (both maps re-exported at the bottom of the file);
@@ -243,8 +258,9 @@ selected and explicitly authorized.
 - **Complexity:** S · **Approval:** no
 
 ### OL-014 · scripts/seed-to-backup.mjs re-implements default state
+- **2026-09-19 candidate:** The generator uses the app default/export modules through existing Vite SSR, writes a separate seed-backup filename, and refuses existing output. Synthetic temporary tests cover parity, import, and overwrite refusal; real personal files were not accessed.
 - **Domain:** dead code/duplication · **Kind:** maintenance ·
-  **Status:** Verified + Ready
+  **Status:** Implemented candidate — not merged/deployed
 - **Evidence:** duplicates `parseFrontmatter`, four context items, and
   seed lists from `src/data/` (audit §2.1); omits newer AppState keys.
   Script still present and unrewritten at `f01a822`.
@@ -276,14 +292,16 @@ selected and explicitly authorized.
 ## P3 — polish, a11y, hardening
 
 ### OL-016 · No top safe-area inset (notched devices, standalone PWA)
-- **Kind:** defect (mobile polish) · **Status:** Verified + Ready
+- **2026-09-19 candidate:** Header padding includes the top safe-area inset. Software CSS and emulated geometry are covered; physical-notch acceptance is NOT RUN.
+- **Kind:** defect (mobile polish) · **Status:** Implemented candidate — not merged/deployed
 - **Evidence (re-verified 2026-07-17):** `index.html` `viewport-fit=cover`
   with no `env(safe-area-inset-top)` on `.app-header`
   (`src/styles/index.css`); bottom inset IS handled (index.css:54,87).
 - **Complexity:** S · **Approval:** no
 
 ### OL-017 · Bottom nav shows no active tab on More sub-pages
-- **Kind:** defect (UX polish) · **Status:** Verified + Ready
+- **2026-09-19 candidate:** More stays active, including aria-current, on its secondary routes; primary tabs retain their own active state.
+- **Kind:** defect (UX polish) · **Status:** Implemented candidate — not merged/deployed
 - **Evidence (re-verified 2026-07-17):** `Layout.tsx` uses plain NavLink
   `isActive` only; on /agents /prompts /context /planning /health
   /settings nothing highlights.
@@ -291,7 +309,8 @@ selected and explicitly authorized.
 - **Complexity:** S · **Approval:** no
 
 ### OL-018 · /settings#data deep link never scrolls to the Data card
-- **Kind:** defect (UX polish) · **Status:** Verified + Ready
+- **2026-09-19 candidate:** Data links use ?section=data and explicitly scroll/focus the Data heading; legacy /settings#data is supported.
+- **Kind:** defect (UX polish) · **Status:** Implemented candidate — not merged/deployed
 - **Evidence (re-verified 2026-07-17):** `MoreMenu.tsx:43` still links
   `/settings#data` under HashRouter; no scroll handling in
   `Settings.tsx` (`id="data"`).
@@ -300,7 +319,8 @@ selected and explicitly authorized.
 - **Complexity:** S · **Approval:** no
 
 ### OL-019 · Missing empty states (ProjectVault, ContextVault)
-- **Kind:** defect (UX polish) · **Status:** Verified + Ready
+- **2026-09-19 candidate:** Project/Context empty states and a validated Context create/cancel flow are implemented, with local-write disclosure and redacted audit entries.
+- **Kind:** defect (UX polish) · **Status:** Implemented candidate — not merged/deployed
 - **Evidence (re-verified 2026-07-17):** zero projects leaves a bare
   card; `ContextVault.tsx` has no create action so an empty import
   yields a permanently empty page.
@@ -309,7 +329,8 @@ selected and explicitly authorized.
 - **Complexity:** S · **Approval:** no
 
 ### OL-020 · Unassociated form labels in vault editors
-- **Kind:** defect (a11y) · **Status:** Verified + Ready
+- **2026-09-19 candidate:** All Project/Prompt editor labels and the Context body label are associated with their controls.
+- **Kind:** defect (a11y) · **Status:** Implemented candidate — not merged/deployed
 - **Evidence (re-verified 2026-07-17):** the required Name/Title fields
   gained `htmlFor` associations with the OL-012 vault fix (`524bdb9`),
   but the remaining labels are still unassociated:
@@ -320,7 +341,8 @@ selected and explicitly authorized.
 - **Complexity:** S · **Approval:** no
 
 ### OL-021 · tsconfig hardening
-- **Kind:** maintenance · **Status:** Inferred + Ready
+- **2026-09-19 candidate:** Both noUncheckedIndexedAccess and forceConsistentCasingInFileNames are enabled. Narrowing and documented fixed-size invariants preserve runtime behavior; hash oracle tests cover block boundaries and Unicode.
+- **Kind:** maintenance · **Status:** Implemented candidate — not merged/deployed
 - **Evidence (re-verified 2026-07-17):** `tsconfig.json` still lacks
   `noUncheckedIndexedAccess` and `forceConsistentCasingInFileNames`;
   `intentRouter.ts` trusts `scores[0]`/`scores[1]`.
@@ -340,8 +362,9 @@ selected and explicitly authorized.
   upgrade
 
 ### OL-028 · Planning and profile reveal panels lose keyboard focus and cannot be keyboard-scrolled
+- **2026-09-19 candidate:** Both reveal paths share a mounted Show/Hide toggle and a labelled focusable panel. Browser checks exercise focus retention and overflowing keyboard scroll.
 - **Domain:** accessibility · **Kind:** defect / hardening ·
-  **Status:** Verified + Ready
+  **Status:** Implemented candidate — not merged/deployed
 - **Problem:** in the Workflow Runner, activating "Show Inserted Planning
   State Text" (`PlanningContextDisclosure.tsx`) or the equivalent Health
   Profile reveal control unmounts the trigger button and replaces it with

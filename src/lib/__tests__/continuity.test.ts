@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getPriorHandoffs, buildPrompt, deleteHandoff, normalizeHandoffRelationships, hasCorrections } from '../workflows/continuity';
 import type { Handoff, HealthFitnessProfile, Workflow } from '../types';
+import { defined } from '../../testSupport/defined';
 
 const mkHandoff = (over: Partial<Handoff>): Handoff => ({
   id: over.id ?? Math.random().toString(36).slice(2),
@@ -55,7 +56,7 @@ describe('getPriorHandoffs', () => {
   it('trims to target count, newest first', () => {
     const got = getPriorHandoffs(many, 'fitness-handoff', 7);
     expect(got).toHaveLength(7);
-    expect(got[0].id).toBe('h9');
+    expect(defined(got[0], 'first prior handoff').id).toBe('h9');
   });
 
   it('default target of 3 works', () => {
@@ -87,7 +88,7 @@ describe('getPriorHandoffs', () => {
       mkHandoff({ id: 'early-entry', entryDate: '2026-06-05', dateConfidence: 'explicit', createdAt: '2026-06-25T10:00:00.000Z' }),
     ];
     const got = getPriorHandoffs(list, 'fitness-handoff', 3);
-    expect(got[0].id).toBe('late-entry');
+    expect(defined(got[0], 'first prior handoff').id).toBe('late-entry');
   });
 });
 
@@ -138,8 +139,9 @@ describe('correction-relationship integrity (Priority 4)', () => {
   it('normalization repairs an orphaned correction at import/boot', () => {
     // A correction whose original is absent (corrupt/partial backup).
     const repaired = normalizeHandoffRelationships([corr()]);
-    expect(repaired[0].status).toBe('active');
-    expect(repaired[0].correctsHandoffId).toBeUndefined();
+    const orphan = defined(repaired[0], 'repaired handoff');
+    expect(orphan.status).toBe('active');
+    expect(orphan.correctsHandoffId).toBeUndefined();
   });
 
   it('normalization is idempotent (reload preserves valid relationships)', () => {

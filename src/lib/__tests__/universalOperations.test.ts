@@ -25,6 +25,7 @@ import {
   type UniversalWorkflowRecord,
 } from '../workflows/universalOperations';
 import type { Agent, Workflow } from '../types';
+import { defined } from '../../testSupport/defined';
 
 const action = (overrides: Partial<UniversalActionRecord>): UniversalActionRecord => ({
   id: 'action',
@@ -62,16 +63,21 @@ describe('universal operations registry wiring', () => {
   });
 
   it('rejects malformed and duplicate agent ids', () => {
-    const base = AGENTS[0];
+    const base = defined(AGENTS[0], 'first registered agent');
     expect(() => validateAgentRegistry([{ ...base, id: 'Bad Id' } as unknown as Agent])).toThrow(/malformed id/);
     expect(() => validateAgentRegistry([base, { ...base }])).toThrow(/duplicate id/);
   });
 
   it('rejects malformed, duplicate, and unknown-agent workflow ids', () => {
-    const base = WORKFLOWS[0];
+    const base = defined(WORKFLOWS[0], 'first registered workflow');
     expect(() => validateWorkflowRegistry([{ ...base, id: 'Bad Id' } as Workflow])).toThrow(/malformed id/);
     expect(() => validateWorkflowRegistry([base, { ...base }])).toThrow(/duplicate id/);
     expect(() => validateWorkflowRegistry([{ ...base, agentId: 'missing_agent' } as unknown as Workflow])).toThrow(/unknown agent/);
+  });
+
+  it('rejects a workflow with no output styles (the style fallback needs a first entry)', () => {
+    const base = defined(WORKFLOWS[0], 'first registered workflow');
+    expect(() => validateWorkflowRegistry([{ ...base, outputStyles: [] }])).toThrow(/no output styles/);
   });
 
   it('keeps universal operations seed specs free of private locators and values', () => {

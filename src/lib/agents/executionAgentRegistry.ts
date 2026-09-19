@@ -77,7 +77,8 @@ export function validateExecutionAgentRegistry(
   }
   // Exact identity, not just a syntactically valid id: DOS-AGT-001A ships
   // precisely the coding-coordinator, and a cast cannot smuggle another.
-  if (profiles[0].id !== 'coding-coordinator') {
+  // The length !== 1 check above guarantees exactly one profile.
+  if (profiles[0]?.id !== 'coding-coordinator') {
     throw new Error('Execution agent registry must contain exactly the "coding-coordinator" profile.');
   }
   return profiles;

@@ -13,6 +13,7 @@ import {
   validateExecutionRecordsCollectionUnknown,
 } from '../agents/executionRecords';
 import type { AppState, ExecutionRecord } from '../types';
+import { defined } from '../../testSupport/defined';
 
 // DOS-AGT-001A review correction 1 — malformed PERSISTED execution records
 // must go through the standard deep-validation → invalid classification →
@@ -150,8 +151,9 @@ describe('boot deep validation of executionRecords (review correction 1)', () =>
     expect(storage.data.get(recovery.recoveryKey!)).toBe(raw);
     // Exactly one survivor: the first record; the duplicate was removed.
     expect(state!.executionRecords).toHaveLength(1);
-    expect(state!.executionRecords[0].id).toBe('duperec001');
-    expect(state!.executionRecords[0].title).toBe('Valid task'); // first, not 'Second copy'
+    const survivor = defined(state!.executionRecords[0], 'surviving execution record');
+    expect(survivor.id).toBe('duperec001');
+    expect(survivor.title).toBe('Valid task'); // first, not 'Second copy'
     expect(state!.executionRecords.filter((r) => r.title === 'Second copy')).toEqual([]);
     // The surviving collection passes the full unknown-safe validation —
     // this assertion fails meaningfully if an invalid record ever survives.

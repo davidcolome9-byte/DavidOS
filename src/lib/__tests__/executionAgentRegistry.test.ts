@@ -7,6 +7,7 @@ import {
   type ExecutionAgentProfile,
 } from '../agents/executionAgentRegistry';
 import { AGENTS } from '../agents/agentRegistry';
+import { defined } from '../../testSupport/defined';
 
 function profile(overrides: Partial<ExecutionAgentProfile> = {}): ExecutionAgentProfile {
   return {
@@ -24,8 +25,9 @@ function profile(overrides: Partial<ExecutionAgentProfile> = {}): ExecutionAgent
 describe('execution agent registry (DOS-AGT-001A)', () => {
   it('contains exactly one fixed profile with the approved id and name', () => {
     expect(EXECUTION_AGENTS).toHaveLength(1);
-    expect(EXECUTION_AGENTS[0].id).toBe('coding-coordinator');
-    expect(EXECUTION_AGENTS[0].name).toBe('DavidOS Coding Coordinator');
+    const only = defined(EXECUTION_AGENTS[0], 'the fixed execution agent profile');
+    expect(only.id).toBe('coding-coordinator');
+    expect(only.name).toBe('DavidOS Coding Coordinator');
     expect(getExecutionAgent('coding-coordinator')).toBe(CODING_COORDINATOR);
     expect(getExecutionAgent('nope')).toBeUndefined();
   });

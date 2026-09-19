@@ -82,12 +82,13 @@ export function useModalFocus<T extends HTMLElement>(
       }
       if (e.key !== 'Tab' || !dialog) return;
       const focusables = [...dialog.querySelectorAll<HTMLElement>(MODAL_FOCUSABLE_SELECTOR)];
-      if (focusables.length === 0) {
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (!first || !last) {
+        // No focusable content: keep focus on the dialog itself.
         e.preventDefault();
         return;
       }
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
       const active = document.activeElement;
       if (e.shiftKey && (active === first || active === dialog)) {
         e.preventDefault();

@@ -37,6 +37,19 @@ Two kinds of data:
 - `intentRouter.ts` — turns scores into a `RouteResult`: target agent, confidence
   (heuristic, capped at 0.9), human-readable reasoning, suggested workflow, next action.
 
+Router labels and default workflow ids derive from the seed-backed agent
+registry rather than a second hand-maintained map. The seed-backup utility
+loads the app's real default-state/export modules with the existing Vite
+SSR loader; its output is exclusive-create, never an overwrite.
+
+The local DOS-APP-20260919 candidate also adds Context Vault creation through
+the existing store/audit path, with required title/kind/body and redacted audit
+labels. Creation feedback describes the session change without claiming a
+durable write before the store commits. Planning and Health Profile exact-text
+disclosures share `RevealToggle`: a mounted Show/Hide button plus a labelled,
+focusable output panel. Settings Data links use `?section=data`, with explicit
+heading focus and scroll; the legacy `#data` suffix remains supported.
+
 Slash commands (`src/lib/commands.ts`) are matched before routing: `/brief`,
 `/fitness`, `/work`, etc. → navigation or workflow launch.
 

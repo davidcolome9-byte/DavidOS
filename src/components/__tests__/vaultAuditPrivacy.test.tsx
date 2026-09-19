@@ -9,6 +9,7 @@ import ProjectVault from '../ProjectVault';
 import PromptVault from '../PromptVault';
 import ContextVault from '../ContextVault';
 import { selectJournalAuthority } from '../../lib/storage/stateJournal';
+import { defined } from '../../testSupport/defined';
 
 // POST-H-PRIV-01 — new Project, Prompt, and Context audit records must not
 // store titles, descriptions, bodies, or other personal free text verbatim.
@@ -117,6 +118,9 @@ function auditLog(): StoredAudit[] {
   return ((JSON.parse(committedRaw()) as { auditLog?: StoredAudit[] }).auditLog ?? []) as StoredAudit[];
 }
 
+/** Newest audit entry; that one exists is part of what each test asserts. */
+const newest = (log: StoredAudit[]) => defined(log[0], 'newest audit entry');
+
 function serializedAuditLog(): string {
   return JSON.stringify(auditLog());
 }
@@ -130,7 +134,7 @@ describe('Project audit privacy (POST-H-PRIV-01)', () => {
 
     let log = auditLog();
     expect(log.length).toBeGreaterThan(0);
-    expect(log[0].command).toMatch(/^project_created · fp [0-9a-f]{12} · \d+ chars$/);
+    expect(newest(log).command).toMatch(/^project_created · fp [0-9a-f]{12} · \d+ chars$/);
     expect(serializedAuditLog()).not.toContain('ZZPRIV');
 
     // Delete it (confirm dialog auto-accepted).
@@ -139,7 +143,7 @@ describe('Project audit privacy (POST-H-PRIV-01)', () => {
     await click('Delete');
 
     log = auditLog();
-    expect(log[0].command).toMatch(/^project_deleted · fp [0-9a-f]{12} · \d+ chars$/);
+    expect(newest(log).command).toMatch(/^project_deleted · fp [0-9a-f]{12} · \d+ chars$/);
     expect(serializedAuditLog()).not.toContain('ZZPRIV');
   });
 });
@@ -153,8 +157,8 @@ describe('Prompt audit privacy (POST-H-PRIV-01)', () => {
     await click('Save (local)');
 
     let log = auditLog();
-    expect(log[0].command).toMatch(/^prompt_created · fp [0-9a-f]{12} · \d+ chars$/);
-    expect(log[0].resultSummary).toMatch(/^Prompt created · body \d+ chars\.$/);
+    expect(newest(log).command).toMatch(/^prompt_created · fp [0-9a-f]{12} · \d+ chars$/);
+    expect(newest(log).resultSummary).toMatch(/^Prompt created · body \d+ chars\.$/);
     expect(serializedAuditLog()).not.toContain('ZZPRIV');
 
     // Update the same prompt with a changed body.
@@ -163,8 +167,8 @@ describe('Prompt audit privacy (POST-H-PRIV-01)', () => {
     await click('Save (local)');
 
     log = auditLog();
-    expect(log[0].command).toMatch(/^prompt_updated · fp [0-9a-f]{12} · \d+ chars$/);
-    expect(log[0].resultSummary).toMatch(/^Prompt updated \(previous version kept\) · body \d+ chars\.$/);
+    expect(newest(log).command).toMatch(/^prompt_updated · fp [0-9a-f]{12} · \d+ chars$/);
+    expect(newest(log).resultSummary).toMatch(/^Prompt updated \(previous version kept\) · body \d+ chars\.$/);
     expect(serializedAuditLog()).not.toContain('ZZPRIV');
 
     // The prompt itself IS stored (that's the vault's job) — only the audit
@@ -187,8 +191,8 @@ describe('Context audit privacy (POST-H-PRIV-01)', () => {
 
     const log = auditLog();
     expect(log.length).toBeGreaterThan(0);
-    expect(log[0].command).toMatch(/^context_updated · fp [0-9a-f]{12} · \d+ chars$/);
-    expect(log[0].resultSummary).toMatch(/^Context item updated · body \d+ chars\.$/);
+    expect(newest(log).command).toMatch(/^context_updated · fp [0-9a-f]{12} · \d+ chars$/);
+    expect(newest(log).resultSummary).toMatch(/^Context item updated · body \d+ chars\.$/);
     const serialized = serializedAuditLog();
     expect(serialized).not.toContain('ZZPRIV');
     expect(serialized).not.toContain(title);

@@ -4,6 +4,7 @@ import { parseImport, serializeState } from '../storage/exportImport';
 import { buildDefaultState } from '../../data/defaultState';
 import { CURRENT_SCHEMA_VERSION } from '../storage/localStore';
 import type { AppState } from '../types';
+import { defined } from '../../testSupport/defined';
 
 const base = (): AppState => buildDefaultState();
 const envelope = (mutate: (s: AppState) => void): string => {
@@ -189,8 +190,9 @@ describe('handoff relationship validation (POST-H-IMPORT-01)', () => {
     const errs = errsFor([h({ id: 'ZZ-DUP-TOKEN' }), h({ id: 'ZZ-DUP-TOKEN' })]);
     const dup = onField(errs, 'id');
     expect(dup.length).toBe(1);
-    expect(dup[0].item).toBe('[1]');
-    expect(dup[0].message).toContain('handoffs[0]');
+    const dupError = defined(dup[0], 'duplicate-id diagnostic');
+    expect(dupError.item).toBe('[1]');
+    expect(dupError.message).toContain('handoffs[0]');
     assertNoEcho(errs);
   });
 

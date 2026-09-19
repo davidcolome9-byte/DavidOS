@@ -245,7 +245,9 @@ function commitSerializedWhileLocked(
       previousGenerationHash: previous ? sha256Hex(previous.raw) : null,
       previousGenerationLength: previous ? previous.raw.length : null,
     };
-    const headKey = JOURNAL_HEAD_KEYS[(sequence - 1) % JOURNAL_HEAD_KEYS.length];
+    // Heads alternate a/b by sequence parity (sequence 1 → a, 2 → b, 3 → a, …).
+    // JOURNAL_HEAD_KEYS is a fixed two-key tuple, so index 0/1 are always defined.
+    const headKey = (sequence - 1) % 2 === 0 ? JOURNAL_HEAD_KEYS[0] : JOURNAL_HEAD_KEYS[1];
     const headRaw = JSON.stringify(head);
     try { options.storage.setItem(headKey, headRaw); }
     catch { return { ok: false, reason: 'head_write_failed', uncertain: true }; }
