@@ -1961,3 +1961,25 @@ candidate section of CURRENT_STATE.md. Backlog entries remain implemented
 candidates until separately authorized merge/deployment. OL-026, provider work,
 major toolchain upgrades, and the existing OL-032 storage decisions are not
 reopened by this package.
+
+## 2026-09-20 — DOS-APP-20260919 release and closeout
+
+- **Prerequisite.** The portfolio authority refresh was merged through PR #49
+  at `c35c89cac84a5d38ad64085484d1835698f39586` before the app candidate was
+  promoted.
+- **Release.** Accepted candidate
+  `2cd1501d941f54db7509605967164e8105d94be1` was merged through PR #50 to
+  `main` at `3f1139fa0de6f839dc6faf250e157073f5215999` and deployed on
+  2026-09-20.
+- **Remote gates.** Exact-merge GitHub CI run `35526050814`, Pages deployment
+  run `35526050781`, and CodeQL run `35526050763` all completed successfully.
+  The live Pages app and stamped service worker both returned HTTP 200.
+- **Scope closed.** OL-013, OL-014, OL-016–OL-021, and OL-028 are resolved.
+  No provider integration, credential, storage redesign, OL-026 work, or major
+  toolchain upgrade was included or authorized.
+- **Acceptance boundary.** Physical notched-device testing, manual
+  screen-reader testing, and owner physical-device acceptance are NOT RUN.
+  These are recorded product-acceptance limitations, not unfinished digital
+  release work.
+- **Program reset.** DOS-APP-20260919 is closed and no implementation package
+  is active. Any follow-on package requires a new explicit authorization.
