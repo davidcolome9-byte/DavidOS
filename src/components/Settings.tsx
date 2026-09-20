@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { commitImport } from '../lib/storage/importCommit';
@@ -62,6 +63,8 @@ export default function Settings() {
     commitDestructiveState,
   } = useStore();
   const fileInput = useRef<HTMLInputElement>(null);
+  const dataHeadingRef = useRef<HTMLHeadingElement>(null);
+  const location = useLocation();
   const [flash, setFlash] = useState('');
   const [pending, setPending] = useState<PendingCall | null>(null);
   const [pendingDriveExport, setPendingDriveExport] = useState<ApprovalRequest | null>(null);
@@ -131,6 +134,23 @@ export default function Settings() {
       : persistFailed
         ? 'saving to this device is currently failing (storage may be full or unavailable)'
         : null;
+
+  // OL-018: HashRouter owns the URL hash, so a second `#data` fragment can
+  // never scroll natively. The Data card is reached via `?section=data`; the
+  // old `/settings#data` form is still honored. Focus moves to the card heading
+  // so keyboard and screen-reader users land on Data, not where they clicked.
+  const wantsData =
+    new URLSearchParams(location.search).get('section') === 'data' || location.hash === '#data';
+  useEffect(() => {
+    if (!wantsData) return;
+    const heading = dataHeadingRef.current;
+    if (!heading) return;
+    // Scroll the whole card (#data carries the scroll-margin), focus the heading.
+    (heading.parentElement ?? heading).scrollIntoView({ block: 'start' });
+    heading.focus({ preventScroll: true });
+    // location.key changes on every navigation, so following the link again
+    // while already on Settings re-scrolls.
+  }, [wantsData, location.key]);
 
   useEffect(() => {
     let cancelled = false;
@@ -585,7 +605,7 @@ export default function Settings() {
       </div>
 
       <div className="card" id="data">
-        <h2>Data <span className="badge info">Local only</span></h2>
+        <h2 ref={dataHeadingRef} tabIndex={-1}>Data <span className="badge info">Local only</span></h2>
         <p className="muted small">{EXPORT_WARNING}</p>
         <div className="btn-row">
           <button className="primary" onClick={exportData}>Export backup (JSON)</button>

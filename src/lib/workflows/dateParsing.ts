@@ -32,17 +32,20 @@ export function parseEntryDate(text: string, now: Date = new Date()): ParsedEntr
   // ISO: 2026-07-08
   const isoMatch = text.match(/\b(\d{4})-(\d{2})-(\d{2})\b/);
   if (isoMatch) {
-    const d = iso(+isoMatch[1], +isoMatch[2], +isoMatch[3]);
+    // Groups 1-3 are unconditional in the pattern, so a match always sets them.
+    const d = iso(+isoMatch[1]!, +isoMatch[2]!, +isoMatch[3]!);
     if (d) return { entryDate: d, dateConfidence: 'explicit' };
   }
 
   // Month name: July 8, 2026 / Jul 8 2026 / July 8 (year assumed = current)
   const monthMatch = text.match(/\b([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?\b/);
   if (monthMatch) {
-    const m = MONTHS[monthMatch[1].toLowerCase()];
+    // Groups 1 and 2 are unconditional in the pattern; only group 3 (year) is
+    // optional and is guarded by the ternary below.
+    const m = MONTHS[monthMatch[1]!.toLowerCase()];
     if (m) {
       const year = monthMatch[3] ? +monthMatch[3] : now.getFullYear();
-      const d = iso(year, m, +monthMatch[2]);
+      const d = iso(year, m, +monthMatch[2]!);
       // Year-less dates are still explicit about month/day but we only accept
       // them with a stated year to stay conservative.
       if (d && monthMatch[3]) return { entryDate: d, dateConfidence: 'explicit' };
@@ -52,9 +55,10 @@ export function parseEntryDate(text: string, now: Date = new Date()): ParsedEntr
   // US short: 7/8/26 or 07/08/2026 (month/day/year — user is US-based)
   const usMatch = text.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})\b/);
   if (usMatch) {
-    let year = +usMatch[3];
+    // Groups 1-3 are unconditional in the pattern, so a match always sets them.
+    let year = +usMatch[3]!;
     if (year < 100) year += 2000;
-    const d = iso(year, +usMatch[1], +usMatch[2]);
+    const d = iso(year, +usMatch[1]!, +usMatch[2]!);
     if (d) return { entryDate: d, dateConfidence: 'explicit' };
   }
 

@@ -1,29 +1,19 @@
 import type { AgentId, RouteResult } from '../types';
+import { AGENTS } from '../agents/agentRegistry';
 import { scoreInput } from './routeScoring';
 import { resolveFitnessWorkflow } from './fitnessRouting';
 import { detectIntents, hasConjunction, type DetectedIntent } from './intentClassifier';
 
-const AGENT_NAMES: Record<string, string> = {
-  'universal-operations': 'Universal Operations',
-  daily_command: 'Daily Command',
-  fitness: 'Operation David Fitness',
-  work_project: 'Work / Fraud / Cybersecurity',
-  prompt_vault: 'Prompt Vault',
-  calendar_planning: 'Calendar / Planning',
-  dogs_home_life_admin: 'Dogs / Home / Life Admin',
-  content_asset: 'Content / Side-Income Assets',
-};
+// Keep routing copy and launch defaults on the same seed-backed registry that
+// drives the rest of the app. A second hand-maintained map silently drifted
+// when an agent name or default workflow changed in seed/agents.
+const AGENT_NAMES: Record<string, string> = Object.fromEntries(
+  AGENTS.map((agent) => [agent.id, agent.name]),
+);
 
-const DEFAULT_WORKFLOW: Record<string, string> = {
-  'universal-operations': 'universal-operations-review',
-  daily_command: 'daily-brief',
-  fitness: 'fitness-handoff',
-  work_project: 'work-teachback',
-  prompt_vault: 'prompt-improvement',
-  calendar_planning: 'weekly-review',
-  dogs_home_life_admin: 'life-admin-checklist',
-  content_asset: 'content-asset-planner',
-};
+const DEFAULT_WORKFLOW: Record<string, string> = Object.fromEntries(
+  AGENTS.map((agent) => [agent.id, agent.defaultWorkflow]),
+);
 
 const UNKNOWN = (reasoning: string, nextAction: string): RouteResult => ({
   target: 'unknown', classification: 'unknown', confidence: 0, reasoning, matched: [], nextAction,
@@ -98,20 +88,22 @@ export function routeIntent(input: string): RouteResult {
   }
 
   const scores = scoreInput(trimmed);
-  const top = scores[0];
-  const second = scores[1];
+  const [top, second] = scores;
+  // scoreInput returns one entry per agent (eight), so this never fires; it
+  // narrows the indexed access rather than trusting scores[0]/scores[1].
+  if (!top || !second) return UNKNOWN('No agent keywords matched this input.', 'Rephrase with more detail, or pick an agent from the dashboard.');
 
   // Precedence: a strong supported command wins over a weak unsupported phrase.
-  if (supported.length >= 1) {
-    const intent = supported[0];
-    const matched = top.score > 0 ? top.matched : [intent.goal];
+  const [supportedIntent] = supported;
+  if (supportedIntent) {
+    const matched = top.score > 0 ? top.matched : [supportedIntent.goal];
     const confidence = evidenceConfidence(top.score, second.score, /* strong */ true);
-    return supportedResult(intent, matched, confidence, trimmed);
+    return supportedResult(supportedIntent, matched, confidence, trimmed);
   }
 
   // Recognized but unsupported — name the domain, route nothing.
-  if (unsupported.length >= 1) {
-    const intent = unsupported[0];
+  const [intent] = unsupported;
+  if (intent) {
     return {
       target: 'unknown',
       classification: 'unsupported',

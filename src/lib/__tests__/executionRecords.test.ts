@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ExecutionRecord, ExecutionRecordStatus } from '../types';
 import { CODING_COORDINATOR } from '../agents/executionAgentRegistry';
 import { uid, nowIso } from '../types';
+import { defined } from '../../testSupport/defined';
 import {
   AUTHORITY_FIELDS,
   EXECUTION_RECORD_ID_PATTERN,
@@ -307,7 +308,7 @@ describe('evidence & approval-gate integrity', () => {
     );
     const again = decideApprovalGate(record, 'g1', 'denied', T3);
     expect(again).toBe(record);
-    expect(again.approvalGates[0].decision).toBe('approved');
+    expect(defined(again.approvalGates[0], 'approval gate').decision).toBe('approved');
   });
 
   it('terminal records reject every mutation helper', () => {

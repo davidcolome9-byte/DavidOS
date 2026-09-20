@@ -2,11 +2,12 @@ import { describe, expect, it } from 'vitest';
 import { computeStyleSync, canonicalStyleParam } from '../workflows/styleSync';
 import { resolveLogsTab, isLogsTab } from '../workflows/logsTabs';
 import { getWorkflow } from '../workflows/workflowRegistry';
+import { defined } from '../../testSupport/defined';
 
 const handoff = getWorkflow('fitness-handoff')!;
 const weekly = getWorkflow('weekly-review')!;
-const defaultStyle = handoff.outputStyles[0];
-const otherStyle = handoff.outputStyles[1];
+const defaultStyle = defined(handoff.outputStyles[0], 'fitness-handoff default style');
+const otherStyle = defined(handoff.outputStyles[1], 'fitness-handoff second style');
 
 describe('computeStyleSync (Phase 1G)', () => {
   it('switching workflows syncs to the new workflow default and invalidates', () => {

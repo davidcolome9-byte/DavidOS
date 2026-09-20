@@ -17,6 +17,7 @@ import { serializeState } from '../../lib/storage/exportImport';
 import { HEALTH_DRAFT_KEY, saveHealthDraft } from '../../lib/health/profileDraft';
 import { buildDefaultState } from '../../data/defaultState';
 import type { AppState, HealthFitnessProfile } from '../../lib/types';
+import { defined } from '../../testSupport/defined';
 
 // DOS-STAB-001A Phase 2A2b — Import runs on the SAME journal-backed
 // destructive transaction as StoreProvider, Reset, and Prune: exactly one
@@ -311,7 +312,7 @@ describe('journal-backed import transaction — success', () => {
     expect(generationWrites()).toHaveLength(1);
     expect(headWrites()).toHaveLength(1);
     expect(legacyWrites()).toHaveLength(0);
-    const first = JSON.parse(generationWrites()[0][2]!) as AppState;
+    const first = JSON.parse(defined(generationWrites()[0], 'first generation write')[2]!) as AppState;
     expect(first.settings.theme).toBe('light');
     const entry = first.auditLog.find((e) => e.command === 'Import backup');
     expect(entry).toMatchObject({ actionTaken: true, approvalStatus: 'approved' });

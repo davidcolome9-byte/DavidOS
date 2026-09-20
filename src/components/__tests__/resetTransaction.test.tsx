@@ -16,6 +16,7 @@ import {
 import { buildDefaultState } from '../../data/defaultState';
 import { HEALTH_DRAFT_KEY, saveHealthDraft } from '../../lib/health/profileDraft';
 import type { AppState, HealthFitnessProfile } from '../../lib/types';
+import { defined } from '../../testSupport/defined';
 
 (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -209,7 +210,7 @@ describe('journal-backed reset transaction', () => {
 
     expect(generationWrites()).toHaveLength(1);
     expect(headWrites()).toHaveLength(1);
-    const first = JSON.parse(generationWrites()[0][2]!) as AppState;
+    const first = JSON.parse(defined(generationWrites()[0], 'first generation write')[2]!) as AppState;
     expect(first.settings.theme).toBe('dark');
     expect(first.auditLog.find((entry) => entry.command.includes('Reset to seed') && entry.command.includes('completed')))
       .toMatchObject({ actionTaken: true, approvalStatus: 'approved' });

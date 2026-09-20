@@ -5,6 +5,7 @@ import { validateImportedState } from '../storage/importValidation';
 import { handoffContent } from '../workflows/continuity';
 import { buildDefaultState } from '../../data/defaultState';
 import type { AppState, Handoff, OpenLoop, Priority, Reminder } from '../types';
+import { defined } from '../../testSupport/defined';
 
 // DOS-STAB-001A — legacy-aware DEEP boot validation. Malformed individual
 // records must be quarantined (preserve the byte-exact original blob FIRST,
@@ -271,7 +272,7 @@ describe('historical v1 output-only Handoffs stay compatible', () => {
     expect(result.recovery.kind).toBe('none');
     expect(recoveryKeys()).toEqual([]);
     expect(result.state!.handoffs.map((h) => h.id)).toEqual(['syn-h1', 'syn-h2']);
-    const legacy = result.state!.handoffs[0];
+    const legacy = defined(result.state!.handoffs[0], 'first loaded handoff');
     // The historical shape is preserved: `content` is NOT fabricated to
     // satisfy validation, and the legacy `output` value survives untouched.
     expect(legacy.content).toBeUndefined();

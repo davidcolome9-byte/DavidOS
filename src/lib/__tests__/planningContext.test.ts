@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildDefaultState } from '../../data/defaultState';
 import { buildPlanningContext, buildWeeklyReviewContext, renderPlanningStateBlock } from '../planning/planningContext';
 import type { AppState, Project } from '../types';
+import { defined } from '../../testSupport/defined';
 
 const NOTES_MARKER = 'MARKER-PROJECT-NOTES-7f3a';
 const AREA_MARKER = 'MARKER-PROJECT-AREA-9c1b';
@@ -39,7 +40,7 @@ describe('buildPlanningContext — approved fields only', () => {
 
   it('includes only open loops (excludes done)', () => {
     const state = baseState();
-    const doneId = state.openLoops[0].id;
+    const doneId = defined(state.openLoops[0], 'seeded open loop').id;
     const withDone = {
       ...state,
       openLoops: state.openLoops.map((l) => (l.id === doneId ? { ...l, status: 'done' as const } : l)),
@@ -51,7 +52,7 @@ describe('buildPlanningContext — approved fields only', () => {
 
   it('includes only pending reminders (excludes done) with label + due', () => {
     const state = baseState();
-    const doneId = state.reminders[0].id;
+    const doneId = defined(state.reminders[0], 'seeded reminder').id;
     const withDone = {
       ...state,
       reminders: state.reminders.map((r) => (r.id === doneId ? { ...r, done: true } : r)),
@@ -84,9 +85,10 @@ describe('buildPlanningContext — approved fields only', () => {
   it('project fields are limited to name/status/nextAction (no notes/area on the item)', () => {
     const state = withProjects(baseState(), [mkProject({ id: 'a', name: 'Proj' })]);
     const ctx = buildPlanningContext(state, 'planning');
-    expect(ctx.projects[0]).toEqual({ name: 'Proj', status: 'active', nextAction: 'Do the thing' });
-    expect(Object.keys(ctx.projects[0])).not.toContain('notes');
-    expect(Object.keys(ctx.projects[0])).not.toContain('area');
+    const item = defined(ctx.projects[0], 'planning project item');
+    expect(item).toEqual({ name: 'Proj', status: 'active', nextAction: 'Do the thing' });
+    expect(Object.keys(item)).not.toContain('notes');
+    expect(Object.keys(item)).not.toContain('area');
   });
 
   it('reports accurate counts', () => {

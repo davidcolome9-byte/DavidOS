@@ -17,6 +17,7 @@ import {
   usageLevel,
 } from '../storage/storageUsage';
 import type { StorageReader } from '../storage/storageUsage';
+import { defined } from '../../testSupport/defined';
 
 // OL-003: measurement and prune planning are pure and destructive-free —
 // nothing in this module may delete anything. All fixture values synthetic.
@@ -49,11 +50,11 @@ function fakeReader(entries: Record<string, string>): StorageReader {
   return {
     length: keys.length,
     key: (i) => keys[i] ?? null,
-    getItem: (k) => (k in entries ? entries[k] : null),
+    getItem: (k) => entries[k] ?? null,
   };
 }
 
-const gen = (id: string) => `${JOURNAL_GENERATION_PREFIX}${id}`;
+const gen =(id: string) => `${JOURNAL_GENERATION_PREFIX}${id}`;
 const rec = (suffix: string) => `${RECOVERY_KEY_PREFIX}${suffix}`;
 const sumEntries = (entries: Record<string, string>) =>
   Object.entries(entries).reduce((sum, [k, v]) => sum + k.length + v.length, 0);
@@ -74,7 +75,7 @@ describe('measureStorageUsage — total same-origin accounting (DOS-STAB-002A P1
     const art = usage.collections.find((c) => c.key === 'artifacts')!;
     expect(art.count).toBe(1);
     expect(art.units).toBe(JSON.stringify(state.artifacts).length);
-    expect(usage.collections[0].key).toBe('artifacts'); // largest first
+    expect(defined(usage.collections[0], 'largest collection').key).toBe('artifacts'); // largest first
     const sizes = usage.collections.map((c) => c.units);
     expect([...sizes].sort((a, b) => b - a)).toEqual(sizes);
   });
@@ -237,7 +238,7 @@ describe('measureStorageUsage — total same-origin accounting (DOS-STAB-002A P1
         if (k !== null) enumerated.push(k);
         return k;
       },
-      getItem: (k) => (k in entries ? entries[k] : null),
+      getItem: (k) => entries[k] ?? null,
     };
     const state = baseState();
     const usage = measureStorageUsage(state, truncating);
@@ -265,7 +266,7 @@ describe('measureStorageUsage — total same-origin accounting (DOS-STAB-002A P1
     expect(usage.level).toBe('ok');
     // Measurement stayed read-only: the fixture is untouched.
     expect(Object.keys(entries)).toEqual([bigA, bigB]);
-    expect(entries[bigA].length).toBe(Math.ceil(QUOTA_UNITS_ESTIMATE * 0.20));
+    expect(defined(entries[bigA], 'fixture entry').length).toBe(Math.ceil(QUOTA_UNITS_ESTIMATE * 0.20));
   });
 
   it('getItem returning null for an enumerated key discards the partial tally and falls back', () => {
@@ -287,7 +288,7 @@ describe('measureStorageUsage — total same-origin accounting (DOS-STAB-002A P1
       key: (i) => keys[i] ?? null,
       getItem: (k) => {
         read.push(k);
-        return k in values ? values[k] : null; // `vanished` reads back null
+        return values[k] ?? null; // `vanished` reads back null
       },
     };
     const state = baseState();
@@ -311,7 +312,7 @@ describe('measureStorageUsage — total same-origin accounting (DOS-STAB-002A P1
     // The deterministic single-copy fallback is used instead.
     expect(usage.totalUnits).toBe(usage.stateUnits);
     expect(usage.stateUnits).toBe(STORAGE_KEY.length + JSON.stringify(state).length);
-    expect(usage.totalUnits).toBeLessThan(values[first].length);
+    expect(usage.totalUnits).toBeLessThan(defined(values[first], 'fixture entry').length);
     expect(usage.level).toBe('ok');
     // Measurement stayed read-only: the backing fixture is unmodified.
     expect(keys).toEqual([first, vanished, third]);

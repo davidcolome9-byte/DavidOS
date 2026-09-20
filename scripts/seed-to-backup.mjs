@@ -1,103 +1,93 @@
-// Converts the seed files into an importable DavidOS backup JSON.
+// Converts the app's real default state into an importable DavidOS backup JSON.
 // Useful for seeding a new device: Settings → Import → pick the file.
-// Output goes to personal/ which is gitignored — safe for personal seed content.
-import { readFileSync, writeFileSync, mkdirSync, readdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+//
+// The state is built by the app's own buildDefaultState()/serializeState()
+// (loaded through Vite's SSR module loader, so seed imports and `?raw` files
+// resolve exactly as they do in the app) — there is no second copy of the seed
+// lists or AppState shape to drift. Nothing is written except the output file.
+//
+// Usage: node scripts/seed-to-backup.mjs [output-path]
+// Default output is personal/davidos-seed-backup.json (gitignored). Any
+// existing output file is refused — the script never overwrites, and there is
+// deliberately no force option, so it can never clobber the personal backup.
+import { lstatSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createServer } from 'vite';
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const now = new Date().toISOString();
-let n = 0;
-const uid = () => `seed-${Date.now().toString(36)}-${(n++).toString(36)}`;
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
+const DEFAULT_OUTPUT = join(repoRoot, 'personal', 'davidos-seed-backup.json');
 
-function parseFrontmatter(raw) {
-  const s = raw.replace(/\r\n/g, '\n');
-  if (!s.startsWith('---\n')) return { meta: {}, body: s.trim() };
-  const end = s.indexOf('\n---', 4);
-  if (end === -1) return { meta: {}, body: s.trim() };
-  const meta = {};
-  for (const line of s.slice(4, end).split('\n')) {
-    const c = line.indexOf(':');
-    if (c > 0) meta[line.slice(0, c).trim()] = line.slice(c + 1).trim();
+function exists(path) {
+  try {
+    lstatSync(path); // lstat: a dangling symlink still counts as existing
+    return true;
+  } catch (err) {
+    if (err && err.code === 'ENOENT') return false;
+    throw err;
   }
-  return { meta, body: s.slice(end + 4).trim() };
 }
 
-const readDir = (dir) => readdirSync(join(root, dir)).sort();
+function refuse(outputPath) {
+  return new Error(`Refusing to overwrite existing output: ${outputPath}. Choose a path that does not exist.`);
+}
 
-const projects = readDir('seed/projects').map((f) => ({
-  ...JSON.parse(readFileSync(join(root, 'seed/projects', f), 'utf8')),
-  updatedAt: now,
-}));
+/**
+ * Generate a seed backup at `outputPath` and return a small summary.
+ * Rejects (leaving the existing path untouched) if anything already exists there.
+ */
+export async function generateSeedBackup(outputPath) {
+  const out = resolve(outputPath);
+  if (exists(out)) throw refuse(out);
 
-const contextItems = readDir('seed/context').map((f) => {
-  const { meta, body } = parseFrontmatter(readFileSync(join(root, 'seed/context', f), 'utf8'));
-  return { id: uid(), title: meta.title ?? f, kind: meta.kind ?? 'stable', body, updatedAt: now };
-});
-contextItems.push(
-  {
-    id: uid(), title: 'AI Output Rules', kind: 'stable', updatedAt: now,
-    body: '- Lead with the answer; no filler or motivational padding\n- Mark assumptions explicitly as [ASSUMPTION]\n- Mark unverified claims as [VERIFY]\n- Fitness: current facts only, grams/mL, no goals/left/remaining unless asked\n- Work: placeholders instead of any member/customer data',
-  },
-  {
-    id: uid(), title: 'Current Priorities', kind: 'priorities', updatedAt: now,
-    body: '1. Body recomposition (Operation David)\n2. Work projects\n3. AI / tool building (DavidOS)\n4. Dogs / home\n5. Calendar / planning',
-  },
-  {
-    id: uid(), title: 'Recurring Workflows', kind: 'workflow', updatedAt: now,
-    body: '- Morning: Daily Brief\n- After meals/training: Fitness Handoff\n- Sunday: Weekly Review\n- As needed: Work Teachback, Prompt Improvement, Life Admin Checklist',
-  },
-  {
-    id: uid(), title: 'Session Notes (temporary)', kind: 'session', updatedAt: now,
-    body: 'Scratch space for today only — cleared whenever you like.',
-  },
-);
+  const server = await createServer({
+    root: repoRoot,
+    configFile: false,
+    envFile: false,
+    logLevel: 'error',
+    appType: 'custom',
+    server: { middlewareMode: true, watch: null, hmr: false },
+    optimizeDeps: { noDiscovery: true }, // SSR load only; no dependency scan or cache writes
+  });
+  try {
+    const { buildDefaultState } = await server.ssrLoadModule('/src/data/defaultState.ts');
+    const { serializeState } = await server.ssrLoadModule('/src/lib/storage/exportImport.ts');
+    const state = buildDefaultState();
+    const json = serializeState(state);
 
-const prompts = readDir('seed/prompts').map((f) => {
-  const { meta, body } = parseFrontmatter(readFileSync(join(root, 'seed/prompts', f), 'utf8'));
-  return {
-    id: f.replace(/\.md$/, ''),
-    title: meta.title ?? f,
-    body,
-    category: meta.category ?? 'General',
-    tags: (meta.tags ?? '').split(',').map((t) => t.trim()).filter(Boolean),
-    agentId: meta.agent,
-    favorite: false,
-    versions: [],
-    updatedAt: now,
-  };
-});
+    await mkdir(dirname(out), { recursive: true });
+    try {
+      // 'wx' (O_EXCL) fails on ANY existing path, including one created after
+      // the check above.
+      await writeFile(out, json, { flag: 'wx' });
+    } catch (err) {
+      if (err && err.code === 'EEXIST') throw refuse(out);
+      throw err;
+    }
+    return {
+      outputPath: out,
+      projects: state.projects.length,
+      prompts: state.prompts.length,
+      contextItems: state.contextItems.length,
+    };
+  } finally {
+    await server.close();
+  }
+}
 
-const state = {
-  schemaVersion: 1,
-  priorities: [
-    { id: uid(), label: 'Body recomposition (Operation David)', rank: 1 },
-    { id: uid(), label: 'Work projects', rank: 2 },
-    { id: uid(), label: 'AI / tool building', rank: 3 },
-    { id: uid(), label: 'Dogs / home', rank: 4 },
-    { id: uid(), label: 'Calendar / planning', rank: 5 },
-  ],
-  openLoops: [
-    { id: uid(), label: 'Build DavidOS', status: 'open', createdAt: now },
-    { id: uid(), label: 'Maintain fitness diary', status: 'open', createdAt: now },
-    { id: uid(), label: 'Weekly planning', status: 'open', createdAt: now },
-    { id: uid(), label: 'Work training / project assets', status: 'open', createdAt: now },
-  ],
-  reminders: [
-    { id: uid(), label: 'Run weekly review', due: 'Sunday', done: false },
-    { id: uid(), label: 'Dog food check', due: '', done: false },
-  ],
-  projects,
-  prompts,
-  contextItems,
-  handoffs: [],
-  auditLog: [],
-  settings: { theme: 'dark' },
-};
+async function main() {
+  const target = process.argv[2] ?? DEFAULT_OUTPUT;
+  try {
+    const summary = await generateSeedBackup(target);
+    console.log(`Wrote ${summary.outputPath}`);
+    console.log(`  ${summary.projects} projects, ${summary.prompts} prompts, ${summary.contextItems} context items`);
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err);
+    process.exitCode = 1;
+  }
+}
 
-const envelope = { app: 'davidos', exportedAt: now, schemaVersion: 1, state };
-mkdirSync(join(root, 'personal'), { recursive: true });
-const out = join(root, 'personal', 'davidos-personal-backup.json');
-writeFileSync(out, JSON.stringify(envelope, null, 2));
-console.log(`Wrote ${out}`);
-console.log(`  ${projects.length} projects, ${prompts.length} prompts, ${contextItems.length} context items`);
+if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
+  await main();
+}

@@ -40,7 +40,7 @@ const GROUPS: MoreGroup[] = [
   {
     title: 'Data',
     items: [
-      { to: '/settings#data', icon: '💾', label: 'Export / Import / Reset', hint: 'Back up or restore all local data' },
+      { to: '/settings?section=data', icon: '💾', label: 'Export / Import / Reset', hint: 'Back up or restore all local data' },
     ],
   },
 ];

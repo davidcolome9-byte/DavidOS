@@ -31,6 +31,11 @@ export function validateWorkflowRegistry(workflows: Workflow[], agents = AGENTS)
     if (!agentIds.has(workflow.agentId)) {
       throw new Error(`Workflow registry references unknown agent: ${workflow.id} -> ${workflow.agentId}`);
     }
+    // resolveWorkflowOutputStyle falls back to the first style, so every
+    // registered workflow must have one.
+    if (workflow.outputStyles.length === 0) {
+      throw new Error(`Workflow registry contains workflow with no output styles: ${workflow.id}`);
+    }
     seen.add(workflow.id);
   }
   return workflows;
@@ -60,5 +65,5 @@ export function workflowsForAgent(agentId: AgentId): Workflow[] {
 export function resolveWorkflowOutputStyle(workflow: Workflow, requestedStyle?: string | null): string {
   return requestedStyle && workflow.outputStyles.includes(requestedStyle)
     ? requestedStyle
-    : workflow.outputStyles[0];
+    : workflow.outputStyles[0] ?? ''; // '' is unreachable for registered workflows (validated non-empty above)
 }

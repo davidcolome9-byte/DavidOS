@@ -11,6 +11,7 @@ import { selectJournalAuthority } from '../../lib/storage/stateJournal';
 import { serializeState } from '../../lib/storage/exportImport';
 import { buildDefaultState } from '../../data/defaultState';
 import type { AppState, WorkflowArtifact } from '../../lib/types';
+import { defined } from '../../testSupport/defined';
 
 // OL-015 — the Settings dialogs (reset, import-conflict) and the Storage
 // prune dialog on the shared focus contract: safe control takes initial
@@ -247,8 +248,8 @@ describe('import-conflict dialog (OL-015 focus contract)', () => {
     await importBackup(conflictBackup());
     const dialog = dialogWithText('Health Profile conflict')!;
     const buttons = [...dialog.querySelectorAll('button')];
-    const first = buttons[0];
-    const last = buttons[buttons.length - 1];
+    const first = defined(buttons[0], 'first conflict-dialog button');
+    const last = defined(buttons[buttons.length - 1], 'last conflict-dialog button');
     await focusEl(last as HTMLElement);
     await pressKey(last, 'Tab');
     expect(document.activeElement).toBe(first);

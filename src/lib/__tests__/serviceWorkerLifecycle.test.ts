@@ -29,7 +29,7 @@ class MockCache {
   store = new Map<string, MockResponse>();
   private key(reqOrUrl: unknown): string {
     const url = typeof reqOrUrl === 'string' ? reqOrUrl : (reqOrUrl as { url: string }).url;
-    return url.split('#')[0];
+    return url.split('#')[0] ?? url; // split() always yields at least one element
   }
   async match(reqOrUrl: unknown) {
     return this.store.get(this.key(reqOrUrl));

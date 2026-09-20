@@ -1,4 +1,5 @@
 import type { PlanningContextCounts, PlanningContextMode, RenderedPlanningStateBlock } from '../lib/planning/planningContext';
+import RevealToggle from './RevealToggle';
 
 /**
  * Planning-state inclusion + disclosure control (DOS-WF-002A). Visible only
@@ -13,7 +14,7 @@ export interface PlanningContextDisclosureProps {
   counts: PlanningContextCounts | null;
   block: RenderedPlanningStateBlock | null;
   revealed: boolean;
-  onReveal: () => void;
+  onToggleReveal: () => void;
 }
 
 export default function PlanningContextDisclosure({
@@ -23,7 +24,7 @@ export default function PlanningContextDisclosure({
   counts,
   block,
   revealed,
-  onReveal,
+  onToggleReveal,
 }: PlanningContextDisclosureProps) {
   const hasContent = Boolean(block && !block.empty);
 
@@ -54,11 +55,13 @@ export default function PlanningContextDisclosure({
               audit-record content, artifact content, handoff content and summaries.
             </li>
           </ul>
-          {!revealed ? (
-            <button className="chip" onClick={onReveal}>Show Inserted Planning State Text</button>
-          ) : (
-            <pre className="output">{block.text}</pre>
-          )}
+          <RevealToggle
+            panelId="planning-state-text"
+            subject="Inserted Planning State Text"
+            revealed={revealed}
+            onToggle={onToggleReveal}
+            text={block.text}
+          />
         </details>
       )}
     </>

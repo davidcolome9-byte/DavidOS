@@ -58,7 +58,8 @@ html, body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 14px 4px 10px;
+  /* viewport-fit=cover lets content reach under the notch/status bar. */
+  padding: calc(14px + env(safe-area-inset-top)) 4px 10px;
   position: sticky;
   top: 0;
   background: var(--bg);
@@ -124,7 +125,14 @@ html, body {
   gap: 8px;
 }
 
+/* Heading + action button that must wrap onto two lines on narrow screens
+   instead of overflowing the card (e.g. Context Vault at 375px). */
+.card h2.wrap { flex-wrap: wrap; }
+
 .card h3 { margin: 12px 0 6px; font-size: 0.9rem; }
+
+/* Keep a scrolled-to Data card clear of the sticky header. */
+#data { scroll-margin-top: calc(64px + env(safe-area-inset-top)); }
 
 .muted { color: var(--text-dim); font-size: 0.85rem; }
 .small { font-size: 0.78rem; }
