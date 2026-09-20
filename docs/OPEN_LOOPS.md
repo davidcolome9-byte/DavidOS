@@ -1,18 +1,18 @@
 # Open Loops — Prioritized Backlog
 
-## Local candidate update — 2026-09-19
+## Release update — 2026-09-20
 
-DOS-APP-20260919 implements OL-013, OL-014, OL-016, OL-017, OL-018,
-OL-019, OL-020, OL-021, and OL-028 in an isolated local candidate.
-They remain here until merge/deployment: **Implemented candidate** is not
-the **Resolved** release status defined below. Combined verification passed
-(942 unit/component tests, 129 browser tests); independent read-only review
-returned READY FOR CANDIDATE COMMIT with no blocking findings, after its own
-165 targeted tests and 21 browser scenarios passed.
-David's current bounded authorization
-supersedes historical no-active-package statements only for this package;
-provider, credential, storage redesign, push, merge, and deployment work
-remain outside it. See [CURRENT_STATE.md](CURRENT_STATE.md) for evidence.
+DOS-APP-20260919 resolved OL-013, OL-014, OL-016, OL-017, OL-018,
+OL-019, OL-020, OL-021, and OL-028. Candidate
+`2cd1501d941f54db7509605967164e8105d94be1` was merged through PR #50 and
+deployed from merge SHA `3f1139fa0de6f839dc6faf250e157073f5215999`.
+Combined verification passed (942 unit/component tests, 129 browser tests);
+independent read-only review found no blocking issues after 165 targeted tests
+and 21 browser scenarios passed. Exact-merge CI, Pages deployment, and CodeQL
+all succeeded. Program Control has returned to no active package. Provider,
+credential, storage-redesign, and follow-on work remain separately authorized.
+See [CURRENT_STATE.md](CURRENT_STATE.md) for evidence and preserved physical
+acceptance limitations.
 
 The single authoritative backlog. Every item: stable ID, domain, kind
 (defect / maintenance / environmental / future capability), problem,
@@ -248,7 +248,7 @@ selected and explicitly authorized.
 ### OL-013 · Router duplicates agent names/default workflows from seed
 - **2026-09-19 candidate:** Router names/defaults now derive from the agent registry; registry parity and routing regressions cover the change.
 - **Domain:** dead code/drift risk · **Kind:** maintenance ·
-  **Status:** Implemented candidate — not merged/deployed
+  **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence (re-verified 2026-07-17):** `src/lib/router/intentRouter.ts:6-22`
   hardcodes `AGENT_NAMES`/`DEFAULT_WORKFLOW` that `agentRegistry`
   already exposes (both maps re-exported at the bottom of the file);
@@ -260,7 +260,7 @@ selected and explicitly authorized.
 ### OL-014 · scripts/seed-to-backup.mjs re-implements default state
 - **2026-09-19 candidate:** The generator uses the app default/export modules through existing Vite SSR, writes a separate seed-backup filename, and refuses existing output. Synthetic temporary tests cover parity, import, and overwrite refusal; real personal files were not accessed.
 - **Domain:** dead code/duplication · **Kind:** maintenance ·
-  **Status:** Implemented candidate — not merged/deployed
+  **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence:** duplicates `parseFrontmatter`, four context items, and
   seed lists from `src/data/` (audit §2.1); omits newer AppState keys.
   Script still present and unrewritten at `f01a822`.
@@ -293,7 +293,7 @@ selected and explicitly authorized.
 
 ### OL-016 · No top safe-area inset (notched devices, standalone PWA)
 - **2026-09-19 candidate:** Header padding includes the top safe-area inset. Software CSS and emulated geometry are covered; physical-notch acceptance is NOT RUN.
-- **Kind:** defect (mobile polish) · **Status:** Implemented candidate — not merged/deployed
+- **Kind:** defect (mobile polish) · **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence (re-verified 2026-07-17):** `index.html` `viewport-fit=cover`
   with no `env(safe-area-inset-top)` on `.app-header`
   (`src/styles/index.css`); bottom inset IS handled (index.css:54,87).
@@ -301,7 +301,7 @@ selected and explicitly authorized.
 
 ### OL-017 · Bottom nav shows no active tab on More sub-pages
 - **2026-09-19 candidate:** More stays active, including aria-current, on its secondary routes; primary tabs retain their own active state.
-- **Kind:** defect (UX polish) · **Status:** Implemented candidate — not merged/deployed
+- **Kind:** defect (UX polish) · **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence (re-verified 2026-07-17):** `Layout.tsx` uses plain NavLink
   `isActive` only; on /agents /prompts /context /planning /health
   /settings nothing highlights.
@@ -310,7 +310,7 @@ selected and explicitly authorized.
 
 ### OL-018 · /settings#data deep link never scrolls to the Data card
 - **2026-09-19 candidate:** Data links use ?section=data and explicitly scroll/focus the Data heading; legacy /settings#data is supported.
-- **Kind:** defect (UX polish) · **Status:** Implemented candidate — not merged/deployed
+- **Kind:** defect (UX polish) · **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence (re-verified 2026-07-17):** `MoreMenu.tsx:43` still links
   `/settings#data` under HashRouter; no scroll handling in
   `Settings.tsx` (`id="data"`).
@@ -320,7 +320,7 @@ selected and explicitly authorized.
 
 ### OL-019 · Missing empty states (ProjectVault, ContextVault)
 - **2026-09-19 candidate:** Project/Context empty states and a validated Context create/cancel flow are implemented, with local-write disclosure and redacted audit entries.
-- **Kind:** defect (UX polish) · **Status:** Implemented candidate — not merged/deployed
+- **Kind:** defect (UX polish) · **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence (re-verified 2026-07-17):** zero projects leaves a bare
   card; `ContextVault.tsx` has no create action so an empty import
   yields a permanently empty page.
@@ -330,7 +330,7 @@ selected and explicitly authorized.
 
 ### OL-020 · Unassociated form labels in vault editors
 - **2026-09-19 candidate:** All Project/Prompt editor labels and the Context body label are associated with their controls.
-- **Kind:** defect (a11y) · **Status:** Implemented candidate — not merged/deployed
+- **Kind:** defect (a11y) · **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence (re-verified 2026-07-17):** the required Name/Title fields
   gained `htmlFor` associations with the OL-012 vault fix (`524bdb9`),
   but the remaining labels are still unassociated:
@@ -342,7 +342,7 @@ selected and explicitly authorized.
 
 ### OL-021 · tsconfig hardening
 - **2026-09-19 candidate:** Both noUncheckedIndexedAccess and forceConsistentCasingInFileNames are enabled. Narrowing and documented fixed-size invariants preserve runtime behavior; hash oracle tests cover block boundaries and Unicode.
-- **Kind:** maintenance · **Status:** Implemented candidate — not merged/deployed
+- **Kind:** maintenance · **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Evidence (re-verified 2026-07-17):** `tsconfig.json` still lacks
   `noUncheckedIndexedAccess` and `forceConsistentCasingInFileNames`;
   `intentRouter.ts` trusts `scores[0]`/`scores[1]`.
@@ -364,7 +364,7 @@ selected and explicitly authorized.
 ### OL-028 · Planning and profile reveal panels lose keyboard focus and cannot be keyboard-scrolled
 - **2026-09-19 candidate:** Both reveal paths share a mounted Show/Hide toggle and a labelled focusable panel. Browser checks exercise focus retention and overflowing keyboard scroll.
 - **Domain:** accessibility · **Kind:** defect / hardening ·
-  **Status:** Implemented candidate — not merged/deployed
+  **Status:** Resolved — PR #50, deployed 2026-09-20
 - **Problem:** in the Workflow Runner, activating "Show Inserted Planning
   State Text" (`PlanningContextDisclosure.tsx`) or the equivalent Health
   Profile reveal control unmounts the trigger button and replaces it with
@@ -727,7 +727,7 @@ without new evidence.
 - **Current behavior:** A shared `useModalFocus` hook now covers all six dialog surfaces (Settings import-conflict, Settings reset-confirmation, StorageManager pruning, Settings Health Profile draft-conflict, ApprovalGate, StaleTabDialog): safe initial focus, Tab/Shift+Tab containment, Escape mapped only to each surface's existing safe cancel/deny action, connected-opener focus restoration, and reference-counted body-scroll locking for stacked modals. ApprovalGate's Escape always resolves to Deny/Close, never Approve.
 - **Independent review:** Verdict B. APPROVED WITH NON-BLOCKING OBSERVATIONS (reviewer: GPT-5.6 Sol, High). Non-blocking: (1) the shared focusable selector does not yet filter every hidden/inert/CSS-invisible candidate — future hardening, no current surface affected; (2) reviewer's environment could not re-query remote GitHub metadata — non-blocking, confirmed independently via local refs and deployed-site behavior.
 - **Tests:** 562/562 unit/component tests (44 files, up from 538/538), 94/94 Playwright tests (up from 93/93) — `src/components/__tests__/useModalFocus.test.tsx` (13), `src/components/__tests__/approvalGate.test.tsx` (6), `src/components/__tests__/settingsModalFocus.test.tsx` (5), `tests/smoke/modalKeyboard.spec.ts` (1).
-- **Limitations preserved:** This is a narrow focus-management fix, not a broad accessibility completion pass — no native `<dialog>` conversion, portals, generalized inert framework, backdrop-dismissal change, or Command Palette redesign was introduced; OL-016 through OL-020 remain open a11y/polish items.
+- **Limitations preserved:** This was a narrow focus-management fix, not a broad accessibility completion pass — no native `<dialog>` conversion, portals, generalized inert framework, backdrop-dismissal change, or Command Palette redesign was introduced. OL-016 through OL-020 were later resolved by DOS-APP-20260919 through PR #50.
 - **Documentation closeout status:** resolved. The documentation entry
   recording this resolution was closed by PR #17
   (`docs/ol-015-modal-focus-management-closeout`, merged 2026-07-19,

@@ -1,25 +1,26 @@
-# Current State — 2026-09-19
+# Current State — 2026-09-20
 
-## Local app completion candidate — DOS-APP-20260919
+## Released app completion package — DOS-APP-20260919
 
-David authorized reversible implementation of the bounded app backlog in an
-isolated worktree, starting from `cdf3cbb8b348dd4c29db5560bf4cf046e398eb52`.
-This package supersedes the historical no-active-package statements below
-only for OL-013, OL-014, OL-016–OL-021, and OL-028. It grants no provider,
-credential, production, merge, push, deployment, or automation authority.
-The AI routing doctrine and adopted portfolio architecture remain unchanged.
+The bounded app-backlog package that began from
+`cdf3cbb8b348dd4c29db5560bf4cf046e398eb52` is complete. Its accepted
+candidate `2cd1501d941f54db7509605967164e8105d94be1` was merged through PR #50
+and deployed from `main` merge SHA
+`3f1139fa0de6f839dc6faf250e157073f5215999` on 2026-09-20. The package
+resolved OL-013, OL-014, OL-016–OL-021, and OL-028. It created no provider,
+credential, automation, or continuing implementation authority. The AI
+routing doctrine and adopted portfolio architecture remain unchanged.
 
-The local candidate implements registry-derived router labels/defaults,
+The released implementation provides registry-derived router labels/defaults,
 shared app-default backup generation with overwrite refusal, top safe-area
 padding, More-tab active state, accessible Settings Data navigation, vault
 labels and empty states, Context-item creation, persistent disclosure toggles
 with keyboard-scrollable panels, and both stricter TypeScript checks.
 No dependency, data schema, storage format, or approval-policy change is
-included. Local implementation does not mean merged, deployed, or accepted
-on a physical device. OL-026 Gravl history remains deferred; provider work,
-toolchain upgrades, and the OL-032 storage decision remain separate.
+included. OL-026 Gravl history remains deferred; provider work, toolchain
+upgrades, and the OL-032 storage decision remain separate.
 
-**Candidate verification:** `npm run verify:full -- --workers=2 --retries=0`
+**Release verification:** `npm run verify:full -- --workers=2 --retries=0`
 passed with 942/942 unit/component tests in 61 files and 129/129 Chromium
 browser tests, with no retries. Lint, seed, privacy, documentation, strict
 typecheck, production build, and the stamped offline shell passed. Privacy
@@ -30,12 +31,17 @@ notched-device and assistive-technology acceptance are NOT RUN.
 Independent read-only review returned **READY FOR CANDIDATE COMMIT**, with
 no blocking findings, after independently passing 165/165 targeted tests in
 nine files and 21/21 new browser scenarios. The reviewer also inspected the
-full gate evidence and the documentation delta. Implementation used Claude
-Sonnet; independent review used a separate Codex task. The historical release
-counts and evidence below describe their named releases, not this candidate.
+full gate evidence and the documentation delta. GitHub CI run `35526050814`,
+Pages deployment run `35526050781`, and CodeQL run `35526050763` all succeeded
+for the exact merge SHA. The deployed Pages app and stamped service worker both
+returned HTTP 200. Implementation used Claude Sonnet; independent review used
+a separate Codex task. Physical notched-device and manual screen-reader/owner
+acceptance remain NOT RUN; those limits do not reopen the completed digital
+package. The historical release counts and evidence below describe their named
+releases, not this package.
 
 The remainder preserves the deployed-product and historical governance
-baseline. Historical package closures do not override this bounded package.
+baseline. Program Control has returned to no active package.
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
