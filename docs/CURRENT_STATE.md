@@ -1,4 +1,4 @@
-# Current State — 2026-08-11
+# Current State — 2026-08-24
 
 Dated snapshot. Update the date and contents whenever a feature lands or a
 count changes. (History: see git log and docs/DECISIONS.md.) This file is
@@ -11,18 +11,35 @@ append-only decision log in [docs/DECISIONS.md](DECISIONS.md).
 `package.json` and `package-lock.json` are unchanged by DOS-WF-002A,
 DOS-AGT-001A, DOS-STAB-001A, DOS-STAB-002A Stage 1, and the
 documentation-only DOS-STAB-002B Option 3 planning closure and this
-governance-only ClickUp adoption record. This record changes no runtime
-behavior, dependency, schema, storage key, persistence logic, test, or
-deployed feature behavior.
+  governance-only ClickUp adoption record, and this documentation-only
+  portfolio authority refresh. This record changes no runtime behavior,
+  dependency, schema, storage key, persistence logic, test, or deployed
+  feature behavior.
 
-## Program Control baseline — 2026-08-08
+## Program Control baseline — 2026-08-24 authority refresh
 
-- **Active project portfolio:** exactly three projects: **DavidOS**;
-  **Operation David / Health & Fitness**; and **Social Assistant /
-  Dating Assistant**. Agent names, workflow domains, seed projects,
-  product surfaces, and roadmap headings are not additional active
-  portfolio projects. The retired “Investing” label is historical only
-  and is not a finance or investing project.
+- **Portfolio authority taxonomy:**
+  - **Command / coordination:** DavidOS.
+  - **Shared continuity infrastructure:** Handoff OS.
+  - **Specialist applications:** MacroPilot; Operation David.
+  - **Specialist workflow:** Dating / Social Assistant.
+  - **Engineering / control infrastructure:** davidos-control / DOS-CTL.
+  - **Supporting services:** GitHub; Google Drive; ClickUp; the F/H
+    preservation system.
+  - **Experimental / research:** HELM / davidos-opus-lab;
+    davidos-gemini-lab; recovery-assurance; signal-extractor; DOS-ORCH
+    Revision 06; and Gemini/Codex agent workspaces where appropriate.
+  - **Historical:** VoxFlow; David Command Center; Tik tik; and stale
+    snapshots/evidence packages.
+- **Authority pointer rule:** this index points to each project's own
+  repository, accepted project record, or preserved evidence. DavidOS
+  does not duplicate every project's Truth and is not a second central
+  state database. A taxonomy entry does not activate a package, grant
+  implementation authority, or change a project's accepted lifecycle
+  state. Agent names, product surfaces, and roadmap headings do not by
+  themselves create additional portfolio authorities. The retired
+  “Investing” label remains historical only and is not a finance or
+  investing project.
 - **DOS-CTL-001A:** Phase 0 Revision 1 Correction Round 3 is complete,
   approved, Gate 1 closed, frozen, and synthetic-only. Real DavidOS
   execution is not authorized. Credentials, live providers, deployment,
@@ -878,11 +895,12 @@ The authoritative list with priorities lives in
 
 - v0.3 Drive sync beyond backup export (OL-024; plan:
   docs/google-drive-sync-plan.md).
-- Dating Wingman, Cooking & Meal Prep, and Daily Log surfaces exist as
-  domains in David's life system but have no dedicated agents yet —
-  they currently route to the closest existing agent. These are product
-  domains, not additional active program-portfolio projects; the active
-  portfolio is recorded in the Program Control baseline above.
+- Dating / Social Assistant is a specialist workflow authority. Cooking
+  & Meal Prep and Daily Log remain product domains in David's life system
+  without dedicated agents and currently route to the closest existing
+  agent. Product-domain labels and agent names do not by themselves create
+  additional portfolio authorities; the taxonomy is recorded in the
+  Program Control baseline above.
 - **AI Tool Routing Doctrine (DOS-GOV-002A) — closed.**
   `docs/AI_TOOL_ROUTING.md` establishes the authoritative model/tool
   routing, independence, quota-fallback, and two-gate policy for every AI
