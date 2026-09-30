@@ -1,4 +1,18 @@
-# Current State — 2026-09-20
+# Current State — 2026-09-30
+
+## DOS-AI-001A local candidate — Agentic Routing Foundation
+
+An isolated local branch based on `8452b26d212df99edcd5428ec649d569f601882a`
+adds a deterministic execution-tier recommendation to the Command Palette.
+Tier 1 covers direct local state/navigation, Tier 2 covers assistant reasoning,
+and Tier 3 requires an actionable technical request. The classifier remains
+separate from domain routing and the risk/approval policy. Tier 3 is advisory:
+no provider, shell, Git action, or execution record starts from this result.
+The Supervised Coding Coordinator remains the future handoff point.
+
+This is a local candidate only. It has not been independently reviewed, pushed,
+merged, deployed, released, or accepted. Local verification results are in the
+execution receipt; this section grants no follow-on execution authority.
 
 ## Released app completion package — DOS-APP-20260919
 

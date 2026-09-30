@@ -36,6 +36,16 @@ Two kinds of data:
   ranked scores with matched terms.
 - `intentRouter.ts` — turns scores into a `RouteResult`: target agent, confidence
   (heuristic, capped at 0.9), human-readable reasoning, suggested workflow, next action.
+- `executionTier.ts` — separately recommends Tier 1 Local for direct DavidOS
+  state/navigation, Tier 2 Assistant for reasoning/drafting/research, or Tier 3
+  Executor for an explicit technical action. This recommendation never calls a
+  provider, runs a tool, creates an execution record, or changes authority.
+
+Execution tier is separate from domain routing and the safety classifier. Tier 3
+requires an actionable technical request, not merely an action word and a
+technical word anywhere in the sentence. The Command Palette displays the
+recommendation. A later authorized package may hand Tier 3 to the existing
+Supervised Coding Coordinator; DOS-AI-001A does not wire that handoff.
 
 Router labels and default workflow ids derive from the seed-backed agent
 registry rather than a second hand-maintained map. The seed-backup utility

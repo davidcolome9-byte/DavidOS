@@ -1983,3 +1983,22 @@ reopened by this package.
   release work.
 - **Program reset.** DOS-APP-20260919 is closed and no implementation package
   is active. Any follow-on package requires a new explicit authorization.
+
+## 2026-09-30 — DOS-AI-001A local execution-tier candidate
+
+- **Authorization and baseline.** David authorized a bounded local candidate
+  from protected `main` `8452b26d212df99edcd5428ec649d569f601882a`.
+  The baseline matched the prepared package; implementation used an isolated
+  worktree so the protected checkout stayed untouched.
+- **Package adaptation.** The supplied script would fetch, pull, and switch the
+  protected checkout. Its broad action-plus-object match could mark ordinary
+  drafting about an app as executor work. Apply the bounded changes manually
+  and require an actionable technical request at the start of the sentence.
+- **Reuse and authority.** Keep domain routing, risk classification, audit,
+  execution records, and the Supervised Coding Coordinator as their existing
+  authorities. Execution tier is a separate recommendation. It performs no
+  provider call, shell or Git action, record creation, or approval change.
+  A handoff to the Coordinator requires a later authorized package.
+- **Scope.** No new dependency, AppState field, storage key, provider, OAuth,
+  backend, background service, or autonomous execution path. This candidate
+  is local and unreviewed; it is not pushed, merged, deployed, or accepted.

@@ -51,6 +51,28 @@ test('risky free-text command shows the honest no-op, sends nothing', async ({ p
   await expect(page.locator('strong', { hasText: 'Nothing was sent or changed.' })).toBeVisible();
 });
 
+test('execution-tier advice is visible and creates no execution record', async ({ page }) => {
+  await gotoHome(page);
+  const input = page.getByLabel('Command input');
+  const route = page.getByRole('button', { name: 'Route This' });
+
+  await input.fill('Show my priorities');
+  await route.click();
+  await expect(page.getByText('Tier 1 · Local', { exact: true })).toBeVisible();
+
+  await input.fill('Write me a message about the app');
+  await route.click();
+  await expect(page.getByText('Tier 2 · Assistant', { exact: true })).toBeVisible();
+
+  await input.fill('Fix this bug and run tests');
+  await route.click();
+  await expect(page.getByText('Tier 3 · Executor', { exact: true })).toBeVisible();
+  await expect.poll(async () => {
+    const raw = await canonicalStateRaw(page);
+    return raw === null ? null : (JSON.parse(raw) as { executionRecords?: unknown[] }).executionRecords;
+  }).toEqual([]);
+});
+
 test('a routed free-text command is never stored or rendered verbatim (privacy)', async ({ page }) => {
   const SECRET = 'SENTINEL-SECRET-audit-9f3a';
   await gotoHome(page);
