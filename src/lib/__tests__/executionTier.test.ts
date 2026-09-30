@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { classifyExecutionTier } from '../router/executionTier';
 import { routeIntent } from '../router/intentRouter';
+import { classifyCommand } from '../safety/riskClassifier';
+import { isBlockedInV1, requiresApproval } from '../safety/approvalRules';
 
 const decide = (input: string) => classifyExecutionTier(input, routeIntent(input));
 
@@ -28,6 +30,60 @@ describe('executionTier', () => {
     expect(decide('Run the tests').requiresSupervisedExecution).toBe(true);
     expect(decide('Compare these two options').requiresSupervisedExecution).toBe(false);
     expect(decide('Show my reminders').requiresSupervisedExecution).toBe(false);
+  });
+
+  it.each([
+    'run a test',
+    'run the test',
+    'run tests',
+    'run unit tests',
+    'write unit tests',
+    'write a test',
+    'write tests',
+    'run a unit test',
+    'delete the branch',
+    'Please write unit tests',
+  ])('recognizes the technical request "%s" without executing it', (input) => {
+    expect(decide(input)).toMatchObject({
+      tier: 'tier_3_executor',
+      requiresSupervisedExecution: true,
+    });
+    expect(decide(input).reasoning).toContain('nothing was executed');
+  });
+
+  it.each([
+    'write',
+    'delete',
+    'clean',
+    'write me a message',
+    'delete my reminder',
+    'clean my schedule',
+    'clean the house',
+    'delete my reminder about the branch',
+    'write me a message about unit tests',
+    'Explain how to delete the branch',
+    'write unit plans',
+    'run testimony',
+  ])('does not escalate a bare verb or non-actionable technical mention: "%s"', (input) => {
+    expect(decide(input)).toMatchObject({
+      tier: 'tier_2_assistant',
+      requiresSupervisedExecution: false,
+    });
+  });
+
+  it.each([
+    ['delete the branch', 'local_write', false, false],
+    ['delete file', 'external_write', true, false],
+    ['delete the branch and buy a server', 'high_risk', true, true],
+  ] as const)('preserves independent risk/approval policy for "%s"', (input, risk, approval, blocked) => {
+    const route = routeIntent(input);
+    const originalRoute = structuredClone(route);
+    expect(classifyCommand(input)).toBe(risk);
+    expect(classifyExecutionTier(input, route).tier).toBe('tier_3_executor');
+    expect(route).toEqual(originalRoute);
+    expect(classifyCommand(input)).toBe(risk);
+    expect(requiresApproval(risk)).toBe(approval);
+    expect(isBlockedInV1(risk)).toBe(blocked);
   });
 
   it('does not mistake ordinary life-language verbs for coding execution', () => {

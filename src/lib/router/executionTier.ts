@@ -37,7 +37,7 @@ const ASSISTANT_SIGNALS = [
 // word co-occurrence ("build" plus "app" anywhere) escalates life-planning text.
 const REQUEST_PREFIX = '(?:(?:please|can you|could you|would you|i need you to)\\s+)?';
 const EXECUTOR_PATTERNS: readonly [RegExp, string][] = [
-  [new RegExp(`^${REQUEST_PREFIX}(?:write|edit|modify|change|refactor|debug|fix|implement|run|commit|push|deploy|install|migrate|create|build)\\s+(?:(?:this|that|the|a|an|my|our|new|existing)\\s+){0,2}(?:bug|code|codebase|repository|repo|branch|commit|pull request|pr|tests?|test suite|migration|database|schema|app|website|server|api|dependencies?|packages?|files?)\\b`), 'technical action'],
+  [new RegExp(`^${REQUEST_PREFIX}(?:write|edit|modify|change|refactor|debug|fix|implement|run|commit|push|deploy|install|migrate|create|build|delete)\\s+(?:(?:this|that|the|a|an|my|our|new|existing)\\s+){0,2}(?:bug|code|codebase|repository|repo|branch|commit|pull request|pr|(?:unit\\s+)?tests?|test suite|migration|database|schema|app|website|server|api|dependencies?|packages?|files?)\\b`), 'technical action'],
   [new RegExp(`^${REQUEST_PREFIX}implement\\s+(?:(?:this|the|a|an|my|our|new)\\s+)?feature\\b.*\\b(?:repository|repo|codebase|app)\\b`), 'implement feature in code'],
   [new RegExp(`^${REQUEST_PREFIX}open\\s+(?:(?:a|the)\\s+)?(?:pull request|pr)\\b`), 'open pull request'],
   [/^(?:npm run|git (?:commit|push|checkout|switch|branch))\b/, 'tool command'],

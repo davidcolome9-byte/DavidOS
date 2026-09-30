@@ -2002,3 +2002,58 @@ reopened by this package.
 - **Scope.** No new dependency, AppState field, storage key, provider, OAuth,
   backend, background service, or autonomous execution path. This candidate
   is local and unreviewed; it is not pushed, merged, deployed, or accepted.
+
+## 2026-09-30 — DOS-AI-001A bounded review corrections and receipt reconciliation
+
+- **Authority.** The owner supplied an independent APPROVE verdict with
+  non-blocking findings for `7e63b7ebf9a7510a473642cf8eba0089a86bc5a9` and
+  authorized only bounded corrections, verification, and a new local candidate
+  on `feat/dos-ai-001a-agentic-routing`. Main remains at baseline
+  `8452b26d212df99edcd5428ec649d569f601882a`; no push, PR, merge, deployment,
+  or DOS-AI-001B work is authorized. The new candidate needs its own independent
+  review; implementation self-checks are not that gate.
+- **Match the actual source.** The reviewed commit uses an anchored regex with
+  `tests?`, not a `tests` executor-vocabulary entry passed to `matchesTerm`.
+  Singular forms already worked. Preserve that rule, add only the optional
+  `unit` modifier and the `delete` verb with the existing required technical
+  object. Do not broaden to loose word co-occurrence or add `clean`. Explicit
+  regressions cover singular/plural tests and ordinary-language negatives.
+  Domain routing's five states and the independent risk/approval rules are
+  unchanged, including high-risk blocking.
+- **UI evidence.** Extend the existing `tests/smoke/app.spec.ts` routing test,
+  not a parallel harness. Cover Tier 1/2/3 badge visibility, editing, Clear,
+  empty submission, and a Tier 3 request that remains high-risk/blocked.
+  Wait for each routing audit to commit before asserting no action and no
+  non-audit state change. Block and record attempted HTTP/WebSocket requests
+  after boot with service workers disabled for this test only. The browser
+  test observes the web boundary and local state; it is not OS process tracing.
+  Source inspection confirms no provider, shell, Git, or Coordinator dispatch
+  was introduced. Existing approval and supervised-execution component tests
+  remain the focused component regression layer.
+- **Receipt discrepancy.** `git --no-replace-objects diff-tree
+  --no-commit-id --name-only -r 7e63b7ebf9a7510a473642cf8eba0089a86bc5a9`
+  and the baseline-to-candidate diff both identify seven files, not five:
+  `docs/ARCHITECTURE.md`, `docs/CURRENT_STATE.md`, `docs/DECISIONS.md`,
+  `src/components/CommandPalette.tsx`,
+  `src/lib/__tests__/executionTier.test.ts`,
+  `src/lib/router/executionTier.ts`, and `tests/smoke/app.spec.ts`.
+  The candidate's parent is the supplied baseline; there are no Git replacement
+  objects. Both disputed files were committed, not left in a dirty worktree.
+  The review's five-file inventory omitted them; the reason for that omission
+  is not established by the local evidence. No missing history was fabricated.
+- **Documentation scope.** Update the existing candidate section in
+  `CURRENT_STATE.md` under AGENTS.md's current-state/feature documentation
+  requirements. This is candidate-state continuity, not release acceptance or
+  a new tracker. Dependencies, providers, schemas, storage, architecture, and
+  the protected checkout remain unchanged.
+- **Verification.** The new focused cases first reproduced eight failures
+  across the missing unit-test/delete forms; after the correction all 32
+  execution-tier tests and 21 existing approval/supervised-execution component
+  tests passed. The focused app/daily-use browser run passed 13/13. Required
+  `npm run verify:full -- --workers=2 --retries=0` passed: 62 Vitest files /
+  974 tests, 130/130 browser tests, lint, seed/privacy/docs validators,
+  TypeScript, and production build. Privacy validation scanned 259 text files
+  out of 266 tracked files with no findings. Final scope/privacy diff review
+  found no private assets, credentials, dependencies, or unrelated files;
+  `git diff --check` passed. Correction edits cover five already-tracked files;
+  the complete candidate still changes seven files from baseline.
