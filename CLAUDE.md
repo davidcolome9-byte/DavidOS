@@ -104,6 +104,8 @@ DavidOS/
   docs/                  operating docs (index in §11 below)
   seed/                  portable authored DATA (not code): agents, workflows,
                          projects, prompts, context — plus seed/AGENTS.md rules
+  skills/                repository-authored Skill procedures (<id>/SKILL.md);
+                         never imported by src/ — start at skills/skill-authoring
   src/
     app/                 App.tsx (routes/shell), main.tsx, AppErrorBoundary.tsx
     components/          UI screens — thin; logic belongs in lib/
@@ -195,6 +197,7 @@ npm test            # Vitest unit suite
 npm run test:watch  # Vitest watch
 npm run test:smoke  # build + Playwright (needs: npx playwright install chromium)
 npm run validate:seed     # seed schema, duplicate ids, seed↔registry parity
+npm run validate:skills   # Skill contract, closed vocabularies, references
 npm run validate:privacy  # generic personal-data rules over all tracked text
 npm run validate:docs     # JSON validity, md links, version sync, doc invariants
 npm run build       # tsc --noEmit + vite build + stamp sw version
@@ -230,6 +233,12 @@ These fail builds in ways that are easy to misread, so know them before you edit
 - **`validate:seed`** — required fields, known/duplicate ids, and seed↔registry
   parity in both directions (routed agents only; execution agents are excluded by
   design).
+- **`validate:skills`** — every `skills/<id>/SKILL.md` against the bounded Skill
+  contract: restricted frontmatter (fail-closed), required sections in order,
+  closed tier/risk/tool vocabularies and their consistency, id/reference
+  resolution, size limits, and hidden-character and credential-shape rejection.
+  It is deterministic only; quality judgment belongs to `skills/skill-authoring`
+  review mode. A missing `skills/` directory is not an error.
 
 ## 8. Conventions
 

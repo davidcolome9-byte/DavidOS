@@ -13,6 +13,7 @@ list wins; fix the stale copy, never the authoritative one.
 | Entity shapes | `src/lib/types.ts` | Every module imports from here |
 | Agent specs | `seed/agents/*.json` | Authored data; app never edits them |
 | Workflow specs | `seed/workflows/*.json` | Same |
+| Skill procedures | `skills/<id>/SKILL.md` (contract enforced by `scripts/validate-skills.mjs`) | Repository-authored procedure specifications, not loaded by the app. Subordinate to David's current instruction, `docs/AI_TOOL_ROUTING.md`, the authoritative source system for any domain fact, and the active package brief; a Skill can never grant or widen authority |
 | Starter projects/prompts/context | `seed/projects`, `seed/prompts`, `seed/context` | Loaded into default state; user copies then diverge |
 | Generic health seed | `src/data/healthProfileSeed.ts` | MUST stay bracket-placeholder generic (public repo) |
 | Decisions history | `docs/DECISIONS.md` | Append-only |

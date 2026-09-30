@@ -113,6 +113,8 @@ davidos/
   docs/              operating docs (see index below)
   seed/              portable JSON/MD specs: agents, workflows, projects,
                      prompts, context — data, not code; readable by any AI
+  skills/            repository-authored Skill procedures (skills/<id>/SKILL.md);
+                     procedure files only — never loaded by the app
   src/
     app/             App shell + entry
     components/      UI screens (thin; logic lives in lib/)
@@ -180,6 +182,7 @@ npm run typecheck   # tsc --noEmit
 npm test            # vitest unit tests
 npm run test:smoke  # Playwright browser smoke tests (needs: npx playwright install chromium)
 npm run validate:seed     # seed schema + duplicate ids + registry parity
+npm run validate:skills   # Skill contract, closed vocabularies, references
 npm run validate:privacy  # no personal location/timezone literals in the repo
 npm run validate:docs     # JSON, md links, version sync, documented commands
 npm run build       # typecheck + vite build + stamp sw version

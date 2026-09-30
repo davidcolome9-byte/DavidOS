@@ -118,6 +118,41 @@ The UI is one thin section on the existing Agents page
 dependency, provider path, or background job. DavidOS only records and copies;
 the external service does the work under David's supervision.
 
+## Skills (DOS-AI-001B) — authored procedures, not runtime entities
+
+`skills/<id>/SKILL.md` holds reusable, provider-independent procedures in a
+bounded DavidOS profile of the Agent Skills `SKILL.md` convention: Markdown
+body, restricted YAML-style frontmatter (`name`, `description`, and a
+`metadata` string map with `davidos-*` keys), and ten fixed `##` sections
+(Purpose → Authority). The Meta-Skill, `skills/skill-authoring`, defines how
+Skills are created, revised, versioned, and reviewed; it is itself a Skill
+validated by the same contract. Two pilot Skills (`independent-code-review`,
+`deep-research`) exercise it.
+
+A Skill is a repository-authored procedure that a person or an external AI
+tool follows. It is not an agent (no routing target, not in `AgentId`), not a
+workflow (no template, not in the runner), not a Prompt Vault entry (not user
+state), and not an execution record. The contract is owned by
+`scripts/validate-skills.mjs` (`npm run validate:skills`, part of `verify`):
+restricted fail-closed frontmatter, required sections in order, closed
+tier/risk/tool vocabularies and their consistency, id and `davidos-related`
+reference resolution (a Skill id may not collide with an agent or workflow id),
+size limits, and hidden-character and credential-shape rejection. Quality,
+duplication of doctrine, and provider independence are review judgment under
+the Meta-Skill, not validator behavior. No YAML dependency is used.
+
+**Runtime boundary.** Nothing in `src/` imports or reads `skills/`, so Skills
+are not in the bundle or the service-worker precache. There is no registry,
+index, `AppState` field, storage key, UI, router or tier-classifier change, or
+`ExecutionRecord` reference. `davidos-tiers` (`tier_2_assistant`,
+`tier_3_executor`; never `tier_1_local`) and `davidos-risk` (`read_only`,
+`draft_only`, `local_write`) are documentary declarations; they do not route,
+classify, approve, or execute anything, and the risk and approval policy is
+unchanged. Tool capability labels describe needs; they are not permissions, and
+`allowed-tools` pre-approval is rejected. A Skill can never grant authority.
+Wiring Skills into the app, the Tier router, or Execution Records would be a
+separate, separately authorized package.
+
 ## Continuity engine (v0.2 — the core of the Workflow Runner)
 - `lib/workflows/continuity.ts` — prior-handoff retrieval (3 default /
   7 fitness, overfetch ×2, status filter, correction dedupe) and prompt
