@@ -2057,3 +2057,28 @@ reopened by this package.
   found no private assets, credentials, dependencies, or unrelated files;
   `git diff --check` passed. Correction edits cover five already-tracked files;
   the complete candidate still changes seven files from baseline.
+
+## 2026-09-30 — DOS-AI-001A final release and authorization reset
+
+- **Release authority.** David authorized merge of exact reviewed candidate
+  `ac0100e70a4e23bc5f0c28f64afc11fa57789cec` and acknowledged the existing
+  automatic Pages workflow. Final independent read-only delta review returned
+  APPROVE with no blocking findings. PR #52 was marked ready, then merged by
+  GitHub's normal merge-commit method without changing the candidate.
+- **Exact merge.** `563327bd548b9ae0b5e3ddb9cea9eaf2922ed34d` has parents
+  `8452b26d212df99edcd5428ec649d569f601882a` (reviewed `main`) and the
+  approved candidate. The PR diff still contained the same seven files at
+  merge; auto-merge was not enabled.
+- **Remote verification.** Exact-candidate PR CI `36774113334` and CodeQL
+  `36774108566` succeeded. Exact-merge post-merge CI `36775352361`, Pages
+  `36775352714`, and CodeQL `36775356589` succeeded. Deployment record
+  `6769839331` reports success for the merge SHA. The live app, service worker,
+  and JavaScript bundle returned HTTP 200; the worker was stamped and the
+  bundle contained the Tier 3 UI. No physical-device or manual accessibility
+  acceptance is inferred from these checks.
+- **Closeout boundary.** This is a documentation-only release record under the
+  existing CURRENT_STATE/DECISIONS closeout convention. DOS-AI-001A is closed.
+  The pre-existing local-write notice wording for “delete the branch” remains
+  a non-blocking observation; no safety-policy or runtime change was made.
+  No provider, credential, OAuth, backend, dependency, schema, storage, or
+  external-execution authority was added. DOS-AI-001B remains unauthorized.
