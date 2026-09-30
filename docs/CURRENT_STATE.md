@@ -1,16 +1,17 @@
 # Current State — 2026-09-30
 
-## DOS-AI-001A local candidate — Agentic Routing Foundation
+## DOS-AI-001A released and closed — Agentic Routing Foundation
 
-An isolated local branch based on `8452b26d212df99edcd5428ec649d569f601882a`
-adds a deterministic execution-tier recommendation to the Command Palette.
+Candidate `ac0100e70a4e23bc5f0c28f64afc11fa57789cec`, based on
+`8452b26d212df99edcd5428ec649d569f601882a`, adds a deterministic
+execution-tier recommendation to the Command Palette.
 Tier 1 covers direct local state/navigation, Tier 2 covers assistant reasoning,
 and Tier 3 requires an actionable technical request. The classifier remains
 separate from domain routing and the risk/approval policy. Tier 3 is advisory:
 no provider, shell, Git action, or execution record starts from this result.
 The Supervised Coding Coordinator remains the future handoff point.
 
-The owner reports independent review of candidate
+The owner reported independent review of original candidate
 `7e63b7ebf9a7510a473642cf8eba0089a86bc5a9`: APPROVE with non-blocking findings.
 The authorized correction retains the anchored technical-action rule, adds
 `unit test(s)` and object-qualified `delete`, and tests singular/plural requests,
@@ -23,14 +24,29 @@ Git inspection confirms the previous candidate already committed seven files,
 including `tests/smoke/app.spec.ts` and this document; the reported five-file
 review list was incomplete. See the correction entry in `DECISIONS.md`.
 
-This corrected candidate remains local and awaits independent review of its
-exact new commit. It is not pushed, merged, deployed, released, or accepted.
-Local verification on 2026-09-30 passed: 32 focused execution-tier tests,
-21 focused component tests, 13 focused browser tests, and
-`npm run verify:full -- --workers=2 --retries=0` (62 Vitest files / 974 tests,
-130 browser tests, lint, seed/privacy/docs validation, TypeScript, and build).
-The final diff was reviewed for scope/privacy and passed `git diff --check`.
-This section grants no follow-on execution authority.
+Final independent read-only delta review of the corrected SHA returned
+APPROVE with no blocking findings. It reran 32 execution-tier unit tests,
+one focused browser test, and privacy validation. Local full verification
+passed with 974 unit/component tests in 62 files and 130 browser tests,
+along with lint, seed/privacy/docs validation, typecheck, and build.
+
+David authorized final release. PR #52 merged the unchanged candidate by
+merge commit `563327bd548b9ae0b5e3ddb9cea9eaf2922ed34d` on 2026-09-30.
+Its parents are the reviewed baseline and approved candidate. Pre-merge CI
+`36774113334` and CodeQL `36774108566` passed. Post-merge CI `36775352361`,
+Pages deployment `36775352714`, and CodeQL `36775356589` all passed on the
+exact merge SHA; Pages deployment record `6769839331` reports success. The
+live site, service worker, and served app bundle returned HTTP 200. The
+service worker contained stamped values rather than build placeholders, and
+the served bundle contained the Tier 3 UI. These are digital release checks,
+not physical-device or manual accessibility acceptance.
+
+DOS-AI-001A is merged, deployed, verified, and closed. The existing local-write
+notice is imprecise for “delete the branch”; this non-blocking review observation
+does not alter the safety policy or authorize a follow-up change. No provider,
+credential, backend, dependency, schema, storage, or real-execution authority
+was added. No implementation package is active; DOS-AI-001B requires separate
+owner authorization.
 
 ## Released app completion package — DOS-APP-20260919
 
