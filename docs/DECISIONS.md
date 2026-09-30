@@ -2082,3 +2082,82 @@ reopened by this package.
   a non-blocking observation; no safety-policy or runtime change was made.
   No provider, credential, OAuth, backend, dependency, schema, storage, or
   external-execution authority was added. DOS-AI-001B remains unauthorized.
+
+## 2026-09-30 — DOS-AI-001B Skills + Meta-Skill foundation (local candidate)
+
+- **Status honesty: this entry records a LOCAL CANDIDATE.** It is on
+  `feat/dos-ai-001b-skills-foundation` in an isolated worktree based exactly on
+  `5b1b60e5a986f3de9fc2b43714ca655fbf0a300a` (verified against `origin/main`
+  after a read-only fetch). It is unreviewed and is not pushed, merged, or
+  deployed. The protected checkout was stale at `8452b26` and was not touched.
+  David authorized Gate 1 local-candidate work only.
+- **Reuse-first analysis.** Nothing existing satisfied the need. Agents are
+  routed personas bound to the `AgentId` union; workflows are agent-bound
+  runnable templates; seed prompts become user-editable Prompt Vault state;
+  execution records are supervised-coding bookkeeping; the tier classifier is
+  advisory routing; `AI_TOOL_ROUTING.md` is policy. None is a portable,
+  validated procedure artifact, and extending `Prompt` or `Workflow` would be a
+  schema change. Adopted: the Agent Skills `SKILL.md` convention and the existing
+  validator, fixture, and `DAVIDOS_ROOT` conventions. Built new only the
+  `skills/` files, one validator, and its tests.
+- **Skills are authored procedures, not runtime entities.** They live at
+  `skills/<id>/SKILL.md`, deliberately not under `seed/`: `seed/` is application
+  seed data loaded by registries, while Skills are never loaded into the PWA.
+  Nothing in `src/` imports or reads them, so they are not in the bundle or the
+  service-worker precache. No registry, index, `AppState` field, storage key,
+  UI, tier-router or intent-router change, risk-classification change, or
+  `ExecutionRecord` reference was added. `davidos-tiers` and `davidos-risk` are
+  documentary declarations that route, classify, and approve nothing.
+- **Bounded contract.** A DavidOS profile of the Agent Skills format: frontmatter
+  limited to `name`, `description`, and a `metadata` string map with `davidos-*`
+  keys; ten required body sections in fixed order plus an optional final
+  `Examples`; only `SKILL.md` in a Skill directory (no `scripts/`,
+  `references/`, or `assets/`); `allowed-tools` rejected so a Skill cannot
+  pre-approve tools. Tiers are `tier_2_assistant` / `tier_3_executor` (never
+  `tier_1_local`, which is deterministic local code); risks are `read_only` /
+  `draft_only` / `local_write` (external writes and high-risk are out of
+  contract); tool labels are `none`, `web_search`, `repo_read`, `repo_write`,
+  `shell_run` and are descriptions, not permissions. `repo_write`, `local_write`,
+  and `shell_run` require `tier_3_executor`, and `repo_write` requires
+  `local_write`. The Authority section must contain the exact sentence "No
+  authority is granted by this skill." A Skill id may not equal an agent or
+  workflow id (underscores compared as hyphens).
+- **Validation is dedicated and deterministic.** `npm run validate:skills`
+  (`scripts/validate-skills.mjs`) runs in `verify` between `validate:seed` and
+  `validate:privacy`; `validate:seed` was left unchanged. The restricted
+  frontmatter parser fails closed and needs no dependency. It enforces
+  structure, closed vocabularies, cross-field consistency, reference
+  resolution, line/byte caps, and hidden-character and credential-shape
+  rejection. A missing `skills/` directory is not an error.
+- **Deliberately not built.** No global vendor/model lexical ban: provider
+  independence is Meta-Skill guidance and independent-review judgment, and the
+  three Skills were authored to be provider-independent. No prompt-injection
+  phrase heuristics, exact-duplicate-description heuristic, URL ban, or
+  HTML-comment check. No additional pilot Skills.
+- **Interpretations and deviations from the brief, recorded for review.** (1)
+  The unit test is `src/lib/__tests__/skillValidator.test.ts`, the repository's
+  test directory; the brief named `src/lib/tests/`, which Vitest would collect
+  but no other test uses. (2) `## Tool requirements` accepts only capability
+  bullets (indented lines may continue a bullet); the "capabilities are not
+  permissions" caveat lives in each Skill's Authority section. (3) Plain
+  metadata values that YAML would type as non-strings (numbers, booleans, null)
+  must be double-quoted so `metadata` stays a string map. (4) "Checkable"
+  Verification is enforced structurally as at least one bullet; whether a bullet
+  is genuinely checkable is review judgment. (5) The agent/workflow id collision
+  check also treats `_` and `-` as equal.
+- **Known limitations.** Content-safety rules are a floor, not a substitute for
+  review: they catch hidden characters and credential-shaped strings, not
+  manipulative prose. Version bumps are not machine-enforced. Skills are not
+  reachable from the PWA; surfacing them is separate, separately authorized work.
+- **Verification.** Baseline on the authorized SHA was green before edits (62
+  files / 974 unit tests, all validators, build). With the candidate:
+  63 files / 1017 unit tests (43 new), the three validators, build, and the
+  130 Chromium tests with no retries all passed. Six rule mutations were each
+  caught by the new tests. No dependency, `package-lock.json`, `types.ts`,
+  storage, router, safety, execution, or `AI_TOOL_ROUTING.md` change.
+- **Authority.** No provider, credential, OAuth, MCP, ORCA, voice, background
+  job, network, dependency, schema, storage, or authority change was added.
+  Independent review has not run; any push, pull request, merge, or deployment
+  requires separate owner authorization. `docs/AI_TOOL_ROUTING.md` section 13 is a
+  dated mapping that still says no package is active; it was intentionally left
+  unchanged.

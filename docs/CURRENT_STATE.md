@@ -1,5 +1,43 @@
 # Current State — 2026-09-30
 
+## DOS-AI-001B local candidate — Skills + Meta-Skill Foundation
+
+**Status: LOCAL CANDIDATE, unreviewed.** David authorized Gate 1 local-candidate
+work only for DOS-AI-001B. The candidate is on
+`feat/dos-ai-001b-skills-foundation`, built in an isolated worktree exactly on
+`5b1b60e5a986f3de9fc2b43714ca655fbf0a300a`. It is not pushed, not in a pull
+request, not merged, and not deployed; independent review has not run. Nothing
+below describes deployed behavior. This section supersedes any "no
+implementation package is active" statement further down for as long as the
+candidate exists; the sections below are dated history.
+
+The candidate adds repository-authored procedure infrastructure only:
+
+- `skills/<id>/SKILL.md` in a bounded DavidOS profile of the Agent Skills
+  convention, with three Skills: the Meta-Skill `skill-authoring` (how Skills
+  are created, revised, versioned, and reviewed) and two pilots,
+  `independent-code-review` and `deep-research`;
+- `scripts/validate-skills.mjs` and `npm run validate:skills`, added to
+  `npm run verify` between `validate:seed` and `validate:privacy`;
+- `src/lib/__tests__/skillValidator.test.ts` (43 tests);
+- pointer and architecture documentation (see the DECISIONS entry).
+
+Skills are **not** runtime entities: nothing in `src/` imports or reads them,
+they are not bundled, and there is no registry, index, `AppState` field,
+storage key, UI, router or tier-classifier change, or `ExecutionRecord`
+reference. A Skill cannot grant authority and is subordinate to David's current
+instruction, `docs/AI_TOOL_ROUTING.md`, source-system authority, and the active
+package brief. No provider, credential, OAuth, MCP, ORCA, voice, background
+job, network, dependency, schema, storage, or approval-policy change was made,
+and `docs/AI_TOOL_ROUTING.md` is unchanged.
+
+Local verification: the baseline on the authorized SHA was green before edits
+(62 files / 974 unit tests). With the candidate, 63 files / 1017 unit tests,
+`validate:seed`, `validate:skills`, `validate:privacy`, `validate:docs`, the
+production build, and 130/130 Chromium tests passed with no retries. These are
+local results, not CI, and there is no physical-device or manual accessibility
+acceptance. Next gate: independent read-only review of the exact candidate.
+
 ## DOS-AI-001A released and closed — Agentic Routing Foundation
 
 Candidate `ac0100e70a4e23bc5f0c28f64afc11fa57789cec`, based on
@@ -45,8 +83,9 @@ DOS-AI-001A is merged, deployed, verified, and closed. The existing local-write
 notice is imprecise for “delete the branch”; this non-blocking review observation
 does not alter the safety policy or authorize a follow-up change. No provider,
 credential, backend, dependency, schema, storage, or real-execution authority
-was added. No implementation package is active; DOS-AI-001B requires separate
-owner authorization.
+was added. At that closeout no implementation package was active; DOS-AI-001B
+was then authorized separately as a Gate 1 local candidate (see the section
+above).
 
 ## Released app completion package — DOS-APP-20260919
 

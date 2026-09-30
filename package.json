@@ -19,9 +19,10 @@
     "test:watch": "vitest",
     "test:smoke": "npm run build && playwright test",
     "validate:seed": "node scripts/validate-seed.mjs",
+    "validate:skills": "node scripts/validate-skills.mjs",
     "validate:privacy": "node scripts/validate-privacy.mjs",
     "validate:docs": "node scripts/validate-docs.mjs",
-    "verify": "npm run lint && npm test && npm run validate:seed && npm run validate:privacy && npm run validate:docs && npm run build",
+    "verify": "npm run lint && npm test && npm run validate:seed && npm run validate:skills && npm run validate:privacy && npm run validate:docs && npm run build",
     "verify:full": "npm run verify && playwright test",
     "icons": "node scripts/make-icons.mjs"
   },

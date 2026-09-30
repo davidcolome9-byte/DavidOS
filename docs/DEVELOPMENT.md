@@ -43,11 +43,12 @@ export UI stays disabled and everything else works.
 | `npm run test:watch` | Vitest watch mode |
 | `npm run test:smoke` | Playwright browser smoke tests (builds first; chromium required) |
 | `npm run validate:seed` | Seed JSON validation: required fields, known ids, duplicates, seed↔registry parity both directions |
+| `npm run validate:skills` | Skill validation for `skills/<id>/SKILL.md`: restricted frontmatter, required sections, closed tier/risk/tool vocabularies, reference resolution, size and content-safety limits |
 | `npm run validate:privacy` | Fails on personal location/home-timezone literals anywhere in tracked text files |
 | `npm run validate:docs` | JSON validity, markdown link targets, package/lock version sync, documented npm commands exist |
 | `npm run build` | `tsc --noEmit` + `vite build` + stamp sw version |
 | `npm run preview` | Serve `dist/` → http://localhost:4173 |
-| `npm run verify` | lint + unit tests + seed/privacy/docs validation + build (build includes typecheck) — the definition-of-done gate |
+| `npm run verify` | lint + unit tests + seed/skills/privacy/docs validation + build (build includes typecheck) — the definition-of-done gate |
 | `npm run verify:full` | `verify` + browser smoke tests |
 | `npm run icons` | Regenerate PWA icons (rarely needed; committed) |
 
