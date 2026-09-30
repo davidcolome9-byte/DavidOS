@@ -2161,3 +2161,51 @@ reopened by this package.
   requires separate owner authorization. `docs/AI_TOOL_ROUTING.md` section 13 is a
   dated mapping that still says no package is active; it was intentionally left
   unchanged.
+
+## 2026-09-30 — DOS-AI-001B final release and authorization reset
+
+- **Release authority.** David authorized final release of exact candidate
+  `39bc54ef6fdd69dc66b5496137f396a728c3e58e` and acknowledged that merging
+  triggers the existing automatic Pages deployment. The owner reported a
+  separate independent read-only review: READY FOR PUSH AND PR, no blocking
+  findings. The feature candidate was not changed at any point after that review.
+- **Pre-merge gate.** Immediately before merging, PR #54 was open and mergeable,
+  its head was exactly the approved candidate, `main` was still
+  `5b1b60e5a986f3de9fc2b43714ca655fbf0a300a`, and the PR diff was identical to the
+  candidate's (13 files, one commit). Exact-head CI run `36790095709` and CodeQL
+  run `36790092405` had succeeded. The draft PR was marked ready; no auto-merge
+  was enabled and no branch was deleted.
+- **Exact merge.** `3b7033ca3115b300dc8584277a1da7acddc87096` (2026-09-30) was made
+  by GitHub's normal merge-commit method, pinned to the approved head. Its parents
+  are the reviewed baseline and the approved candidate, and its tree equals the
+  candidate's.
+- **Remote verification.** Exact-merge CI `36790478557`, Pages deployment
+  `36790478617`, and CodeQL `36790478116` succeeded; deployment record
+  `6772284981` reports success. The CI log shows `Skills validation OK` for three
+  Skills, so `validate:skills` runs in the gate that also guards deployment. The
+  live site, `sw.js`, and the manifest returned HTTP 200. The served bundle and
+  stylesheet have the same content hashes as the verified build, the service
+  worker is stamped with no build placeholders, the Tier 3 UI from DOS-AI-001A is
+  still served, and the bundle contains no Skill text. No Skills UI acceptance
+  test was invented because none exists; these are digital release checks, not
+  physical-device or manual accessibility acceptance.
+- **Stale-wording determination.** After release, the statements in
+  `docs/AI_TOOL_ROUTING.md` section 13 and `docs/OPEN_LOOPS.md` that no
+  implementation package is active are accurate again, because this closeout
+  closes the only active package. They were inspected and not edited; the
+  routing doctrine in particular is unchanged. The temporary supersession note
+  recorded in `CURRENT_STATE.md` during the candidate phase is replaced by the
+  release record there.
+- **Closeout boundary.** This is a documentation-only release record under the
+  existing CURRENT_STATE/DECISIONS closeout convention (two files). DOS-AI-001B is
+  closed. No backlog item was added: no concrete unresolved defect surfaced, and
+  possible follow-ons (runtime or UI integration, tier-router or Execution Record
+  linkage, more Skills, tool adapters, version-bump enforcement) are not
+  authorized and are not recorded as work. The feature branch and worktree were
+  left in place because branch cleanup needs separate authorization. GitHub
+  reported 15 existing Dependabot alerts on the default branch when the branch was
+  pushed; this package changed no dependencies and does not address them.
+- **Authority reset.** No provider, credential, OAuth, MCP, ORCA, voice, background
+  job, network, dependency, schema, storage, runtime-integration, or
+  approval-policy change was added. No implementation package is active, and no
+  later package is authorized.

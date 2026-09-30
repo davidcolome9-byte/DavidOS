@@ -1,26 +1,20 @@
 # Current State — 2026-09-30
 
-## DOS-AI-001B local candidate — Skills + Meta-Skill Foundation
+## DOS-AI-001B released and closed — Skills + Meta-Skill Foundation
 
-**Status: LOCAL CANDIDATE, unreviewed.** David authorized Gate 1 local-candidate
-work only for DOS-AI-001B. The candidate is on
-`feat/dos-ai-001b-skills-foundation`, built in an isolated worktree exactly on
-`5b1b60e5a986f3de9fc2b43714ca655fbf0a300a`. It is not pushed, not in a pull
-request, not merged, and not deployed; independent review has not run. Nothing
-below describes deployed behavior. This section supersedes any "no
-implementation package is active" statement further down for as long as the
-candidate exists; the sections below are dated history.
-
-The candidate adds repository-authored procedure infrastructure only:
+Approved candidate `39bc54ef6fdd69dc66b5496137f396a728c3e58e`, based on
+`5b1b60e5a986f3de9fc2b43714ca655fbf0a300a`, adds repository-authored procedure
+infrastructure only:
 
 - `skills/<id>/SKILL.md` in a bounded DavidOS profile of the Agent Skills
   convention, with three Skills: the Meta-Skill `skill-authoring` (how Skills
   are created, revised, versioned, and reviewed) and two pilots,
   `independent-code-review` and `deep-research`;
-- `scripts/validate-skills.mjs` and `npm run validate:skills`, added to
-  `npm run verify` between `validate:seed` and `validate:privacy`;
+- `scripts/validate-skills.mjs` and `npm run validate:skills`, part of
+  `npm run verify` between `validate:seed` and `validate:privacy`, so it runs in
+  CI and in the Pages deployment gate;
 - `src/lib/__tests__/skillValidator.test.ts` (43 tests);
-- pointer and architecture documentation (see the DECISIONS entry).
+- pointer and architecture documentation.
 
 Skills are **not** runtime entities: nothing in `src/` imports or reads them,
 they are not bundled, and there is no registry, index, `AppState` field,
@@ -29,14 +23,42 @@ reference. A Skill cannot grant authority and is subordinate to David's current
 instruction, `docs/AI_TOOL_ROUTING.md`, source-system authority, and the active
 package brief. No provider, credential, OAuth, MCP, ORCA, voice, background
 job, network, dependency, schema, storage, or approval-policy change was made,
-and `docs/AI_TOOL_ROUTING.md` is unchanged.
+and `docs/AI_TOOL_ROUTING.md` was not edited.
 
-Local verification: the baseline on the authorized SHA was green before edits
-(62 files / 974 unit tests). With the candidate, 63 files / 1017 unit tests,
-`validate:seed`, `validate:skills`, `validate:privacy`, `validate:docs`, the
-production build, and 130/130 Chromium tests passed with no retries. These are
-local results, not CI, and there is no physical-device or manual accessibility
-acceptance. Next gate: independent read-only review of the exact candidate.
+Pre-merge evidence: the baseline on the authorized SHA was green before edits
+(62 files / 974 unit tests). The owner reported an independent read-only review
+of the exact candidate by a separate reviewer: READY FOR PUSH AND PR with no
+blocking findings, having reproduced lint, typecheck, 43/43 validator tests,
+1017/1017 unit tests in 63 files, the four validators, the build,
+`verify:full`, and 130/130 Chromium tests with no retries, plus a clean
+`git diff --check` and no Skill text in `dist/`. Exact-head PR CI run
+`36790095709` (job `verify`) and CodeQL run `36790092405` (Analyze for actions
+and javascript-typescript, plus the CodeQL check) succeeded.
+
+David authorized final release. PR #54 was marked ready and merged by GitHub's
+normal merge-commit method, pinned to the approved head, as
+`3b7033ca3115b300dc8584277a1da7acddc87096` on 2026-09-30. Its parents are the
+reviewed baseline and the approved candidate, and its tree is identical to the
+candidate's (13 files). Post-merge CI `36790478557` (63 files / 1017 unit tests,
+all four validators including `Skills validation OK` for three Skills, the
+build, and 130 Chromium tests), Pages deployment `36790478617`, and CodeQL
+`36790478116` all succeeded on the exact merge SHA; Pages deployment record
+`6772284981` reports success. The live site, `sw.js`, and the manifest returned
+HTTP 200. The served bundle and stylesheet (`index-vtHea5I1.js`,
+`index-3ZbBePYX.css`) carry the same content hashes as the verified build, the
+service worker is stamped rather than carrying build placeholders, the existing
+Tier 3 UI is still served, and the served bundle contains no Skill text. These
+are digital release checks, not physical-device or manual accessibility
+acceptance, and no Skills UI exists to accept.
+
+DOS-AI-001B is merged, deployed, verified, and closed. Known non-blocking
+limitations are unchanged: the content-safety rules are a floor rather than a
+substitute for review, version bumps are not machine-enforced, and Skills are
+not reachable from the PWA. The feature branch and its worktree were left in
+place; no branch cleanup was authorized. No implementation package is active
+after this closeout, and no later package, including any follow-on Skills work,
+runtime or UI integration, provider, credential, or execution work, is
+authorized; each needs separate owner authorization.
 
 ## DOS-AI-001A released and closed — Agentic Routing Foundation
 
@@ -84,8 +106,7 @@ notice is imprecise for “delete the branch”; this non-blocking review observ
 does not alter the safety policy or authorize a follow-up change. No provider,
 credential, backend, dependency, schema, storage, or real-execution authority
 was added. At that closeout no implementation package was active; DOS-AI-001B
-was then authorized separately as a Gate 1 local candidate (see the section
-above).
+was then authorized separately, released, and closed (see the section above).
 
 ## Released app completion package — DOS-APP-20260919
 
