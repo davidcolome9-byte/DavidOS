@@ -1,4 +1,36 @@
-# Current State — 2026-09-20
+# Current State — 2026-09-30
+
+## DOS-AI-001A local candidate — Agentic Routing Foundation
+
+An isolated local branch based on `8452b26d212df99edcd5428ec649d569f601882a`
+adds a deterministic execution-tier recommendation to the Command Palette.
+Tier 1 covers direct local state/navigation, Tier 2 covers assistant reasoning,
+and Tier 3 requires an actionable technical request. The classifier remains
+separate from domain routing and the risk/approval policy. Tier 3 is advisory:
+no provider, shell, Git action, or execution record starts from this result.
+The Supervised Coding Coordinator remains the future handoff point.
+
+The owner reports independent review of candidate
+`7e63b7ebf9a7510a473642cf8eba0089a86bc5a9`: APPROVE with non-blocking findings.
+The authorized correction retains the anchored technical-action rule, adds
+`unit test(s)` and object-qualified `delete`, and tests singular/plural requests,
+ordinary-language exclusions, and unchanged risk/approval policy. The existing
+Command Palette browser test now covers all three visible badges, stale-result
+clearing, committed no-action audit entries, unchanged non-audit state, and
+blocked network attempts. No new execution path or `clean` action was added.
+
+Git inspection confirms the previous candidate already committed seven files,
+including `tests/smoke/app.spec.ts` and this document; the reported five-file
+review list was incomplete. See the correction entry in `DECISIONS.md`.
+
+This corrected candidate remains local and awaits independent review of its
+exact new commit. It is not pushed, merged, deployed, released, or accepted.
+Local verification on 2026-09-30 passed: 32 focused execution-tier tests,
+21 focused component tests, 13 focused browser tests, and
+`npm run verify:full -- --workers=2 --retries=0` (62 Vitest files / 974 tests,
+130 browser tests, lint, seed/privacy/docs validation, TypeScript, and build).
+The final diff was reviewed for scope/privacy and passed `git diff --check`.
+This section grants no follow-on execution authority.
 
 ## Released app completion package — DOS-APP-20260919
 

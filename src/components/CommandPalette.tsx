@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { COMMANDS, matchCommand, resolveDomainRouteCommand, workflowTargetToParams } from '../lib/commands';
 import { redactedCommandLabel } from '../lib/audit/redaction';
 import { routeIntent } from '../lib/router/intentRouter';
+import { classifyExecutionTier, EXECUTION_TIER_LABELS, type ExecutionTierDecision } from '../lib/router/executionTier';
 import { classifyCommand } from '../lib/safety/riskClassifier';
 import { requiresApproval, requiresLocalNotice, RISK_LABELS } from '../lib/safety/approvalRules';
 import { getAgent } from '../lib/agents/agentRegistry';
@@ -22,6 +23,7 @@ export default function CommandPalette() {
   const [input, setInput] = useState('');
   const [result, setResult] = useState<RouteResult | null>(null);
   const [risk, setRisk] = useState<RiskLevel | null>(null);
+  const [executionTier, setExecutionTier] = useState<ExecutionTierDecision | null>(null);
   const [routedInput, setRoutedInput] = useState('');
   const navigate = useNavigate();
   const { audit } = useStore();
@@ -62,6 +64,7 @@ export default function CommandPalette() {
 
   function routeFreeText(text: string, auditOptions?: { command?: string; resultSummary?: string }) {
     const r = routeIntent(text);
+    const executionDecision = classifyExecutionTier(text, r);
     const commandRisk = classifyCommand(text);
     const blocked = requiresApproval(commandRisk); // external_write and above
     // Keyed by the closed classification union, so the lookup below is total.
@@ -75,8 +78,10 @@ export default function CommandPalette() {
     const defaultSummary = blocked
       ? `Risky command detected (${RISK_LABELS[commandRisk]}), but no executable route is connected. Nothing was sent or changed.`
       : classSummary[r.classification];
+    const auditSummary = `${auditOptions?.resultSummary ?? defaultSummary} Execution tier: ${EXECUTION_TIER_LABELS[executionDecision.tier]}.`;
     setResult(r);
     setRisk(commandRisk);
+    setExecutionTier(executionDecision);
     setRoutedInput(text);
     // Never persist the raw command. Store a safe event label with the route
     // classification and a non-reversible fingerprint (F-05). The routed text
@@ -88,7 +93,7 @@ export default function CommandPalette() {
       actionType: commandRisk,
       approvalStatus: blocked ? 'blocked' : 'not_required',
       actionTaken: false,
-      resultSummary: auditOptions?.resultSummary ?? defaultSummary,
+      resultSummary: auditSummary,
     });
   }
 
@@ -126,7 +131,7 @@ export default function CommandPalette() {
       <input
         type="text"
         value={input}
-        onChange={(e) => { setInput(e.target.value); setResult(null); setRisk(null); }}
+        onChange={(e) => { setInput(e.target.value); setResult(null); setRisk(null); setExecutionTier(null); }}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
         placeholder='Type a request, or "/" for commands...'
         aria-label="Command input"
@@ -145,7 +150,7 @@ export default function CommandPalette() {
       )}
       <div className="btn-row">
         <button className="primary" onClick={submit}>Route This</button>
-        <button className="ghost" onClick={() => { setInput(''); setResult(null); setRisk(null); }}>Clear</button>
+        <button className="ghost" onClick={() => { setInput(''); setResult(null); setRisk(null); setExecutionTier(null); }}>Clear</button>
       </div>
 
       {/* Honest safety banner for risky commands - shown whether or not an agent matched. */}
@@ -168,6 +173,12 @@ export default function CommandPalette() {
 
       {result && (
         <div className="notice" style={{ borderStyle: 'solid' }}>
+          {executionTier && (
+            <p className="row small">
+              <span className="badge neutral">{EXECUTION_TIER_LABELS[executionTier.tier]}</span>
+              <span className="muted">{executionTier.reasoning}</span>
+            </p>
+          )}
           {result.classification === 'unknown' ? (
             <>
               <p><strong>No confident match.</strong> {result.reasoning}</p>

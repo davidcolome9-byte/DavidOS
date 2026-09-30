@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { canonicalStateRaw } from './helpers/journalState';
+import { canonicalState, canonicalStateRaw, waitForCanonicalState } from './helpers/journalState';
+import type { AppState } from '../../src/lib/types';
 
 // Browser smoke tests: a thin safety net over the production build.
 // They assert the app boots, navigates, persists, and recovers — not
@@ -49,6 +50,92 @@ test('risky free-text command shows the honest no-op, sends nothing', async ({ p
   await page.getByLabel('Command input').fill('send an email to my boss about the report');
   await page.getByRole('button', { name: 'Route This' }).click();
   await expect(page.locator('strong', { hasText: 'Nothing was sent or changed.' })).toBeVisible();
+});
+
+test.describe('execution-tier routing', () => {
+  // Keep this test's network guard observable; do not let a worker bypass it.
+  test.use({ serviceWorkers: 'block' });
+
+  test('shows each advisory badge, clears stale results, and executes nothing', async ({ page, context }) => {
+    await gotoHome(page);
+    await waitForCanonicalState(page);
+    const before = await canonicalState<AppState>(page);
+    const originalUrl = page.url();
+    const attempts: string[] = [];
+    // Classification needs no requests after boot. Fail even attempted calls,
+    // and prevent provider/local shell or Git bridge requests from leaving.
+    await context.route('**/*', (request) => {
+      attempts.push(request.request().url());
+      return request.abort();
+    });
+    await context.routeWebSocket('**/*', (socket) => {
+      attempts.push(socket.url());
+      socket.close();
+    });
+    page.on('popup', () => attempts.push('popup'));
+    page.on('download', () => attempts.push('download'));
+
+    const input = page.getByLabel('Command input');
+    const route = page.getByRole('button', { name: 'Route This' });
+    const badges = page.locator('.badge').filter({ hasText: /^Tier [123] · / });
+    const cases = [
+      ['Show my priorities', 'Tier 1 · Local'],
+      ['Write me a message about the app', 'Tier 2 · Assistant'],
+      ['Write unit tests', 'Tier 3 · Executor'],
+      ['Delete the branch', 'Tier 3 · Executor'],
+      ['Delete the branch and buy a server', 'Tier 3 · Executor'],
+    ] as const;
+
+    for (const [index, [text, label]] of cases.entries()) {
+      await input.fill(text);
+      await expect(badges).toHaveCount(0); // Editing invalidates the old result.
+      await route.click();
+      await expect(badges).toHaveCount(1);
+      await expect(badges).toHaveText(label);
+      await expect(badges).toBeVisible();
+      if (label === 'Tier 3 · Executor') {
+        await expect(page.getByText(/future handoff point; nothing was executed/)).toBeVisible();
+      }
+      // Wait for THIS route's audit write, not an earlier empty-record snapshot.
+      await expect.poll(async () => {
+        const state = await canonicalState<AppState>(page);
+        return state.auditLog.length;
+      }).toBe(before.auditLog.length + index + 1);
+      const current = await canonicalState<AppState>(page);
+      expect(current.auditLog[0]).toMatchObject({ actionTaken: false });
+      expect(current.auditLog[0]?.resultSummary).toContain(`Execution tier: ${label}`);
+      expect(current.executionRecords).toEqual(before.executionRecords);
+      expect({ ...current, auditLog: before.auditLog }).toEqual(before);
+      expect(page.url()).toBe(originalUrl);
+      expect(attempts).toEqual([]);
+    }
+
+    // A Tier 3 label does not override the existing high-risk block.
+    await expect(page.getByText('High risk — blocked in v1', { exact: true })).toBeVisible();
+    await expect(page.getByText('Nothing was sent or changed.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Approve', exact: true })).toHaveCount(0);
+    const routed = await canonicalState<AppState>(page);
+    expect(routed.auditLog[0]).toMatchObject({ actionType: 'high_risk', approvalStatus: 'blocked', actionTaken: false });
+
+    await page.getByRole('button', { name: 'Clear', exact: true }).click();
+    await expect(input).toHaveValue('');
+    await expect(badges).toHaveCount(0);
+    await expect(page.getByText(/future handoff point; nothing was executed/)).toHaveCount(0);
+    await input.fill('Run a test');
+    await route.click();
+    await expect(badges).toHaveText('Tier 3 · Executor');
+    await expect.poll(async () => (await canonicalState<AppState>(page)).auditLog.length)
+      .toBe(before.auditLog.length + cases.length + 1);
+    const lastRoute = await canonicalState<AppState>(page);
+    await input.fill(''); // Deleting the text also clears the result.
+    await expect(badges).toHaveCount(0);
+    await route.click(); // Empty submissions do not reuse the old result.
+    await expect(badges).toHaveCount(0);
+    expect(await canonicalState<AppState>(page)).toEqual(lastRoute);
+    expect({ ...lastRoute, auditLog: before.auditLog }).toEqual(before);
+    expect(lastRoute.auditLog[0]).toMatchObject({ actionTaken: false });
+    expect(attempts).toEqual([]);
+  });
 });
 
 test('a routed free-text command is never stored or rendered verbatim (privacy)', async ({ page }) => {
