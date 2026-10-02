@@ -90,9 +90,10 @@ here than in most repos, because Claude Code can push and open PRs.
 - **Stop and report** on: wrong repo/branch/base/candidate SHA, unexpected
   modified or untracked files, failing tests or CI, failed privacy validation,
   merge conflicts, data-safety uncertainty, or authorization ambiguity.
-- **Independence.** A Claude implementation is normally reviewed by a different
-  model family (Codex). Self-review can improve a candidate but
-  does not satisfy the review gate — don't claim it does.
+- **Independence.** Review follows the independence rules (§6) and current
+  review mapping (§4.4) in [docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md).
+  Self-review can improve a candidate but does not satisfy the review gate —
+  don't claim it does.
 - **Execution header and effort.** A meaningful Claude Code execution packet
   begins with the five-field header (PLATFORM, MODEL, EFFORT / INTELLIGENCE,
   WHY, ESCALATE ONLY IF) from

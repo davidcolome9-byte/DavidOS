@@ -190,7 +190,7 @@ Astra at the effort in §4.7.
 
 ### 4.4 Primary independent reviewer
 
-**Default tool/model:** Codex Auto Review when appropriate; otherwise a separate Codex GPT-6 Astra / High review context. A Codex implementation is reviewed by a separate Claude Code context (Sonnet 5.5 / High for ordinary audit; Opus 5.5 / High for serious red-team or difficult adjudication). Antigravity/Gemini is not currently a designated reviewer: David has not approved a current Gemini mapping (§4.7), and earlier Gemini review records remain historical evidence.
+**Default tool/model:** Codex Auto Review when appropriate; otherwise a separate Codex GPT-6 Astra / High review context. This is the owner-adopted review route for Claude-built work. The 2026-10-02 policy does not map a reviewer for a Codex-built candidate: the general independence requirement (§6) applies, and the reviewer is assigned separately under current authority. Antigravity/Gemini is not currently a designated reviewer: David has not approved a current Gemini mapping (§4.7), and earlier Gemini review records remain historical evidence.
 
 **Use for:**
 
@@ -322,11 +322,11 @@ evidence and are not modified.
 |---|---|---|---|
 | Program strategy, package design, decision support | ChatGPT Program Control (model not pinned, §4.1) | Codex GPT-6 Astra / High or Claude Opus 5.5 / High when needed | Opus 5.5 / High for deep technical consultation |
 | Documentation and governance | Claude Code Sonnet 5.5 (Medium for small edits, High for multi-file or consequential work) | Codex Auto Review or separate GPT-6 Astra / High | Codex GPT-6 Astra / High for disputed technical claims |
-| Standard implementation | Claude Code Sonnet 5.5 / High, or Codex GPT-6 Sol / Medium (bounded) or GPT-6 Astra / High (multi-file) | Codex Auto Review or separate GPT-6 Astra / High; a Codex build is reviewed by a separate Claude Code context | Opus 5.5 / High if the default is blocked |
+| Standard implementation | Claude Code Sonnet 5.5 / High, or Codex GPT-6 Sol / Medium (bounded) or GPT-6 Astra / High (multi-file) | Codex Auto Review or separate GPT-6 Astra / High for Claude-built work; for a Codex build, assigned separately (§4.4, §6) | Opus 5.5 / High if the default is blocked |
 | High-risk storage, migration, recovery, concurrency | Claude Code Opus 5.5 / High (Codex GPT-6 Astra / Extra High for major architecture) | Codex preferred (Auto Review or separate GPT-6 Astra / High) | David decision if reviewers disagree |
 | UI, accessibility, mobile polish | Claude Code Sonnet 5.5 / High | Codex Auto Review or separate GPT-6 Astra / High | Codex for code-specific disputes |
 | Mechanical inventory or repetitive cleanup | Haiku 4.5 / Medium (Claude Code) or GPT-6 Luna / Low (Codex) | Sonnet 5.5 / Medium spot-check | None |
-| Privacy and security review | Independent reviewer per §4.4 (Codex GPT-6 Astra / High; Claude Opus 5.5 / High for a Codex build); serious red-team classification when consequence is high | Codex for code-level confirmation | Opus 5.5 / High or GPT-6 Astra / Extra High for complex correction |
+| Privacy and security review | Independent reviewer per §4.4 and §6; serious red-team classification (GPT-6 Astra / Extra High or Opus 5.5 / High per §4.7) when consequence is high | Codex for code-level confirmation | Opus 5.5 / High or GPT-6 Astra / Extra High for complex correction |
 | Test reliability and harness repair | Claude Code Sonnet 5.5 / High | Codex Auto Review or separate GPT-6 Astra / High | Opus 5.5 / High only for complex environment interactions |
 | Release execution after authorization | Claude Code Sonnet 5.5 (effort per §4.7 classification) | Program Control verifies report | Stop on any mismatch |
 | Live acceptance | Claude Code Sonnet 5.5 in isolated synthetic context | Program Control reviews evidence | Never use David’s real browser data |
@@ -339,15 +339,13 @@ Gemini/Antigravity has no current mapping and appears in no row (§4.7).
 ## 6. Independence rules
 
 1. The primary builder must not be the sole final reviewer.
-2. Use a different model family for independent review whenever practical.
-3. A Claude implementation should normally be reviewed by Codex (§4.4).
-4. A Gemini implementation (should one ever be authorized) should normally be reviewed by Codex or Claude.
-5. A Codex implementation should normally be reviewed by a separate Claude Code context (§4.4).
-6. Self-review may improve a candidate, but it does not satisfy the independent-review gate.
-7. Reviewers operate read-only unless Program Control explicitly converts the session into a correction session.
-8. The reviewer must inspect the exact candidate SHA, staged diff, or explicitly identified working-tree state.
-9. “Tests passed” is not enough. The reviewer must state which tests ran, on which SHA or state, and what remains untested.
-10. Model confidence never replaces repository evidence.
+2. Use a different model family, or at least a separate review context, for independent review whenever practical.
+3. The specific reviewer for a candidate is assigned under the current mapping (§4.4, §4.7) and current authority; this section fixes no pairing of a provider or model to a builder.
+4. Self-review may improve a candidate, but it does not satisfy the independent-review gate.
+5. Reviewers operate read-only unless Program Control explicitly converts the session into a correction session.
+6. The reviewer must inspect the exact candidate SHA, staged diff, or explicitly identified working-tree state.
+7. “Tests passed” is not enough. The reviewer must state which tests ran, on which SHA or state, and what remains untested.
+8. Model confidence never replaces repository evidence.
 
 ---
 
@@ -690,7 +688,7 @@ When uncertain:
 
 - ChatGPT Program Control controls;
 - Sonnet 5.5 (Claude Code) and the GPT-6 models (Codex) build, per §4.7;
-- Codex reviews and arbitrates, and a Codex build is reviewed by a separate Claude context;
+- Codex Auto Review or a separate GPT-6 Astra / High context reviews Claude-built work, Codex arbitrates, and a Codex build's reviewer is assigned separately (§6);
 - Opus 5.5 handles frontier architecture (Fable 5.1 only when its cost is warranted);
 - Haiku 4.5 and GPT-6 Luna handle mechanical support;
 - Gemini has no current mapping until David approves one;
