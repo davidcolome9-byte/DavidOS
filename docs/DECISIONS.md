@@ -2209,3 +2209,49 @@ reopened by this package.
   job, network, dependency, schema, storage, runtime-integration, or
   approval-policy change was added. No implementation package is active, and no
   later package is authorized.
+
+## 2026-10-02 — AI execution routing policy adopted (current Codex and Claude Code mappings)
+
+- **Decision (owner-adopted by David, 2026-10-02).** `docs/AI_TOOL_ROUTING.md`
+  is updated to version 1.1 with the owner-supplied current routing policy:
+  a mandatory five-field execution header (PLATFORM, MODEL,
+  EFFORT / INTELLIGENCE, WHY, ESCALATE ONLY IF) for every meaningful Codex or
+  Claude Code execution packet (section 2); the current Codex and Claude Code
+  model/effort mappings (new section 4.7) with the role bindings in sections
+  4.1–4.6, the section 5 matrix, section 13's Program Control line, and the
+  section 17 summary list brought into line; and ten general cost-aware routing
+  rules (section 7). Max, Ultra, and Ultracode are exceptional and Fable 5.1 is
+  used only when its usage-credit cost is warranted.
+- **Scope.** Current policy statements only. The stable doctrine — authorization
+  boundaries, two-gate execution model, independence rules, mandatory stop
+  conditions, usage-aware fallback structure, and the package assignment
+  template — is preserved, and the validator markers that guard it still pass.
+  Section 6 was edited only to remove the previous provider-specific
+  builder-to-reviewer pairings and keep its principles.
+  `AGENTS.md` and `CLAUDE.md` gained a minimal pointer to the header and
+  section 4.7 rather than a copy of the policy. Platform, model, and effort
+  selection never expands authority.
+- **Historical records unchanged.** Model names in earlier decisions,
+  `CURRENT_STATE.md`, `OPEN_LOOPS.md`, reviews, and handoffs (for example GPT-5.6
+  Thinking, Sonnet 5, Fable 5, Gemini 3.1 Pro, Gemini 3.5 Flash) are evidence of
+  what was true when written and were not modernized. Section 13's
+  package-level program state was not re-reviewed and keeps its 2026-07-26
+  date.
+- **Evidence gaps recorded, not filled.** The owner-supplied policy approves no
+  current Gemini/Antigravity mapping and names no current ChatGPT model for
+  Program Control. Repository evidence contains no newer accepted mapping for
+  either. The document therefore stops asserting the earlier bindings as
+  current, states the gap in section 4.7, assigns Gemini to no role or matrix
+  row, and leaves the ChatGPT model unpinned. No replacement was invented.
+  David may later approve a mapping for either; that would be a new dated
+  entry.
+- **Independent-review mapping.** The adopted policy establishes the Codex
+  review route: prefer Codex Auto Review when appropriate, otherwise a separate
+  GPT-6 Astra / High review context. Section 4.4 records that route for
+  Claude-built work in place of the unmapped Gemini reviewer binding. The policy
+  does not establish a reviewer mapping for Codex-built work, and section 6
+  states only the stable independence principles without a provider pairing, so
+  a Codex candidate's reviewer is assigned separately under current authority.
+- **Authority and implementation.** No code, dependency, schema, storage,
+  provider, credential, deployment, or approval-policy change. No implementation
+  package is activated by this entry.
