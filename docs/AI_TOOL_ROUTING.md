@@ -1,25 +1,28 @@
 # DavidOS AI Tool Routing Doctrine
 
-**Version:** 1.0\
-**Effective date:** 2026-07-21\
+**Version:** 1.1\
+**Effective date:** 2026-07-21 (current mapping and execution header adopted 2026-10-02)\
 **Canonical repository path:** `docs/AI_TOOL_ROUTING.md`\
 **Owner:** David\
 **Change authority:** David approval required for any material routing change
 
-**Document layers.** Sections 1–3 and 5–12 and 14–17 are the STABLE
-DOCTRINE — role concepts, independence rules, quota-fallback policy,
-gates, stop conditions, and templates that persist across model
-generations and should rarely change. Sections 4 and 13 are the CURRENT
-MAPPING — the specific model/tool bound to each stable role today — and
-are expected to change far more often as models are released, retired,
-or reassigned. **Current role mapping (§4) reviewed: 2026-07-21. Current
-strategic routing (§13) reviewed: 2026-07-26.** The two mapping sections
-carry their own dates and are reviewed independently — §13 typically
-moves whenever the active package changes, while §4 moves only when a
-model/role binding changes — so reviewing this document means
-re-confirming whichever of the §4 or §13 bindings the change affects, not
-necessarily both. Sections 1–3/5–12/14–17 do not need to change on any
-review.
+**Document layers.** Sections 1–3, 6–12, 14–16 and the execution-header
+rule in §2 are the STABLE DOCTRINE — role concepts, independence rules,
+quota-fallback policy, gates, stop conditions, and templates that persist
+across model generations and should rarely change. Sections 4, 5, 13 and
+the closing list in §17 are the CURRENT MAPPING — the specific model/tool
+bound to each stable role today — and are expected to change far more
+often as models are released, retired, or reassigned. **Current role
+mapping (§4, §5, §17) reviewed: 2026-10-02. Current model bindings in
+§13 reviewed: 2026-10-02; its package-level program state was last
+reviewed 2026-07-26 and is unchanged by that review.** The mapping
+sections carry their own dates and are reviewed independently, so
+reviewing this document means re-confirming whichever bindings the change
+affects, not necessarily all of them. The stable sections do not need to
+change on any review. Model names that appear in the repository's
+historical records (DECISIONS, CURRENT_STATE, OPEN_LOOPS, reviews,
+handoffs) are evidence and stay as written; only this document's CURRENT
+statements are updated when a mapping changes.
 
 ---
 
@@ -58,6 +61,34 @@ Every coding prompt should begin with:
 
 > Before acting, read AGENTS.md, docs/AI_TOOL_ROUTING.md, docs/CURRENT_STATE.md, docs/OPEN_LOOPS.md, and the active package brief. Treat the repository files as authoritative over conversational memory. Stop and report any contradiction before changing code.
 
+### Mandatory execution header
+
+Every meaningful Codex or Claude Code execution packet must begin with
+these five fields, in this order:
+
+```text
+PLATFORM:
+[Codex / Claude Code]
+
+MODEL:
+[exact selectable model]
+
+EFFORT / INTELLIGENCE:
+[exact selectable level]
+
+WHY:
+[one concise task-specific reason]
+
+ESCALATE ONLY IF:
+[observable condition justifying stronger routing]
+```
+
+The values come from the CURRENT mapping in §4.7. `ESCALATE ONLY IF` names an
+observable condition (a documented blocker, a failed validation, conflicting
+evidence), not a preference for more capability. The §16 package assignment
+record is a different artifact and is not a substitute for this header; a
+package prompt carries both.
+
 ---
 
 ## 3. Source-of-truth order
@@ -80,14 +111,19 @@ When two sources conflict, use the safer and more restrictive interpretation, st
 
 ## 4. Core operating roles
 
-*Current mapping reviewed: 2026-07-21. Role concepts (Program Control,
-primary builder, escalation, independent reviewer, arbitrator, mechanical
-support) are stable; the specific model bound to each is the dated
-mapping below.*
+*Current mapping reviewed: 2026-10-02 (owner-adopted). Role concepts
+(Program Control, primary builder, escalation, independent reviewer,
+arbitrator, mechanical support) are stable; the specific model bound to
+each is the dated mapping below. Exact model and effort values for Codex
+and Claude Code are in §4.7.*
 
 ### 4.1 Program Control
 
-**Default tool/model:** ChatGPT using GPT-5.6 Thinking
+**Default tool/model:** ChatGPT (Program Control / Work room). The
+2026-10-02 policy does not pin a ChatGPT model; use the current selectable
+ChatGPT option suited to the work (§7 rule 8). The earlier "GPT-5.6
+Thinking" binding is no longer asserted as current. David has not yet
+approved a replacement ChatGPT binding (evidence gap, see §4.7).
 
 **Responsibilities:**
 
@@ -110,7 +146,10 @@ mapping below.*
 
 ### 4.2 Default implementation model
 
-**Default tool/model:** Claude Code using Sonnet 5 High
+**Default tool/model:** Claude Code using Sonnet 5.5 (High for normal
+multi-file implementation; Medium for small safe edits, documentation, and
+simple tests — see §4.7). Codex implementation uses GPT-6 Sol or GPT-6
+Astra at the effort in §4.7.
 
 **Use for:**
 
@@ -124,13 +163,13 @@ mapping below.*
 
 **Restrictions:**
 
-- Sonnet must not independently provide the final approval for its own implementation.
+- The implementing model must not independently provide the final approval for its own implementation.
 - It must stop for failed validation, unexpected repository state, security concerns, or authorization boundaries.
 - It must not broaden a narrow package merely because related improvements are visible.
 
 ### 4.3 Frontier implementation escalation
 
-**Default tool/model:** Claude Code using Fable 5
+**Default tool/model:** Claude Code using Opus 5.5 / High (Opus 5.5 / Extra only if High is genuinely insufficient). Codex equivalent for major architecture: GPT-6 Astra / Extra High. Fable 5.1 only when the toughest available Claude capability genuinely warrants its usage-credit cost. All values: §4.7.
 
 **Use only for:**
 
@@ -140,18 +179,18 @@ mapping below.*
 - recovery systems;
 - large schema transitions;
 - difficult cross-cutting refactors;
-- problems Sonnet attempted but could not safely resolve;
+- problems the default implementation model attempted but could not safely resolve;
 - technically difficult packages where failure could cause data loss or corruption.
 
-**Do not use for:** ordinary documentation, routine UI polish, mechanical tests, branch inventory, simple backlog maintenance, or work Sonnet can safely complete.
+**Do not use for:** ordinary documentation, routine UI polish, mechanical tests, branch inventory, simple backlog maintenance, or work the default implementation model can safely complete.
 
-**Escalation rule:** Fable is used only when Program Control explicitly classifies the task as high-risk architecture or when Sonnet returns a documented blocker requiring stronger reasoning.
+**Escalation rule:** Escalate only when Program Control explicitly classifies the task as high-risk architecture or when the default implementation model returns a documented blocker requiring stronger reasoning. Diagnose the failure before escalating (§7 rule 7).
 
-**Independence rule:** A Fable implementation should be independently reviewed by Gemini Pro or Codex, not only by another Claude model.
+**Independence rule:** A frontier Claude implementation should be independently reviewed by Codex (§4.4), not only by another Claude model.
 
 ### 4.4 Primary independent reviewer
 
-**Default tool/model:** Antigravity using Gemini 3.1 Pro
+**Default tool/model:** Codex Auto Review when appropriate; otherwise a separate Codex GPT-6 Astra / High review context. A Codex implementation is reviewed by a separate Claude Code context (Sonnet 5.5 / High for ordinary audit; Opus 5.5 / High for serious red-team or difficult adjudication). Antigravity/Gemini is not currently a designated reviewer: David has not approved a current Gemini mapping (§4.7), and earlier Gemini review records remain historical evidence.
 
 **Use for:**
 
@@ -161,7 +200,7 @@ mapping below.*
 - privacy and sensitive-data review;
 - staged-diff or candidate-SHA review;
 - independent re-running of verification and Playwright;
-- assessing whether a Sonnet or Fable candidate is ready for commit or merge consideration.
+- assessing whether a Claude or Codex candidate is ready for commit or merge consideration.
 
 **Restrictions:**
 
@@ -173,12 +212,12 @@ mapping below.*
 
 ### 4.5 Surgical code reviewer and arbitrator
 
-**Default tool/model:** OpenAI Codex
+**Default tool/model:** OpenAI Codex using GPT-6 Astra / High (GPT-6 Astra / Extra High for serious red-team review with conflicting evidence or high consequence; §4.7)
 
 **Use for:**
 
 - narrow adversarial code review;
-- disputed findings between Claude and Gemini;
+- disputed findings between reviewers or between a builder and a reviewer;
 - one-function or one-module correctness questions;
 - concurrency interleavings;
 - migration logic;
@@ -195,7 +234,7 @@ mapping below.*
 
 ### 4.6 Mechanical and low-risk support
 
-**Default tool/model:** Antigravity using Gemini 3.5 Flash
+**Default tool/model:** Claude Code using Haiku 4.5 / Medium for search, file lookup, and narrow inspection; Codex using GPT-6 Luna / Low for repository lookup, file discovery, and mechanical inspection. Small safe edits, documentation, and simple tests use Sonnet 5.5 / Medium (Claude Code) or GPTReserve / GPT-6 Sol / Medium (Codex). The former Gemini Flash binding is not currently mapped (§4.7). All values: §4.7.
 
 **Use for:**
 
@@ -210,23 +249,90 @@ mapping below.*
 
 **Do not use as sole authority for:** storage architecture, migrations, destructive actions, security-sensitive integrations, import/reset/recovery logic, final release approval, or privacy-sensitive automation.
 
+### 4.7 Execution-platform routing (CURRENT, owner-adopted 2026-10-02)
+
+This subsection is the current model and effort selection for Codex and
+Claude Code. It does not expand authority: platform, model, and effort
+choices never change what an AI may do (§9, §7 rule 9). Every meaningful
+execution packet records its choice in the §2 header.
+
+**Codex.** Selectable models: GPT-6 Astra, GPT-6 Sol, GPT-6 Luna,
+GPTReserve, GPT-5.6 Sol, GPT-5.6 Terra, GPT-5.6 Luna, GPT-5.5, Codex Auto
+Review. Intelligence levels: Low, Medium, High, Extra High, Max, Ultra.
+
+| Task class | Model / level |
+|---|---|
+| Simple repository lookup, file discovery, mechanical inspection | GPT-6 Luna / Low |
+| Straightforward low-risk implementation, documentation, or simple test | GPTReserve or GPT-6 Sol / Medium |
+| Normal bounded coding | GPT-6 Sol / Medium |
+| Meaningful multi-file implementation | GPT-6 Astra / High |
+| Gameplay/system implementation | GPT-6 Astra / High |
+| Repository-wide audit | GPT-6 Astra / High |
+| Difficult debugging or performance diagnosis | GPT-6 Astra / High |
+| Major architecture or broad refactor | GPT-6 Astra / Extra High |
+| Serious red-team review with conflicting evidence or high consequence | GPT-6 Astra / Extra High |
+| Independent code review | Prefer Codex Auto Review when appropriate; otherwise a separate GPT-6 Astra / High review context |
+
+Max: only after High or Extra High proves insufficient, or an exceptional
+reasoning burden is established. Ultra: only for exceptional unresolved
+engineering problems after lower settings have failed or are demonstrably
+insufficient. Older models (GPT-5.6 Sol/Terra/Luna, GPT-5.5): not used by
+default; require a specific demonstrated advantage or fallback reason.
+
+**Claude Code.** Selectable models: Opus 5.5, Sonnet 5.5, Fable 5.1, Haiku
+4.5, and older Opus/Sonnet versions. Effort levels: Low, Medium, High,
+Extra, Max, Ultracode.
+
+| Task class | Model / level |
+|---|---|
+| Simple search, file lookup, narrow inspection | Haiku 4.5 / Medium |
+| Small safe edit, documentation, simple test | Sonnet 5.5 / Medium |
+| Normal multi-file implementation | Sonnet 5.5 / High |
+| Repository audit, game-flow reconstruction | Sonnet 5.5 / High |
+| Performance profiling, difficult debugging | Sonnet 5.5 / High |
+| Substantial system implementation | Sonnet 5.5 / High |
+| Complex architecture, major refactor | Opus 5.5 / High |
+| Serious red-team audit, conflicting evidence, difficult adjudication | Opus 5.5 / High |
+| High is genuinely insufficient | Opus 5.5 / Extra |
+
+Fable 5.1: only when the toughest available Claude capability genuinely
+warrants its usage-credit cost. Max: only after lower levels prove
+insufficient or an exceptional reasoning burden exists. Ultracode: only for
+exceptional repository-wide engineering problems after normal approaches
+have failed. Older models: not used by default without a specific
+compatibility, behavioral, or fallback reason.
+
+**Not mapped by the 2026-10-02 policy (evidence gaps).** The owner-supplied
+policy establishes the Codex and Claude Code mappings above only. It does
+not approve a current Gemini/Antigravity mapping, and it does not name a
+current ChatGPT model for Program Control. Earlier bindings (Gemini 3.1 Pro,
+Gemini 3.5 Flash, GPT-5.6 Thinking) are therefore not asserted as current
+anywhere in this document, no replacement has been invented, and no newer
+accepted mapping exists in repository evidence. Until David approves a
+mapping for either, treat it as current-unknown: do not assign Gemini as the
+designated reviewer or mechanical-support model, and do not pin a ChatGPT
+model in a package record. Historical records that cite those models remain
+evidence and are not modified.
+
 ---
 
 ## 5. Task classification and routing matrix
 
 | Task class | Primary tool/model | Independent review | Escalation |
 |---|---|---|---|
-| Program strategy, package design, decision support | GPT-5.6 Thinking | Gemini Pro or Codex when needed | Fable only for deep technical consultation |
-| Documentation and governance | Sonnet 5 High | Gemini 3.1 Pro | Codex for disputed technical claims |
-| Standard implementation | Sonnet 5 High | Gemini 3.1 Pro | Fable if Sonnet is blocked |
-| High-risk storage, migration, recovery, concurrency | Fable 5 | Codex preferred, Gemini Pro acceptable | David decision if reviewers disagree |
-| UI, accessibility, mobile polish | Sonnet 5 High | Gemini 3.1 Pro | Codex for code-specific disputes |
-| Mechanical inventory or repetitive cleanup | Gemini 3.5 Flash or Sonnet | Sonnet or Gemini Pro spot-check | None |
-| Privacy and security review | Gemini 3.1 Pro | Codex for code-level confirmation | Fable for complex correction |
-| Test reliability and harness repair | Sonnet 5 High | Codex or Gemini 3.1 Pro | Fable only for complex environment interactions |
-| Release execution after authorization | Sonnet 5 High | Program Control verifies report | Stop on any mismatch |
-| Live acceptance | Sonnet or Gemini Pro in isolated synthetic context | Program Control reviews evidence | Never use David’s real browser data |
-| Research outside the repository | GPT-5.6 Thinking | Primary sources required | Gemini Pro for second-source review |
+| Program strategy, package design, decision support | ChatGPT Program Control (model not pinned, §4.1) | Codex GPT-6 Astra / High or Claude Opus 5.5 / High when needed | Opus 5.5 / High for deep technical consultation |
+| Documentation and governance | Claude Code Sonnet 5.5 (Medium for small edits, High for multi-file or consequential work) | Codex Auto Review or separate GPT-6 Astra / High | Codex GPT-6 Astra / High for disputed technical claims |
+| Standard implementation | Claude Code Sonnet 5.5 / High, or Codex GPT-6 Sol / Medium (bounded) or GPT-6 Astra / High (multi-file) | Codex Auto Review or separate GPT-6 Astra / High; a Codex build is reviewed by a separate Claude Code context | Opus 5.5 / High if the default is blocked |
+| High-risk storage, migration, recovery, concurrency | Claude Code Opus 5.5 / High (Codex GPT-6 Astra / Extra High for major architecture) | Codex preferred (Auto Review or separate GPT-6 Astra / High) | David decision if reviewers disagree |
+| UI, accessibility, mobile polish | Claude Code Sonnet 5.5 / High | Codex Auto Review or separate GPT-6 Astra / High | Codex for code-specific disputes |
+| Mechanical inventory or repetitive cleanup | Haiku 4.5 / Medium (Claude Code) or GPT-6 Luna / Low (Codex) | Sonnet 5.5 / Medium spot-check | None |
+| Privacy and security review | Independent reviewer per §4.4 (Codex GPT-6 Astra / High; Claude Opus 5.5 / High for a Codex build); serious red-team classification when consequence is high | Codex for code-level confirmation | Opus 5.5 / High or GPT-6 Astra / Extra High for complex correction |
+| Test reliability and harness repair | Claude Code Sonnet 5.5 / High | Codex Auto Review or separate GPT-6 Astra / High | Opus 5.5 / High only for complex environment interactions |
+| Release execution after authorization | Claude Code Sonnet 5.5 (effort per §4.7 classification) | Program Control verifies report | Stop on any mismatch |
+| Live acceptance | Claude Code Sonnet 5.5 in isolated synthetic context | Program Control reviews evidence | Never use David’s real browser data |
+| Research outside the repository | ChatGPT Program Control (model not pinned, §4.1) | Primary sources required | Second-source review by a different model family |
+
+Gemini/Antigravity has no current mapping and appears in no row (§4.7).
 
 ---
 
@@ -234,9 +340,9 @@ mapping below.*
 
 1. The primary builder must not be the sole final reviewer.
 2. Use a different model family for independent review whenever practical.
-3. A Claude implementation should normally be reviewed by Gemini Pro or Codex.
-4. A Gemini implementation should normally be reviewed by Codex or Claude.
-5. A Codex implementation should normally be reviewed by Gemini Pro or Claude.
+3. A Claude implementation should normally be reviewed by Codex (§4.4).
+4. A Gemini implementation (should one ever be authorized) should normally be reviewed by Codex or Claude.
+5. A Codex implementation should normally be reviewed by a separate Claude Code context (§4.4).
 6. Self-review may improve a candidate, but it does not satisfy the independent-review gate.
 7. Reviewers operate read-only unless Program Control explicitly converts the session into a correction session.
 8. The reviewer must inspect the exact candidate SHA, staged diff, or explicitly identified working-tree state.
@@ -258,9 +364,9 @@ Quota percentages are not directly comparable across products. Treat them as ava
 ### Reduced availability
 
 - keep Program Control unchanged;
-- move standard implementation from Sonnet to Gemini Pro only for bounded, low-to-medium-risk work;
+- move standard implementation between Claude Code (Sonnet 5.5) and Codex (GPT-6 Sol / Astra) only for bounded, low-to-medium-risk work;
 - preserve independent review by assigning Codex or a different model family;
-- do not use Flash for high-risk architecture.
+- do not use low-cost tiers (Haiku 4.5, GPT-6 Luna, Low effort) for high-risk architecture.
 
 ### Critical reserve
 
@@ -274,6 +380,19 @@ Quota percentages are not directly comparable across products. Treat them as ava
 - choose the next safe model from this doctrine;
 - do not silently downgrade a high-risk package;
 - postpone the package rather than assigning it to an unsuitable model.
+
+### General routing rules
+
+1. Never default to maximum model strength or reasoning.
+2. Use the cheapest configuration reasonably likely to complete the task reliably.
+3. Escalate in measured steps.
+4. Full audits normally warrant High, not automatically Max, Ultra, or Ultracode.
+5. Multi-agent work must earn its coordination and quota cost.
+6. Do not repeat completed work merely to consume quota.
+7. Diagnose failures before escalating model strength.
+8. Current UI/selectable options control when model names change.
+9. Platform and model changes never expand authority.
+10. Preserve repository, privacy, spending, credential, deployment, destructive-action, and approval boundaries regardless of routing.
 
 ---
 
@@ -505,7 +624,7 @@ integration foundation, or automatic workflow activates that package.
 - A roadmap entry, `Ready` backlog marker, existing integration
   foundation, or auto-deploy workflow is never standing package
   authorization.
-- Program Control: GPT-5.6 Thinking
+- Program Control: ChatGPT (model not pinned; §4.1)
 - Independent review: separately assigned when a future package requires
   it
 - Implementation: **not authorized**
@@ -558,6 +677,9 @@ EXPECTED BASE SHA:
 EXPECTED CANDIDATE STATE:
 ```
 
+A Codex or Claude Code execution packet also begins with the five-field
+execution header from §2; this record does not replace it.
+
 ---
 
 ## 17. Final rule
@@ -566,10 +688,10 @@ Use the cheapest and fastest model that can safely complete the work, but never 
 
 When uncertain:
 
-- GPT-5.6 controls;
-- Sonnet builds;
-- Gemini Pro reviews;
-- Codex arbitrates;
-- Fable handles frontier architecture;
-- Flash handles mechanical support;
+- ChatGPT Program Control controls;
+- Sonnet 5.5 (Claude Code) and the GPT-6 models (Codex) build, per §4.7;
+- Codex reviews and arbitrates, and a Codex build is reviewed by a separate Claude context;
+- Opus 5.5 handles frontier architecture (Fable 5.1 only when its cost is warranted);
+- Haiku 4.5 and GPT-6 Luna handle mechanical support;
+- Gemini has no current mapping until David approves one;
 - David authorizes irreversible actions.

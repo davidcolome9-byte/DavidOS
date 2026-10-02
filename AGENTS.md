@@ -14,7 +14,10 @@ model-role, independence, quota-fallback, and two-gate execution policy
 for every AI tool and model working on DavidOS. It outranks conversational
 memory, prior handoffs, and any temporary chat-session instruction;
 package prompts may narrow it but may not weaken it without David's
-explicit approval.
+explicit approval. Every meaningful Codex or Claude Code execution packet
+must begin with its five-field execution header (PLATFORM, MODEL,
+EFFORT / INTELLIGENCE, WHY, ESCALATE ONLY IF); model and effort come from
+its §4.7, and choosing a platform, model, or effort never expands authority.
 
 Read in this order before acting: this file, `docs/AI_TOOL_ROUTING.md`,
 `docs/CURRENT_STATE.md`, `docs/OPEN_LOOPS.md`, the active package brief

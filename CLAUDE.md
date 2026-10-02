@@ -91,8 +91,15 @@ here than in most repos, because Claude Code can push and open PRs.
   modified or untracked files, failing tests or CI, failed privacy validation,
   merge conflicts, data-safety uncertainty, or authorization ambiguity.
 - **Independence.** A Claude implementation is normally reviewed by a different
-  model family (Gemini Pro or Codex). Self-review can improve a candidate but
+  model family (Codex). Self-review can improve a candidate but
   does not satisfy the review gate — don't claim it does.
+- **Execution header and effort.** A meaningful Claude Code execution packet
+  begins with the five-field header (PLATFORM, MODEL, EFFORT / INTELLIGENCE,
+  WHY, ESCALATE ONLY IF) from
+  [docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md) §2; pick model and effort
+  from its §4.7, use the cheapest setting likely to finish reliably, and
+  escalate in measured steps after diagnosing a failure. Model and effort
+  never expand authority.
 
 ## 4. Repository map
 
