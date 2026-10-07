@@ -1,7 +1,7 @@
 # DavidOS AI Tool Routing Doctrine
 
-**Version:** 1.1\
-**Effective date:** 2026-07-21 (current mapping and execution header adopted 2026-10-02)\
+**Version:** 1.2\
+**Effective date:** 2026-07-21 (current mapping and execution header adopted 2026-10-02; resource-first execution gate adopted 2026-10-06)\
 **Canonical repository path:** `docs/AI_TOOL_ROUTING.md`\
 **Owner:** David\
 **Change authority:** David approval required for any material routing change
@@ -380,6 +380,36 @@ Quota percentages are not directly comparable across products. Treat them as ava
 - postpone the package rather than assigning it to an unsuitable model.
 
 ### General routing rules
+
+#### Resource-first execution gate — owner-adopted 2026-10-06
+
+Before routing work to custom coding, bespoke asset generation, or a coding agent, inspect the resources already available and prefer the path that produces the best result with the least unnecessary implementation and maintenance.
+
+Use this order unless a documented constraint justifies skipping a step:
+
+**REUSE EXISTING → CONFIGURE/NATIVE → SPECIALIST TOOL OR ASSET → ADOPT/INTEGRATE/EXTEND → CUSTOM CODE**
+
+The resource check should include, when relevant:
+
+- existing repository code, components, project assets, prior work, and reusable packages;
+- installed Skills and connected plugins/apps;
+- native platform or engine capabilities;
+- templates, libraries, SDKs, APIs, standards, and maintained open-source projects;
+- paid subscriptions and specialist tools David already has access to;
+- purpose-built image, video, audio, 3D, animation, design, asset, or game-development tools.
+
+For visual, game, media, and design work, do not hand-code or procedurally recreate an element merely because code can do it. Prefer a specialist tool, quality asset, native engine feature, or maintained library when it materially improves fidelity, speed, iteration quality, or quota efficiency. Use code primarily for integration, behavior, orchestration, customization, and gaps the existing resources do not solve well.
+
+Custom code is justified when the earlier options are insufficient under the actual requirements or when a deliberate owner goal such as ownership, privacy, customization, learning, strategic control, or commercial potential materially outweighs the added implementation and maintenance burden.
+
+Every meaningful implementation packet must include one concise line before implementation begins:
+
+```text
+RESOURCE CHECK:
+[resources inspected, chosen reuse/tool path, or why custom code is still warranted]
+```
+
+Do not route a task to Codex or Claude Code solely to reproduce capability already available through a better-fit resource.
 
 1. Never default to maximum model strength or reasoning.
 2. Use the cheapest configuration reasonably likely to complete the task reliably.
