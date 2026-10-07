@@ -2255,3 +2255,32 @@ reopened by this package.
 - **Authority and implementation.** No code, dependency, schema, storage,
   provider, credential, deployment, or approval-policy change. No implementation
   package is activated by this entry.
+
+## 2026-10-06 — Resource-first execution gate adopted
+
+- **Decision (owner-adopted by David, 2026-10-06).** Before custom coding,
+  bespoke asset generation, or routing work to Codex/Claude Code, inspect and
+  prefer the best existing resources available: repository code/assets, Skills,
+  connected plugins/apps, native engine/platform capabilities, templates,
+  libraries, SDKs/APIs/standards, maintained open-source projects, existing
+  subscriptions, and specialist creative or technical tools.
+- **Execution order.** REUSE EXISTING → CONFIGURE/NATIVE → SPECIALIST TOOL OR
+  ASSET → ADOPT/INTEGRATE/EXTEND → CUSTOM CODE. Skipping directly to custom code
+  requires a concise RESOURCE CHECK explaining what was inspected and why the
+  earlier options are insufficient or why a deliberate owner goal materially
+  justifies custom implementation.
+- **Creative/game emphasis.** Visual, game, image, video, audio, 3D, animation,
+  and design work should use purpose-built tools, quality assets, native engine
+  features, and maintained libraries when they improve fidelity, speed,
+  iteration quality, or quota efficiency. Code should primarily handle behavior,
+  integration, orchestration, customization, and genuine gaps rather than
+  recreating specialist capability by default.
+- **Intent.** Maximize outcome quality while reducing unnecessary Codex/Claude
+  usage, duplicated work, maintenance burden, token/compute cost, and
+  reinvention. This strengthens the existing reuse-first doctrine; it does not
+  prohibit deliberate custom builds justified by ownership, privacy,
+  customization, learning, strategic control, or commercial potential.
+- **Scope.** Governance/documentation only. No runtime code, dependency, schema,
+  provider, credential, deployment, or approval-policy behavior is changed by
+  this decision. Merge remains separately owner-gated.
+
