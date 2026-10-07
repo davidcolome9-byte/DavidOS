@@ -79,7 +79,8 @@ Point-in-time status: [docs/CURRENT_STATE.md](docs/CURRENT_STATE.md).
    [docs/SOURCE_OF_TRUTH.md](docs/SOURCE_OF_TRUTH.md) for the hierarchy
    and the files/behaviors that must not be clobbered (e.g. the seeded
    Health Profile rules, the user's personal backup JSON).
-7. **Don't overengineer.** Simple readable code; pure utility functions
+7. **Resource-first before code.** Before writing custom code or generating bespoke assets, inspect and prefer existing repository components/assets, installed Skills, connected plugins/apps, native engine/platform features, templates, libraries, SDKs/APIs/standards, maintained open-source projects, existing subscriptions, and specialist tools. For visual/game/media/design work, prefer purpose-built image/video/audio/3D/animation/design tools or quality assets when they produce a better result with less reinvention. Custom code is a later option and must have a concise RESOURCE CHECK justification under `docs/AI_TOOL_ROUTING.md`.
+8. **Don't overengineer.** Simple readable code; pure utility functions
    for logic (testable); minimal runtime dependencies (currently only
    react, react-dom, react-router-dom — keep it that way unless clearly
    justified in [docs/DECISIONS.md](docs/DECISIONS.md)).
