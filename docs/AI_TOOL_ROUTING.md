@@ -442,6 +442,22 @@ Quota percentages are not directly comparable across products. Treat them as ava
 
 ---
 
+### 7.1 Bounded completion, resources and acceptance
+
+Before substantial work, define acceptance criteria and inspect relevant native features, subscriptions, plugins, connectors, specialized tools, reusable assets, standards and suitable open-source solutions. For creative assets, assess specialized creation tools and suitable licensed assets first. State the selected approach, why remaining custom work is needed and material limitations before substituting a weaker result. Keep checks proportional.
+
+Complete authorized, unblocked work through appropriate verification and prepare concrete results before any remaining approval. One blocked step does not suspend unrelated authorized work. Preserve progress, identify the failure and change approach within authority; do not repeat unsuccessful attempts without new evidence or restart completed analysis.
+
+Match platform, model, effort, tools and review depth to the task under the current mappings. Use the least costly setup reasonably likely to meet required quality, escalating on evidence. Cheapest available is not automatically sufficient. Optimize total effort, including rework, maintenance and owner time; never silently reduce required scope, quality or verification to save tokens or fit quota.
+
+Distinguish subscription entitlement, tool availability, installation, configuration, account connection and successful task-specific testing. Verify actual behavior and relevant visual, audio or experiential quality; identify placeholders and missing assets. Passing tests/builds alone does not prove creative readiness. Preserve existing independent-review requirements in Section 6.
+
+Use concise actionable responses, bundled questions and the owner's voice. Use no em dashes and no copy boxes or fenced code blocks for messages, prompts, instructions or ordinary answers unless explicitly requested. Keep decision-critical objectives, context, constraints, authority, dependencies, acceptance criteria and evidence requirements in concise prompts. Reference sources only when the receiving AI can retrieve them. The illustrative formats already in this document do not require fenced output.
+
+Propagate permanent rules through supported instruction entry points, check nested overrides and verify each accessible consumer. Prefer references to authoritative policy; keep necessary stable preferences directly available when retrieval is unreliable. File presence proves configuration only. Record owning evidence first, then refresh relevant existing continuity and portfolio pointers; label candidates and inaccessible consumers. Preserve credential/spending and closeout boundaries. Local instruction setup does not establish account-level adoption.
+
+This is public execution guidance. Private owner doctrine and local evidence remain at their owning sources; this repository contains neither private doctrine nor device/account records.
+
 ## 8. DavidOS two-gate execution model
 
 ### Gate 1
@@ -707,6 +723,9 @@ Add this to the docs index:
 ```text
 PACKAGE:
 RISK CLASS:
+ACCEPTANCE CRITERIA:
+DEPENDENCIES:
+EVIDENCE REQUIREMENTS:
 PROGRAM CONTROL:
 PRIMARY BUILDER:
 INDEPENDENT REVIEWER:
@@ -730,7 +749,7 @@ execution header from §2; this record does not replace it.
 
 ## 17. Final rule
 
-Use the cheapest and fastest model that can safely complete the work, but never downgrade independence, data safety, privacy, or authorization controls to save quota.
+Use the least costly task-appropriate setup reasonably likely to meet required quality, including total effort, rework, maintenance and owner time. Never silently reduce scope, quality, verification, independence, data safety, privacy or authorization controls to save tokens or fit quota.
 
 When uncertain:
 

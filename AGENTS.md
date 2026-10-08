@@ -19,6 +19,8 @@ must begin with its five-field execution header (PLATFORM, MODEL,
 EFFORT / INTELLIGENCE, WHY, ESCALATE ONLY IF); model and effort come from
 its §4.7 or §4.8, and choosing a platform, model, or effort never expands authority.
 
+**Operating rules.** Apply [AI_TOOL_ROUTING.md section 7.1](docs/AI_TOOL_ROUTING.md#71-bounded-completion-resources-and-acceptance) for completion, recovery, Resources-First checks, acceptance, evidence and concise responses. Supported client entry points reference this guide; file presence alone does not prove loading.
+
 Read in this order before acting: this file, `docs/AI_TOOL_ROUTING.md`,
 `docs/CURRENT_STATE.md`, `docs/OPEN_LOOPS.md`, the active package brief
 or handoff, then any doc directly relevant to the task.

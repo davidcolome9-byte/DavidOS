@@ -9,6 +9,10 @@ this repo; this file adds the orientation Claude Code specifically needs
 anything here disagrees with AGENTS.md, `docs/AI_TOOL_ROUTING.md`, or
 running code, those win and this file is the thing to fix.
 
+@AGENTS.md
+
+The native import above loads the shared operating guide. Follow its policy references, including AI_TOOL_ROUTING.md section 7.1.
+
 ## 0. Read this before touching anything
 
 Required reading order for any DavidOS task (from

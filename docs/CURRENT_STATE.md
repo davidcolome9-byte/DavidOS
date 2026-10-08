@@ -1,3 +1,5 @@
+> Operating-rules reconciliation candidate - 2026-10-08. Bounded documentation changes are based on released main db3688f16fcd4ca35e56c2a8bea874d31e5c8315, on docs/operating-rules-20261008. Candidate publication and independent release review remain pending. Supported local instruction entry points are configured; loading and inaccessible account/web consumers have separate evidence at the owning source. Runtime and dependencies are unchanged. The prior Google candidate notice below is pre-merge history; PR #58 merged at this base SHA.
+
 > Google resource routing candidate - 2026-10-07: Owner-authorized
 > documentation/setup work adds supervised Google resources in
 > AI_TOOL_ROUTING.md section 4.8. This isolated candidate is based on

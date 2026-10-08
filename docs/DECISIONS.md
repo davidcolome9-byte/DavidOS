@@ -2268,3 +2268,9 @@ no runtime integration, account permission, API key, billing attribution,
 background task, merge, publication or deployment is authorized by it.
 The local setup report owns installation evidence; none is copied into this
 public repository. Unrelated existing working-tree changes are preserved.
+
+## 2026-10-08 - Bounded operating-rules reconciliation
+
+Owner directed completion/recovery, evidence distinctions, supported instruction propagation, acceptance, concise responses, quality-aware routing, total effort and concise prompts. Section 7.1 integrates these execution requirements and strengthens existing Resources-First checks. AGENTS.md points to that single execution policy; CLAUDE.md imports AGENTS.md and GEMINI.md provides the native Gemini CLI entry point. Existing model mappings, Section 6 independent review and two-gate authority remain unchanged.
+
+This documentation-only candidate is based on released main db3688f16fcd4ca35e56c2a8bea874d31e5c8315. Private doctrine, device evidence, credentials and account records are excluded. Publication, independent release review, account-level adoption and deployment are not claimed. No runtime/dependency work or backlog feature is opened by this reconciliation. Validate with the existing repository verification command and review the exact scoped diff before publication.
