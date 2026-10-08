@@ -2255,3 +2255,16 @@ reopened by this package.
 - **Authority and implementation.** No code, dependency, schema, storage,
   provider, credential, deployment, or approval-policy change. No implementation
   package is activated by this entry.
+
+## 2026-10-07 - Google AI Pro supervised resource enablement
+
+The owner authorized necessary rules updates and local setup for existing
+Google AI Pro resources. The dated mapping in AI_TOOL_ROUTING.md section 4.8
+adds supervised Google support and resource-first research/media selection.
+It corrects the consumer Gemini CLI entitlement recommendation using Google's
+explicit shutdown/migration notice. Existing Codex/Claude model bindings and
+independent review gates remain. This is a documentation-only candidate;
+no runtime integration, account permission, API key, billing attribution,
+background task, merge, publication or deployment is authorized by it.
+The local setup report owns installation evidence; none is copied into this
+public repository. Unrelated existing working-tree changes are preserved.
