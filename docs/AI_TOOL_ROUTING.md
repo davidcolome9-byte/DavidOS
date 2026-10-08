@@ -1,6 +1,6 @@
 # DavidOS AI Tool Routing Doctrine
 
-**Version:** 1.1\
+**Version:** 1.2\
 **Effective date:** 2026-07-21 (current mapping and execution header adopted 2026-10-02)\
 **Canonical repository path:** `docs/AI_TOOL_ROUTING.md`\
 **Owner:** David\
@@ -13,7 +13,7 @@ across model generations and should rarely change. Sections 4, 5, 13 and
 the closing list in §17 are the CURRENT MAPPING — the specific model/tool
 bound to each stable role today — and are expected to change far more
 often as models are released, retired, or reassigned. **Current role
-mapping (§4, §5, §17) reviewed: 2026-10-02. Current model bindings in
+mapping (§4, §5, §17) reviewed: 2026-10-07 for Google resource enablement; existing Codex/Claude bindings retain their 2026-10-02 provenance. Current model bindings in
 §13 reviewed: 2026-10-02; its package-level program state was last
 reviewed 2026-07-26 and is unchanged by that review.** The mapping
 sections carry their own dates and are reviewed independently, so
@@ -63,12 +63,12 @@ Every coding prompt should begin with:
 
 ### Mandatory execution header
 
-Every meaningful Codex or Claude Code execution packet must begin with
+Every meaningful Codex, Claude Code, or Antigravity execution packet must begin with
 these five fields, in this order:
 
 ```text
 PLATFORM:
-[Codex / Claude Code]
+[Codex / Claude Code / Antigravity]
 
 MODEL:
 [exact selectable model]
@@ -83,7 +83,7 @@ ESCALATE ONLY IF:
 [observable condition justifying stronger routing]
 ```
 
-The values come from the CURRENT mapping in §4.7. `ESCALATE ONLY IF` names an
+The values come from the CURRENT mapping in §4.7 or §4.8. `ESCALATE ONLY IF` names an
 observable condition (a documented blocker, a failed validation, conflicting
 evidence), not a preference for more capability. The §16 package assignment
 record is a different artifact and is not a substitute for this header; a
@@ -190,7 +190,7 @@ Astra at the effort in §4.7.
 
 ### 4.4 Primary independent reviewer
 
-**Default tool/model:** Codex Auto Review when appropriate; otherwise a separate Codex GPT-6 Astra / High review context. This is the owner-adopted review route for Claude-built work. The 2026-10-02 policy does not map a reviewer for a Codex-built candidate: the general independence requirement (§6) applies, and the reviewer is assigned separately under current authority. Antigravity/Gemini is not currently a designated reviewer: David has not approved a current Gemini mapping (§4.7), and earlier Gemini review records remain historical evidence.
+**Default tool/model:** Codex Auto Review when appropriate; otherwise a separate Codex GPT-6 Astra / High review context. This is the owner-adopted review route for Claude-built work. The 2026-10-02 policy does not map a reviewer for a Codex-built candidate: the general independence requirement (§6) applies, and the reviewer is assigned separately under current authority. Google/Antigravity is available for owner-authorized supervised work under §4.8. It is not appointed as the default final reviewer by this setup; earlier Gemini review records remain historical evidence.
 
 **Use for:**
 
@@ -234,7 +234,7 @@ Astra at the effort in §4.7.
 
 ### 4.6 Mechanical and low-risk support
 
-**Default tool/model:** Claude Code using Haiku 4.5 / Medium for search, file lookup, and narrow inspection; Codex using GPT-6 Luna / Low for repository lookup, file discovery, and mechanical inspection. Small safe edits, documentation, and simple tests use Sonnet 5.5 / Medium (Claude Code) or GPTReserve / GPT-6 Sol / Medium (Codex). The former Gemini Flash binding is not currently mapped (§4.7). All values: §4.7.
+**Default tool/model:** Claude Code using Haiku 4.5 / Medium for search, file lookup, and narrow inspection; Codex using GPT-6 Luna / Low for repository lookup, file discovery, and mechanical inspection. Small safe edits, documentation, and simple tests use Sonnet 5.5 / Medium (Claude Code) or GPTReserve / GPT-6 Sol / Medium (Codex). Google mechanical support is available under the dated §4.8 mapping. Existing Codex/Claude values: §4.7.
 
 **Use for:**
 
@@ -303,16 +303,64 @@ have failed. Older models: not used by default without a specific
 compatibility, behavioral, or fallback reason.
 
 **Not mapped by the 2026-10-02 policy (evidence gaps).** The owner-supplied
-policy establishes the Codex and Claude Code mappings above only. It does
-not approve a current Gemini/Antigravity mapping, and it does not name a
-current ChatGPT model for Program Control. Earlier bindings (Gemini 3.1 Pro,
-Gemini 3.5 Flash, GPT-5.6 Thinking) are therefore not asserted as current
-anywhere in this document, no replacement has been invented, and no newer
-accepted mapping exists in repository evidence. Until David approves a
-mapping for either, treat it as current-unknown: do not assign Gemini as the
-designated reviewer or mechanical-support model, and do not pin a ChatGPT
+policy establishes the Codex and Claude Code mappings above only. It did
+not approve a Gemini/Antigravity mapping. The later owner-authorized Google
+setup is recorded separately in §4.8. It does not name a
+current ChatGPT model for Program Control. Earlier Gemini and ChatGPT records
+remain historical evidence; the Google bindings in §4.8 have their own dated
+provenance. Do not assign Google as the default final reviewer merely because
+it is installed. Use §4.8 for bounded Google support and do not pin a ChatGPT
 model in a package record. Historical records that cite those models remain
 evidence and are not modified.
+
+
+### 4.8 Google AI Pro resources (CURRENT, owner-authorized enablement 2026-10-07)
+
+The owner authorized the necessary rules updates and local installation/setup
+on 2026-10-07. This authorizes supervised use within separately authorized
+tasks, not blanket project implementation or unattended operation.
+
+| Work | Resource and minimum initial setting |
+|---|---|
+| Repository inventory, simple questions, mechanical support | Antigravity CLI; Gemini 3.8 Flash Low; low effort; plan/read-only first |
+| Ordinary bounded coding in an authorized package | Antigravity CLI/desktop; Gemini 3.8 Flash Medium; medium effort |
+| Complex analysis or documented lower-model failure | Gemini 3.1 Pro Low, then High only if needed; verify actual selectable effort |
+| Current-source research | Gemini Deep Research for multi-source investigations; ordinary Gemini for narrow questions |
+| Grounded source comparison | Gemini Notebook; dated authoritative inputs; citations checked against originals |
+| Approved visual/media work | Gemini images, Google Flow video, Flow Music; verify export, licensing, consistency and project acceptance |
+| Background Google-app workflows | Spark only after a specific authorized task, connected-app review and successful controlled trial |
+| GitHub maintenance | Jules only for an approved remote repository/task; draft changes reviewed before merge |
+
+These are dated mappings. Confirm model availability, plan eligibility and
+quota in the active account. Older Gemini CLI quota pages conflict with
+Google's explicit June 18, 2026 consumer shutdown notice; use the
+Antigravity migration path, not a promised 1,500-request entitlement.
+CLI/Desktop selection never expands repository, privacy, spending, account,
+credential, merge, deployment or autonomy authority.
+
+Use existing account subscription access, never silently switch to metered
+API keys. Keep AI credit overages at Never/useG1Credits=false. At exhaustion,
+wait or use another already-authorized subscription route. The $10 monthly
+Cloud credit is not evidence of an overdue-balance payment or runtime repair.
+Google One storage is Drive/Gmail/Photos capacity, not Google Cloud Storage
+hosting or a deployment/CDN allocation.
+
+Preserve the current toolchain before installing duplicate IDE, browser,
+GitHub or filesystem integrations. Native web benefits do not require a
+global SDK bundle. Notebook summaries support reasoning; Git remains
+software truth, PAM indexes it, Handoff transports dated context, Drive holds
+human deliverables and ClickUp projects compact status.
+
+Sources checked 2026-10-07:
+- [Consumer CLI deprecation](https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals)
+- [Antigravity CLI](https://antigravity.google/docs/cli/overview)
+- [Antigravity plans](https://antigravity.google/docs/plans/)
+- [Pro benefits](https://support.google.com/googleone/answer/14534406)
+- [Developer benefits](https://developers.google.com/profile/help/benefits)
+
+Local installation and validation evidence belongs in the existing local
+toolchain report; account identities, device data and private project
+narrative must not be copied into this public repository.
 
 ---
 
@@ -332,7 +380,7 @@ evidence and are not modified.
 | Live acceptance | Claude Code Sonnet 5.5 in isolated synthetic context | Program Control reviews evidence | Never use David’s real browser data |
 | Research outside the repository | ChatGPT Program Control (model not pinned, §4.1) | Primary sources required | Second-source review by a different model family |
 
-Gemini/Antigravity has no current mapping and appears in no row (§4.7).
+Google/Antigravity support supplements these existing routes under §4.8; it does not replace the independence or release gates.
 
 ---
 
@@ -691,5 +739,5 @@ When uncertain:
 - Codex Auto Review or a separate GPT-6 Astra / High context reviews Claude-built work, Codex arbitrates, and a Codex build's reviewer is assigned separately (§6);
 - Opus 5.5 handles frontier architecture (Fable 5.1 only when its cost is warranted);
 - Haiku 4.5 and GPT-6 Luna handle mechanical support;
-- Gemini has no current mapping until David approves one;
+- Google/Antigravity supplies bounded support under §4.8;
 - David authorizes irreversible actions.

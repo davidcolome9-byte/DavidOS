@@ -1,3 +1,10 @@
+> Google resource routing candidate - 2026-10-07: Owner-authorized
+> documentation/setup work adds supervised Google resources in
+> AI_TOOL_ROUTING.md section 4.8. This isolated candidate is based on
+> 99ec568f31f5e499889f84920e66855051afb654. It is not merged, published,
+> deployed or evidence of account-benefit activation. It excludes the
+> separate uncommitted dependency-maintenance candidate and changes no runtime.
+
 # Current State — 2026-09-30
 
 ## DOS-AI-001B released and closed — Skills + Meta-Skill Foundation
