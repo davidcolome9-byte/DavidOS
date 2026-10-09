@@ -430,7 +430,7 @@ Quota percentages are not directly comparable across products. Treat them as ava
 ### General routing rules
 
 1. Never default to maximum model strength or reasoning.
-2. Use the cheapest configuration reasonably likely to complete the task reliably.
+2. Use the least costly configuration reasonably likely to meet required quality; include rework, maintenance and owner time in the cost.
 3. Escalate in measured steps.
 4. Full audits normally warrant High, not automatically Max, Ultra, or Ultracode.
 5. Multi-agent work must earn its coordination and quota cost.
@@ -455,6 +455,8 @@ Distinguish subscription entitlement, tool availability, installation, configura
 Use concise actionable responses, bundled questions and the owner's voice. Use no em dashes and no copy boxes or fenced code blocks for messages, prompts, instructions or ordinary answers unless explicitly requested. Keep decision-critical objectives, context, constraints, authority, dependencies, acceptance criteria and evidence requirements in concise prompts. Reference sources only when the receiving AI can retrieve them. The illustrative formats already in this document do not require fenced output.
 
 Propagate permanent rules through supported instruction entry points, check nested overrides and verify each accessible consumer. Prefer references to authoritative policy; keep necessary stable preferences directly available when retrieval is unreliable. File presence proves configuration only. Record owning evidence first, then refresh relevant existing continuity and portfolio pointers; label candidates and inaccessible consumers. Preserve credential/spending and closeout boundaries. Local instruction setup does not establish account-level adoption.
+
+These rules operate within the existing gates and authorization boundaries in Sections 8 and 9; they grant no new authority.
 
 This is public execution guidance. Private owner doctrine and local evidence remain at their owning sources; this repository contains neither private doctrine nor device/account records.
 

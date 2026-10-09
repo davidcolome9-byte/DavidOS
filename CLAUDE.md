@@ -102,7 +102,7 @@ here than in most repos, because Claude Code can push and open PRs.
   begins with the five-field header (PLATFORM, MODEL, EFFORT / INTELLIGENCE,
   WHY, ESCALATE ONLY IF) from
   [docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md) §2; pick model and effort
-  from its §4.7, use the cheapest setting likely to finish reliably, and
+  from its §4.7, use the least costly setting likely to meet required quality, and
   escalate in measured steps after diagnosing a failure. Model and effort
   never expand authority.
 
@@ -112,6 +112,7 @@ here than in most repos, because Claude Code can push and open PRs.
 DavidOS/
   AGENTS.md              vendor-neutral agent operating guide (authoritative)
   CLAUDE.md              this file — Claude Code companion
+  GEMINI.md              Gemini CLI entry point importing AGENTS.md
   README.md              human quickstart
   docs/                  operating docs (index in §11 below)
   seed/                  portable authored DATA (not code): agents, workflows,
@@ -332,6 +333,7 @@ These fail builds in ways that are easy to misread, so know them before you edit
 | Question | File |
 |---|---|
 | Rules for any AI agent here | [AGENTS.md](AGENTS.md) |
+| Gemini CLI instruction entry point | [GEMINI.md](GEMINI.md) |
 | Which model does what; gates and authorization | [docs/AI_TOOL_ROUTING.md](docs/AI_TOOL_ROUTING.md) |
 | How the pieces fit | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | `AppState`, persistence, migration, recovery | [docs/DATA_MODEL.md](docs/DATA_MODEL.md) |

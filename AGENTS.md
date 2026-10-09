@@ -115,6 +115,7 @@ Detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
 davidos/
   AGENTS.md          ← you are here
   CLAUDE.md          Claude Code companion guide (subordinate to this file)
+  GEMINI.md          Gemini CLI entry point importing this guide
   docs/              operating docs (see index below)
   seed/              portable JSON/MD specs: agents, workflows, projects,
                      prompts, context — data, not code; readable by any AI
