@@ -1,5 +1,26 @@
 # DavidOS
 
+## Codex cloud development preparation (2026-10-17)
+
+This checkout includes the unmerged dependency-maintenance candidate. Preserve its
+branch separately from `main`; migration does not approve a release. The repository
+is public. Personal backups, health exports, employer material and machine settings
+must remain outside Git. Pushing `main` runs the existing Pages deployment workflow,
+so cloud development must use a feature branch and must not merge or deploy.
+
+Use Node.js 24 (minimum 22.12) and the committed `package-lock.json`. Install with
+`npm ci`, develop with `npm run dev`, and validate with `npm run verify`.
+For browser checks, install Chromium with `npx --no-install playwright install
+chromium --with-deps` on Linux, then run `npm run test:smoke`.
+No environment variables, API keys, database or PC service are required for these
+source/build checks. Optional integrations remain governed by their existing docs.
+Personal app state stays in each device's browser and is not part of this migration.
+
+In Codex Cloud, create a private environment for this repository and the intended
+branch, prepare the above dependencies, test and publish it, then start a new task.
+That task must report its repository, branch and full commit SHA and run the checks.
+Local validation and a GitHub upload alone do not verify the cloud environment.
+
 Personal agentic command center. A mobile-first, local-first PWA that routes life
 and work tasks into structured workflows: daily command, Operation David fitness,
 work/fraud/cyber projects, prompt vault, planning, dogs/home admin, and content

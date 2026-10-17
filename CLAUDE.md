@@ -30,7 +30,7 @@ an explicitly authorized package is.
 ## 1. What DavidOS is (and is not)
 
 A **private, local-first, mobile-first personal command center**: a PWA
-(React 18 + TypeScript + Vite 5, HashRouter, localStorage) that routes messy
+(React 18 + TypeScript + Vite 8, HashRouter, localStorage) that routes messy
 life/work requests to specialist agents, builds continuity-aware AI-ready
 prompts locally, and enforces a risk/approval model. Deployed to GitHub Pages
 on every push to `main`.
@@ -196,7 +196,7 @@ Full detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
 ## 6. Commands
 
 ```
-npm run setup       # npm ci — deterministic install (Node >= 20)
+npm run setup       # npm ci — deterministic install (Node >= 22.12)
 npm run dev         # Vite dev server → http://localhost:5173
 npm run doctor      # environment diagnosis (Node/npm, install state, ports)
 npm run lint        # ESLint (flat config)

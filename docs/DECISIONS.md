@@ -2255,3 +2255,35 @@ reopened by this package.
 - **Authority and implementation.** No code, dependency, schema, storage,
   provider, credential, deployment, or approval-policy change. No implementation
   package is activated by this entry.
+
+## 2026-10-07 - OL-022 dependency-security maintenance candidate
+
+- **Need.** A fresh audit found critical/high/moderate advisories in the
+  runtime and development dependency graph. Leaving them indefinitely made the
+  normal local/CI verification path and a direct runtime dependency stale.
+- **Resources-first choice.** Use supported upstream releases and the existing
+  npm/Vitest/Playwright gates. Do not add a replacement build system, test
+  runner, component framework or application feature, and do not use
+  `npm audit fix --force` as an architectural decision generator.
+- **Candidate.** On branch
+  `architecture/local-control-plane-alignment-20261007`, update direct runtime
+  dependency `react-router-dom` to 7.18.4; update the production bundler to
+  Vite 8.3.3 and `@vitejs/plugin-react` 6.1.2; update Vitest to 5.0.3 and
+  happy-dom to 20.14.5. `src/testSetup.ts` defines `window.confirm` only when
+  the Vitest DOM lacks that browser API. Application source, state/storage
+  schemas, routes, seed data, integration policy and approval rules are
+  unchanged, but the router implementation, bundler/transforms and resolved
+  transitive graph are intentionally different.
+- **Runtime floor.** Raise `engines.node` to >=22.12 and pin both GitHub
+  workflows to Node 24 so local, PR and exact-deploy gates use a supported
+  runtime. Local verification used Node 24.18.0. Hosted Node-24 CI is not
+  claimed before a branch is pushed.
+- **Evidence.** Fresh `npm audit`: 0 vulnerabilities. `npm run verify`:
+  63 files / 1,017 tests, all four validators, strict typecheck, production
+  build and stamped service worker passed. Exact browser gate:
+  130/130 Chromium tests with two workers and zero retries. Whitespace check
+  passed.
+- **Boundary.** This records a local candidate, not a release. Independent
+  read-only review and explicit owner authorization remain required before
+  commit/promotion. No push, pull request, hosted CI, merge, Pages deployment
+  or live-site verification has occurred.

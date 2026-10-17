@@ -9,3 +9,15 @@ Thumbs.db
 coverage/
 test-results/
 playwright-report/
+
+# Cloud migration: secrets and local-only material
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+.credentials/
+.codex-remote-attachments/

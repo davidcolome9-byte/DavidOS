@@ -1,4 +1,44 @@
-# Current State — 2026-09-30
+# Current State - 2026-10-07
+
+## OL-022 dependency-security maintenance candidate - VERIFIED LOCALLY, NOT COMMITTED OR DEPLOYED
+
+Branch `architecture/local-control-plane-alignment-20261007`, based on clean
+`main` `99ec568f31f5e499889f84920e66855051afb654`, removes the currently
+reported npm dependency vulnerabilities while preserving the tested user-facing
+application behavior. It does **not** change application source, AppState or
+storage schemas, seed data, routing rules, approval policy, integrations or
+service-worker design. It does change the direct runtime router dependency and
+the production build toolchain, so a byte-identical bundle is neither expected
+nor claimed.
+
+Candidate scope:
+
+- direct runtime dependency `react-router-dom` 6.30.x -> 7.18.4. Existing
+  `HashRouter`, `Routes`, `Route`, `Navigate`, `NavLink`, `useLocation` and
+  `useNavigate` call sites are unchanged; their compatibility is covered by the
+  complete component and Chromium suites;
+- production bundler Vite 5.4.x -> 8.3.3 and `@vitejs/plugin-react` 4.x ->
+  6.1.2. This changes the build/transform implementation and resolved
+  transitive graph even though no application source changed;
+- Vitest 2.1.x -> 5.0.3 and `happy-dom` pinned to 20.14.5;
+- one test-environment-only `window.confirm` compatibility shim in
+  `src/testSetup.ts`, loaded only by Vitest;
+- supported Node floor raised to **>=22.12**, with CI and the exact-sha Pages
+  deployment gate pinned to Node **24**. Local verification used Node 24.18.0;
+  hosted CI has not run because nothing has been pushed.
+
+Fresh `npm audit` reports **0 vulnerabilities**. `npm run verify` passed with
+63 test files / 1,017 tests, seed/Skills/privacy/docs validation, strict
+TypeScript, production build and a stamped service worker. The exact UI gate
+`npm run verify:full -- --workers=2 --retries=0` also passed all **130/130**
+Chromium tests with zero retries. `git diff --check` is clean. The large
+lockfile delta is the newly resolved runtime and development dependency graph;
+it is not represented as a dev-only or byte-neutral change.
+
+This is candidate evidence only. No commit, push, pull request, hosted Node-24
+CI run, merge, Pages deployment, live-site verification or owner acceptance is
+claimed. Independent read-only review is the remaining gate before the owner
+decides whether to commit and promote the exact candidate.
 
 ## DOS-AI-001B released and closed — Skills + Meta-Skill Foundation
 

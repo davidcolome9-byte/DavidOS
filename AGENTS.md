@@ -26,7 +26,7 @@ or handoff, then any doc directly relevant to the task.
 ## 1. What DavidOS is — and is not
 
 DavidOS is a **private, local-first, mobile-first personal command center**:
-a PWA (React 18 + TypeScript + Vite 5, HashRouter, localStorage) that routes
+a PWA (React 18 + TypeScript + Vite 8, HashRouter, localStorage) that routes
 messy life/work requests to specialist agents, generates continuity-aware
 AI-ready prompts, and enforces a safety/approval model. It is deployed to
 GitHub Pages on every push to `main`.

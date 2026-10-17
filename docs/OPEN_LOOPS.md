@@ -350,16 +350,27 @@ selected and explicitly authorized.
   mechanical.
 - **Complexity:** M · **Approval:** no
 
-### OL-022 · npm audit reports vulnerabilities in the dev toolchain
-- **Kind:** environmental (dev-toolchain only) · **Status:** Inferred
-- **Evidence:** `npm install` (2026-07-12) reported 5 vulnerabilities
-  (3 moderate, 1 high, 1 critical) — dev dependencies only (vite 5.x
-  line; no runtime deps affected).
-- **Approach:** `npm audit` for specifics; evaluate Vite 5→6/7 upgrade
-  as its own task (build-config review, Node floor, plugin compat). Do
-  NOT `npm audit fix --force` blindly.
-- **Complexity:** M · **Approval:** YES if it forces a major toolchain
-  upgrade
+### OL-022 - npm audit reports vulnerabilities in the runtime and development dependency graph
+- **Kind:** dependency security / compatibility - **Status:** Verified; locally green candidate prepared 2026-10-07, promotion pending
+- **Current candidate:** branch `architecture/local-control-plane-alignment-20261007`
+  updates the affected graph deliberately rather than using
+  `npm audit fix --force`: direct runtime dependency React Router 7.18.4;
+  production bundler Vite 8.3.3 with `@vitejs/plugin-react` 6.1.2;
+  Vitest 5.0.3 and happy-dom 20.14.5. Application source, AppState/storage
+  schemas, seed data, approval rules and service-worker design are unchanged,
+  but the runtime router and production build implementation are changed and
+  are therefore covered by the complete automated gates.
+- **Runtime floor:** `engines.node` is >=22.12; CI and the exact-sha Pages
+  deploy workflow are pinned to Node 24. Local gates ran on Node 24.18.0.
+  Hosted Node-24 CI remains unexecuted until a branch is pushed.
+- **Verification:** fresh `npm audit` reports 0 vulnerabilities;
+  `npm run verify` passed 1,017/1,017 tests plus all validators, typecheck,
+  build and service-worker stamping; `npm run verify:full -- --workers=2
+  --retries=0` passed 130/130 Chromium tests with no retry.
+- **Disposition:** not resolved until the exact candidate is independently
+  reviewed, owner-authorized, committed, merged and deployed. No release or
+  current-production claim follows from the local result.
+- **Complexity:** M - **Approval:** YES (runtime dependency, major toolchain and release)
 
 ### OL-028 · Planning and profile reveal panels lose keyboard focus and cannot be keyboard-scrolled
 - **2026-09-19 candidate:** Both reveal paths share a mounted Show/Hide toggle and a labelled focusable panel. Browser checks exercise focus retention and overflowing keyboard scroll.
