@@ -1,5 +1,30 @@
 # DavidOS
 
+## Preserved app candidate for cloud development (2026-10-17)
+
+This branch preserves the previously uncommitted app work from
+`C:/dev/davidos-completion-20260919`, based on `cdf3cbb`. It is a historical
+candidate, separate from the current dependency-maintenance branch and public
+`main`. No histories were merged and this upload does not approve a release.
+
+Use Node.js 24 and install this branch's own lockfile with `npm ci`. Do not
+reuse another checkout's `node_modules`: the original worktree has a junction
+to the primary checkout, whose upgraded test dependencies are incompatible
+with this historical baseline. That shared local environment produced 33
+window.confirm test failures. Verify using an isolated locked installation.
+
+Development/build/test commands are `npm run dev`, `npm run build` and
+`npm run verify`. Browser checks use `npx --no-install playwright install
+chromium --with-deps` on Linux, followed by `npm run test:smoke`.
+No environment variables, API keys, database or PC service are required for
+synthetic source/build checks. Personal state and backups remain outside Git.
+This repository is public; keep private and employer material excluded.
+Use a feature branch because pushes to `main` deploy the existing Pages site.
+
+Create a private Codex Cloud environment and verify this exact branch and full
+commit SHA in a fresh task after preparing and publishing the setup. Local
+checks do not prove cloud access or owner acceptance.
+
 Personal agentic command center. A mobile-first, local-first PWA that routes life
 and work tasks into structured workflows: daily command, Operation David fitness,
 work/fraud/cyber projects, prompt vault, planning, dogs/home admin, and content

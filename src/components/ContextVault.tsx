@@ -61,6 +61,9 @@ export default function ContextVault() {
         AI-ready context, layered by stability. Private items stay on-device —
         never paste them into external tools without deliberately deciding to.
       </p>
+      {sorted.length === 0 && (
+        <p className="muted small">No context items saved yet. Context entries will appear here when added.</p>
+      )}
       {sorted.map((item) => (
         <details className="item" key={item.id}>
           <summary>
@@ -69,7 +72,8 @@ export default function ContextVault() {
           </summary>
           {editingId === item.id ? (
             <>
-              <textarea style={{ minHeight: 160 }} value={draft} onChange={(e) => setDraft(e.target.value)} />
+              <label className="field" htmlFor={`context-body-${item.id}`}>Context text</label>
+              <textarea id={`context-body-${item.id}`} style={{ minHeight: 160 }} value={draft} onChange={(e) => setDraft(e.target.value)} />
               <div className="btn-row">
                 <button className="primary" onClick={() => save(item)}>Save (local)</button>
                 <button onClick={() => setEditingId(null)}>Cancel</button>

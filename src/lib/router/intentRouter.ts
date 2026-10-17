@@ -1,29 +1,19 @@
 import type { AgentId, RouteResult } from '../types';
+import { AGENTS } from '../agents/agentRegistry';
 import { scoreInput } from './routeScoring';
 import { resolveFitnessWorkflow } from './fitnessRouting';
 import { detectIntents, hasConjunction, type DetectedIntent } from './intentClassifier';
 
-const AGENT_NAMES: Record<string, string> = {
-  'universal-operations': 'Universal Operations',
-  daily_command: 'Daily Command',
-  fitness: 'Operation David Fitness',
-  work_project: 'Work / Fraud / Cybersecurity',
-  prompt_vault: 'Prompt Vault',
-  calendar_planning: 'Calendar / Planning',
-  dogs_home_life_admin: 'Dogs / Home / Life Admin',
-  content_asset: 'Content / Side-Income Assets',
-};
+// Keep routing copy and launch defaults on the same seed-backed registry that
+// drives the rest of the app. A second hand-maintained map silently drifted
+// when an agent name or default workflow changed in seed/agents.
+const AGENT_NAMES: Record<string, string> = Object.fromEntries(
+  AGENTS.map((agent) => [agent.id, agent.name]),
+);
 
-const DEFAULT_WORKFLOW: Record<string, string> = {
-  'universal-operations': 'universal-operations-review',
-  daily_command: 'daily-brief',
-  fitness: 'fitness-handoff',
-  work_project: 'work-teachback',
-  prompt_vault: 'prompt-improvement',
-  calendar_planning: 'weekly-review',
-  dogs_home_life_admin: 'life-admin-checklist',
-  content_asset: 'content-asset-planner',
-};
+const DEFAULT_WORKFLOW: Record<string, string> = Object.fromEntries(
+  AGENTS.map((agent) => [agent.id, agent.defaultWorkflow]),
+);
 
 const UNKNOWN = (reasoning: string, nextAction: string): RouteResult => ({
   target: 'unknown', classification: 'unknown', confidence: 0, reasoning, matched: [], nextAction,

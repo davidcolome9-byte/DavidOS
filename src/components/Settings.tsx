@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useStore } from '../state/store';
 import { downloadBackup, parseImport } from '../lib/storage/exportImport';
 import { commitImport } from '../lib/storage/importCommit';
@@ -50,6 +51,7 @@ const IMPORT_UNCERTAIN_MESSAGE =
   'reload the app to continue, or export a backup first from recovery.';
 
 export default function Settings() {
+  const location = useLocation();
   const {
     state,
     update,
@@ -111,6 +113,15 @@ export default function Settings() {
   });
   const driveConfigured = isGoogleDriveConfigured();
   const driveConnected = isDriveSessionFresh(driveSession);
+
+  // More → Export / Import / Reset uses a hash deep link. Scroll after the
+  // settings card exists so keyboard and touch users land at the requested
+  // section instead of the top of the page.
+  useEffect(() => {
+    if (location.hash === '#data') {
+      document.getElementById('data')?.scrollIntoView({ block: 'start' });
+    }
+  }, [location.hash]);
 
   // DOS-STAB-001A: destructive flows are BLOCKED (not merely warned) whenever
   // a durable commit could not be honored. One human-readable reason at a

@@ -54,6 +54,7 @@ export default function WorkflowRunner() {
   const [includePlanningState, setIncludePlanningState] = useState(true);
   const [planningRevealed, setPlanningRevealed] = useState(false);
   const [flash, setFlash] = useState('');
+  const profileRevealRef = useRef<HTMLPreElement>(null);
 
   // Tracks the `style` param from the previous navigation so Effect 1 can tell
   // "style removed" (restore default) from "style never present".
@@ -117,6 +118,10 @@ export default function WorkflowRunner() {
   const hasProfileData = Boolean(state.healthProfile);
   const deepAnalysis = workflow?.outputMode === 'dashboard_full_analysis' || isFitness;
   const stateContextMode = workflow?.stateContext;
+
+  useEffect(() => {
+    if (profileRevealLevel >= 2) profileRevealRef.current?.focus();
+  }, [profileRevealLevel]);
 
   const profileBlock = useMemo(() => {
     if (!isFitness || !includeProfile || !state.healthProfile) return null;
@@ -561,7 +566,7 @@ export default function WorkflowRunner() {
               counts={planningContext?.counts ?? null}
               block={planningBlock}
               revealed={planningRevealed}
-              onReveal={() => setPlanningRevealed(true)}
+              onReveal={setPlanningRevealed}
             />
           )}
 
@@ -622,10 +627,15 @@ export default function WorkflowRunner() {
                         </li>
                         <li className="small muted">Fields: {profileBlock.metadata.includedFieldPaths?.join(', ')}</li>
                       </ul>
-                      {profileRevealLevel < 2 ? (
-                        <button className="chip" onClick={() => setProfileRevealLevel(2)}>Show Inserted Health Profile Text</button>
-                      ) : (
-                        <pre className="output">{profileBlock.text}</pre>
+                      <button
+                        className="chip"
+                        onClick={() => setProfileRevealLevel(profileRevealLevel < 2 ? 2 : 0)}
+                        aria-expanded={profileRevealLevel >= 2}
+                      >
+                        {profileRevealLevel < 2 ? 'Show Inserted Health Profile Text' : 'Hide Inserted Health Profile Text'}
+                      </button>
+                      {profileRevealLevel >= 2 && (
+                        <pre ref={profileRevealRef} className="output" tabIndex={0}>{profileBlock.text}</pre>
                       )}
                     </details>
                   )}

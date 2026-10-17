@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { PlanningContextCounts, PlanningContextMode, RenderedPlanningStateBlock } from '../lib/planning/planningContext';
 
 /**
@@ -13,7 +14,7 @@ export interface PlanningContextDisclosureProps {
   counts: PlanningContextCounts | null;
   block: RenderedPlanningStateBlock | null;
   revealed: boolean;
-  onReveal: () => void;
+  onReveal: (revealed: boolean) => void;
 }
 
 export default function PlanningContextDisclosure({
@@ -26,6 +27,11 @@ export default function PlanningContextDisclosure({
   onReveal,
 }: PlanningContextDisclosureProps) {
   const hasContent = Boolean(block && !block.empty);
+  const revealedPanelRef = useRef<HTMLPreElement>(null);
+
+  useEffect(() => {
+    if (revealed) revealedPanelRef.current?.focus();
+  }, [revealed]);
 
   return (
     <>
@@ -54,11 +60,10 @@ export default function PlanningContextDisclosure({
               audit-record content, artifact content, handoff content and summaries.
             </li>
           </ul>
-          {!revealed ? (
-            <button className="chip" onClick={onReveal}>Show Inserted Planning State Text</button>
-          ) : (
-            <pre className="output">{block.text}</pre>
-          )}
+          <button className="chip" onClick={() => onReveal(!revealed)} aria-expanded={revealed}>
+            {revealed ? 'Hide Inserted Planning State Text' : 'Show Inserted Planning State Text'}
+          </button>
+          {revealed && <pre ref={revealedPanelRef} className="output" tabIndex={0}>{block.text}</pre>}
         </details>
       )}
     </>

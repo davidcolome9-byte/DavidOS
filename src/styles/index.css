@@ -58,7 +58,7 @@ html, body {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  padding: 14px 4px 10px;
+  padding: calc(14px + env(safe-area-inset-top)) 4px 10px;
   position: sticky;
   top: 0;
   background: var(--bg);

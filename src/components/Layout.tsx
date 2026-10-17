@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useStore } from '../state/store';
 import { measureStorageUsage } from '../lib/storage/storageUsage';
 import { downloadTextFile } from '../lib/storage/exportImport';
@@ -15,7 +15,10 @@ const PRIMARY_NAV = [
   { to: '/more', icon: '⋯', label: 'More' },
 ];
 
+const MORE_PATHS = ['/agents', '/prompts', '/context', '/planning', '/health', '/settings'];
+
 export default function Layout() {
+  const location = useLocation();
   const { state, persistFailed, recovery, externalChange, committedGeneration, committedSequence } = useStore();
   // OL-003 protection: warn BEFORE storage runs out, while an export can still
   // be saved. The measurement enumerates localStorage, so it must recompute
@@ -147,7 +150,16 @@ export default function Layout() {
       </main>
       <nav className="bottom-nav" ref={navRef}>
         {PRIMARY_NAV.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === '/'}
+            className={({ isActive }) => (
+              isActive || (item.to === '/more' && MORE_PATHS.some((path) => location.pathname.startsWith(path)))
+                ? 'active'
+                : ''
+            )}
+          >
             <span className="nav-icon">{item.icon}</span>
             <span>{item.label}</span>
           </NavLink>
